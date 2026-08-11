@@ -21,6 +21,9 @@ export interface DealListItem {
   priceAdvantagePct?: number | null;
   marketSampleSize?: number | null;
   marketConfidence?: string | null;
+  marketSegmentLevel?: string | null;
+  series?: string | null;
+  trim?: string | null;
 }
 
 /**
@@ -56,6 +59,9 @@ export class DealService {
           priceAdvantagePct: true,
           marketSampleSize: true,
           marketConfidence: true,
+          marketSegmentLevel: true,
+          series: true,
+          trim: true,
           dealScore: true,
           url: true,
           platform: true,
@@ -90,6 +96,9 @@ export class DealService {
           priceAdvantagePct: listing.priceAdvantagePct,
           marketSampleSize: listing.marketSampleSize,
           marketConfidence: listing.marketConfidence,
+          marketSegmentLevel: listing.marketSegmentLevel,
+          series: listing.series,
+          trim: listing.trim,
         };
       });
     } catch (error) {
@@ -121,6 +130,9 @@ export class DealService {
           priceAdvantagePct: true,
           marketSampleSize: true,
           marketConfidence: true,
+          marketSegmentLevel: true,
+          series: true,
+          trim: true,
           dealScore: true,
           url: true,
           platform: true,
@@ -156,6 +168,9 @@ export class DealService {
         priceAdvantagePct: listing.priceAdvantagePct,
         marketSampleSize: listing.marketSampleSize,
         marketConfidence: listing.marketConfidence,
+        marketSegmentLevel: listing.marketSegmentLevel,
+        series: listing.series,
+        trim: listing.trim,
       };
     } catch (error) {
       if (error instanceof HttpError) {

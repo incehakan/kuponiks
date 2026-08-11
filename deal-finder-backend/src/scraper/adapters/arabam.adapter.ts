@@ -21,6 +21,7 @@ import {
   ARABAM_LDJSON_EXTRACT_SCRIPT,
   mapArabamLdVehicle,
   parseArabamUrlTaxonomy,
+  resolveArabamSeriesTrim,
   type ArabamLdVehicle,
 } from "../utils/arabam-structured.js";
 
@@ -228,6 +229,14 @@ export class ArabamAdapter extends BaseScraperAdapter {
       const year =
         row.year ?? (ld?.year != null ? String(ld.year) : null);
 
+      const resolved = resolveArabamSeriesTrim({
+        brand,
+        urlSeries: taxonomy.series,
+        urlSeriesSource: taxonomy.seriesSource,
+        ldModel: ld?.model ?? null,
+        domModel: row.model ?? null,
+      });
+
       return {
         ...row,
         ...(brand ? { brand } : {}),
@@ -240,6 +249,12 @@ export class ArabamAdapter extends BaseScraperAdapter {
           : {}),
         ...(ld?.fuelType ? { fuelType: ld.fuelType } : {}),
         ...(ld?.transmission ? { transmission: ld.transmission } : {}),
+        ...(resolved.series ? { series: resolved.series } : {}),
+        ...(resolved.trim ? { trim: resolved.trim } : {}),
+        ...(resolved.seriesSource
+          ? { seriesSource: resolved.seriesSource }
+          : {}),
+        ...(resolved.trimSource ? { trimSource: resolved.trimSource } : {}),
       };
     });
   }
@@ -288,6 +303,10 @@ export class ArabamAdapter extends BaseScraperAdapter {
           ...(row.mileageSource != null
             ? { mileageSource: row.mileageSource }
             : {}),
+          ...(row.series != null ? { series: row.series } : {}),
+          ...(row.trim != null ? { trim: row.trim } : {}),
+          ...(row.seriesSource != null ? { seriesSource: row.seriesSource } : {}),
+          ...(row.trimSource != null ? { trimSource: row.trimSource } : {}),
         },
         {
           category: params.category ?? "Vasıta > Otomobil",

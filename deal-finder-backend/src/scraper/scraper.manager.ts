@@ -49,6 +49,10 @@ export function toListingDto(
     transmission?: string | null;
     brandSource?: string | null;
     mileageSource?: string | null;
+    series?: string | null;
+    trim?: string | null;
+    seriesSource?: string | null;
+    trimSource?: string | null;
   },
   defaults: { category?: string; city?: string } = {},
 ): ListingDto | null {
@@ -130,6 +134,18 @@ export function toListingDto(
   if (row.mileageSource?.trim()) {
     dto.mileageSource = row.mileageSource.trim();
   }
+  if (row.series?.trim()) {
+    dto.series = row.series.trim();
+  }
+  if (row.trim?.trim()) {
+    dto.trim = row.trim.trim();
+  }
+  if (row.seriesSource?.trim()) {
+    dto.seriesSource = row.seriesSource.trim();
+  }
+  if (row.trimSource?.trim()) {
+    dto.trimSource = row.trimSource.trim();
+  }
 
   return dto;
 }
@@ -160,6 +176,12 @@ export function listingDtoToRaw(dto: ListingDto): RawScrapedListing {
   }
   if (dto.brand) {
     raw.brand = dto.brand;
+  }
+  if (dto.series) {
+    raw.series = dto.series;
+  }
+  if (dto.trim) {
+    raw.trim = dto.trim;
   }
   if (dto.year != null) {
     raw.year = dto.year;
@@ -198,6 +220,18 @@ export function listingDtoToRaw(dto: ListingDto): RawScrapedListing {
   }
   if (dto.mileageSource) {
     provenance.mileageSource = dto.mileageSource;
+  }
+  if (dto.series) {
+    provenance.sourceSeries = dto.series;
+  }
+  if (dto.seriesSource) {
+    provenance.seriesSource = dto.seriesSource;
+  }
+  if (dto.trim) {
+    provenance.sourceTrim = dto.trim;
+  }
+  if (dto.trimSource) {
+    provenance.trimSource = dto.trimSource;
   }
   if (Object.keys(provenance).length > 0) {
     raw.rawDetails = provenance;

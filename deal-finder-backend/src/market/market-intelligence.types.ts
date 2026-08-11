@@ -5,7 +5,15 @@ export type MarketStatus =
 
 export type MarketConfidence = "LOW" | "MEDIUM" | "HIGH";
 
-export type MarketSegmentLevel = "L1" | "L2" | "L3" | "L4" | null;
+/** V1.1 segments: L1/L2 trim-level; L3_SERIES/L4_SERIES series-level. L3/L4 kept for BC reads. */
+export type MarketSegmentLevel =
+  | "L1"
+  | "L2"
+  | "L3"
+  | "L4"
+  | "L3_SERIES"
+  | "L4_SERIES"
+  | null;
 
 export interface MarketAnalysisInput {
   id?: string | null;
@@ -16,6 +24,8 @@ export interface MarketAnalysisInput {
   category: string | null;
   brand: string | null;
   model: string | null;
+  series?: string | null;
+  trim?: string | null;
   year: number | null;
   mileage: number | null;
   city: string | null;
@@ -41,6 +51,8 @@ export interface ComparableListingRow {
   currency: string | null;
   brand: string | null;
   model: string | null;
+  series: string | null;
+  trim: string | null;
   year: number | null;
   mileage: number | null;
   city: string | null;

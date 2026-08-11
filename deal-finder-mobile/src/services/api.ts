@@ -461,6 +461,10 @@ function normalizeDeal(deal: Partial<Deal> & Record<string, unknown>): Deal {
       (deal as { marketSampleSize?: number | null }).marketSampleSize ?? null,
     marketConfidence:
       (deal as { marketConfidence?: string | null }).marketConfidence ?? null,
+    marketSegmentLevel:
+      (deal as { marketSegmentLevel?: string | null }).marketSegmentLevel ?? null,
+    series: (deal as { series?: string | null }).series ?? null,
+    trim: (deal as { trim?: string | null }).trim ?? null,
   };
 }
 

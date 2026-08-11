@@ -144,6 +144,8 @@ describe("Core V2.1 ingest timestamps (unit contract)", () => {
         subcategory: null,
         brand: null,
         model: null,
+        series: null,
+        trim: null,
         variant: null,
         year: null,
         mileage: null,

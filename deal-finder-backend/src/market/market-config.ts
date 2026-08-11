@@ -25,6 +25,11 @@ export function getMarketLookbackDays(): number {
   return parsePositiveInt(process.env.MARKET_LOOKBACK_DAYS, 90);
 }
 
+/** Max listings to re-analyze after a new comparable arrives. Default 50. */
+export function getMarketReanalyzeLimit(): number {
+  return parsePositiveInt(process.env.MARKET_REANALYZE_LIMIT, 50);
+}
+
 /** Global deal threshold (isDeal / enqueue). Default 70. */
 export function getDealScoreThreshold(): number {
   return parsePositiveInt(process.env.DEAL_SCORE_THRESHOLD, 70);

@@ -118,6 +118,7 @@ async function ingestQuiet(input: NormalizedListingInput): Promise<{
     const { scraperService } = await import("../src/scraper/scraper.service.js");
     const result = await scraperService.ingestNormalizedListing(input, {
       quiet: true,
+      skipComparableReanalysis: true,
     });
     if (result.status === "created" || result.status === "updated") {
       return {

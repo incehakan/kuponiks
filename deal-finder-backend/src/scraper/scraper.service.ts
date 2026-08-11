@@ -11,6 +11,10 @@ import {
   marketIntelligenceService,
   type MarketIntelligenceService,
 } from "../market/market-intelligence.service.js";
+import {
+  marketReanalysisService,
+  type MarketReanalysisService,
+} from "../market/market-reanalysis.service.js";
 import { enqueueListingMatch } from "../queues/listing.queue.js";
 import {
   normalizeScrapedListing,
@@ -66,6 +70,7 @@ export class ScraperService {
   constructor(
     private readonly scorer: DealScoreService = dealScoreService,
     private readonly market: MarketIntelligenceService = marketIntelligenceService,
+    private readonly reanalysis: MarketReanalysisService = marketReanalysisService,
   ) {}
 
   /**
@@ -88,12 +93,13 @@ export class ScraperService {
 
   /**
    * Ingests an already-normalized listing payload.
-   * Flow: analyze market → DealScore V2 → persist → match (if deal).
+   * Flow: analyze market → DealScore V2 → persist → match (if deal) → bounded reanalysis.
    * Pass `{ quiet: true }` to skip match/notification enqueue (test scrapes).
+   * Pass `{ skipComparableReanalysis: true }` to skip neighbor re-scoring.
    */
   async ingestNormalizedListing(
     input: NormalizedListingInput,
-    options: { quiet?: boolean } = {},
+    options: { quiet?: boolean; skipComparableReanalysis?: boolean } = {},
   ): Promise<ScraperIngestResult> {
     try {
       const existing = await prisma.listing.findFirst({
@@ -104,7 +110,7 @@ export class ScraperService {
       });
 
       if (existing) {
-        return this.updateExistingListing(existing, input);
+        return this.updateExistingListing(existing, input, options);
       }
 
       // Secondary global unique on externalId (legacy / race safety).
@@ -112,7 +118,7 @@ export class ScraperService {
         where: { externalId: input.externalId },
       });
       if (byExternalOnly) {
-        return this.updateExistingListing(byExternalOnly, input);
+        return this.updateExistingListing(byExternalOnly, input, options);
       }
 
       const marketResult = await this.market.analyzeListing({
@@ -123,6 +129,8 @@ export class ScraperService {
         category: input.category,
         brand: input.brand,
         model: input.model,
+        series: input.series,
+        trim: input.trim,
         year: input.year,
         mileage: input.mileage,
         city: input.city,
@@ -170,6 +178,12 @@ export class ScraperService {
             scoreResult.isDeal,
           );
 
+      if (!options.skipComparableReanalysis) {
+        await this.reanalysis.reanalyzeComparableListings(listing, {
+          dryRun: false,
+        });
+      }
+
       return {
         status: "created",
         listing,
@@ -191,7 +205,7 @@ export class ScraperService {
           },
         });
         if (raced) {
-          return this.updateExistingListing(raced, input);
+          return this.updateExistingListing(raced, input, options);
         }
         console.log(
           `[SCRAPER] Unique race — mükerrer externalId=${input.externalId}`,
@@ -209,6 +223,7 @@ export class ScraperService {
   private async updateExistingListing(
     existing: Listing,
     input: NormalizedListingInput,
+    options: { quiet?: boolean; skipComparableReanalysis?: boolean } = {},
   ): Promise<ScraperIngestResult> {
     const marketResult = await this.market.analyzeListing({
       id: existing.id,
@@ -219,6 +234,8 @@ export class ScraperService {
       category: input.category,
       brand: input.brand,
       model: input.model,
+      series: input.series,
+      trim: input.trim,
       year: input.year,
       mileage: input.mileage,
       city: input.city,
@@ -249,6 +266,8 @@ export class ScraperService {
         subcategory: input.subcategory,
         brand: input.brand,
         model: input.model,
+        series: input.series,
+        trim: input.trim,
         variant: input.variant,
         year: input.year,
         mileage: input.mileage,
@@ -272,6 +291,12 @@ export class ScraperService {
     console.log(
       `[SCRAPER] İlan güncellendi (firstSeenAt korundu) → id=${listing.id} externalId=${listing.externalId} market=${marketResult.status} skor=${scoreResult.dealScore} lastSeenAt=${listing.lastSeenAt.toISOString()}`,
     );
+
+    if (!options.skipComparableReanalysis) {
+      await this.reanalysis.reanalyzeComparableListings(listing, {
+        dryRun: false,
+      });
+    }
 
     return {
       status: "updated",

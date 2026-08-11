@@ -50,6 +50,8 @@ model UserFilter {
   subcategory      String?
   brand            String?
   model            String?
+  series           String?
+  trim             String?
   variant          String?
   minYear          Int?
   maxYear          Int?
@@ -102,6 +104,10 @@ model Listing {
   subcategory         String?
   brand               String?
   model               String?
+  /// Vehicle family / series (e.g. Civic). Prefer over model for Market Intelligence.
+  series              String?
+  /// Equipment / engine package (e.g. 1.6i VTEC Elegance).
+  trim                String?
   variant             String?
   year                Int?
   mileage             Int?
@@ -128,6 +134,7 @@ model Listing {
   @@index([platform, city])
   @@index([category, subcategory])
   @@index([brand, model])
+  @@index([brand, series])
   @@index([city, price])
   @@index([year])
   @@index([firstSeenAt])

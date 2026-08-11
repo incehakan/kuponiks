@@ -88,6 +88,8 @@ export interface NormalizedListingInput {
   subcategory: string | null;
   brand: string | null;
   model: string | null;
+  series: string | null;
+  trim: string | null;
   variant: string | null;
   year: number | null;
   mileage: number | null;
@@ -272,6 +274,8 @@ export function normalizeScrapedListing(
   const subcategory = pickString(raw, ["subcategory"]);
   const brand = pickString(raw, ["brand", "marka"]);
   const model = pickString(raw, ["model"]);
+  const series = pickString(raw, ["series", "seri"]);
+  const trim = pickString(raw, ["trim"]);
   const variant = pickString(raw, ["variant"]);
   const year = pickYear(raw, ["year", "yil"]);
   const mileage = pickMileage(raw, ["mileage", "kilometre", "km"]);
@@ -307,6 +311,10 @@ export function normalizeScrapedListing(
   const resolvedBrand =
     brand ?? pickFromRawDetails(nestedRaw, ["brand", "marka"]);
   const resolvedModel = model ?? pickFromRawDetails(nestedRaw, ["model"]);
+  const resolvedSeries =
+    series ?? pickFromRawDetails(nestedRaw, ["series", "sourceSeries"]);
+  const resolvedTrim =
+    trim ?? pickFromRawDetails(nestedRaw, ["trim", "sourceTrim"]);
   const resolvedVariant =
     variant ?? pickFromRawDetails(nestedRaw, ["variant"]);
   const resolvedFuel =
@@ -329,6 +337,8 @@ export function normalizeScrapedListing(
     ...(keywords.length > 0 ? { keywords } : {}),
     ...(resolvedBrand ? { brand: resolvedBrand } : {}),
     ...(resolvedModel ? { model: resolvedModel } : {}),
+    ...(resolvedSeries ? { series: resolvedSeries } : {}),
+    ...(resolvedTrim ? { trim: resolvedTrim } : {}),
     ...(year != null ? { year } : {}),
     ...(mileage != null ? { mileage } : {}),
     source: platform,
@@ -349,6 +359,18 @@ export function normalizeScrapedListing(
   if (nestedRaw?.mileageSource != null) {
     rawDetails.mileageSource = nestedRaw.mileageSource;
   }
+  if (nestedRaw?.sourceSeries != null) {
+    rawDetails.sourceSeries = nestedRaw.sourceSeries;
+  }
+  if (nestedRaw?.seriesSource != null) {
+    rawDetails.seriesSource = nestedRaw.seriesSource;
+  }
+  if (nestedRaw?.sourceTrim != null) {
+    rawDetails.sourceTrim = nestedRaw.sourceTrim;
+  }
+  if (nestedRaw?.trimSource != null) {
+    rawDetails.trimSource = nestedRaw.trimSource;
+  }
 
   return {
     externalId,
@@ -359,6 +381,8 @@ export function normalizeScrapedListing(
     subcategory: resolvedSubcategory,
     brand: resolvedBrand,
     model: resolvedModel,
+    series: resolvedSeries,
+    trim: resolvedTrim,
     variant: resolvedVariant,
     year,
     mileage,
@@ -432,6 +456,8 @@ export function toListingCreateData(
   subcategory: string | null;
   brand: string | null;
   model: string | null;
+  series: string | null;
+  trim: string | null;
   variant: string | null;
   year: number | null;
   mileage: number | null;
@@ -466,6 +492,8 @@ export function toListingCreateData(
     subcategory: input.subcategory,
     brand: input.brand,
     model: input.model,
+    series: input.series,
+    trim: input.trim,
     variant: input.variant,
     year: input.year,
     mileage: input.mileage,

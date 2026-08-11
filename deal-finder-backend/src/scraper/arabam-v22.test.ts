@@ -39,6 +39,7 @@ describe("Arabam V2.2 structured brand/mileage", () => {
       "https://www.arabam.com/ilan/galeriden-satilik-bmw-320i/baslik-slug/123",
     );
     expect(parsed.brand).toBe("BMW");
+    expect(parsed.series).toBe("320i");
     expect(parsed.brandSource).toBe("url-taxonomy");
     expect(parsed.sellerType).toBe("Galeriden");
   });
@@ -104,6 +105,8 @@ describe("Arabam V2.2 re-scrape brand/mileage update", () => {
       subcategory: null,
       brand: null,
       model: "Honda Civic",
+      series: null,
+      trim: null,
       variant: null,
       year: 2018,
       mileage: null,
@@ -119,7 +122,7 @@ describe("Arabam V2.2 re-scrape brand/mileage update", () => {
       url: baseUrl,
       marketAveragePrice: 1_000_000,
       rawDetails: { category: "Vasıta > Otomobil" },
-    });
+    }, { quiet: true, skipComparableReanalysis: true });
     expect(created.status).toBe("created");
     if (created.status !== "created") return;
 
@@ -135,6 +138,8 @@ describe("Arabam V2.2 re-scrape brand/mileage update", () => {
       subcategory: null,
       brand: "Honda",
       model: "Honda Civic",
+      series: "Civic",
+      trim: null,
       variant: null,
       year: 2018,
       mileage: 98_500,
@@ -156,7 +161,7 @@ describe("Arabam V2.2 re-scrape brand/mileage update", () => {
         sourceMileage: 98_500,
         mileageSource: "json-ld",
       },
-    });
+    }, { quiet: true, skipComparableReanalysis: true });
 
     expect(updated.status).toBe("updated");
     if (updated.status !== "updated") return;

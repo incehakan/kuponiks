@@ -16,6 +16,8 @@ function sampleListing(
     subcategory: null,
     brand: "Honda",
     model: "Civic",
+    series: "Civic",
+    trim: null,
     variant: null,
     year: 2020,
     mileage: 80_000,
@@ -40,6 +42,7 @@ describe("ScraperService firstSeenAt / lastSeenAt / dedup", () => {
     const externalId = `arabam:v21-test-${Date.now()}`;
     const created = await scraperService.ingestNormalizedListing(
       sampleListing(externalId),
+      { quiet: true, skipComparableReanalysis: true },
     );
     expect(created.status).toBe("created");
     if (created.status !== "created") {
@@ -58,6 +61,7 @@ describe("ScraperService firstSeenAt / lastSeenAt / dedup", () => {
         title: "V2.1 ingest test listing UPDATED",
         price: 1_150_000,
       }),
+      { quiet: true, skipComparableReanalysis: true },
     );
     expect(updated.status).toBe("updated");
     if (updated.status !== "updated") {

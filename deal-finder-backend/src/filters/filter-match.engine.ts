@@ -14,6 +14,8 @@ export interface MatchableListing {
   subcategory?: string | null;
   brand?: string | null;
   model?: string | null;
+  series?: string | null;
+  trim?: string | null;
   variant?: string | null;
   year?: number | null;
   mileage?: number | null;
@@ -46,6 +48,8 @@ export interface MatchableFilter {
   keywords?: string[] | null;
   excludedKeywords?: string[] | null;
   minDealScore?: number | null;
+  series?: string | null;
+  trim?: string | null;
 }
 
 export { normalizeMatchText } from "../lib/text-normalize.js";
@@ -228,6 +232,18 @@ export function listingMatchesFilter(
     return false;
   }
   if (!matchesOptionalString(filter.model, listing.model)) {
+    return false;
+  }
+  // Additive series/trim: unset → pass; set → match series??model / trim
+  if (
+    !matchesOptionalString(
+      filter.series,
+      listing.series?.trim() ? listing.series : listing.model,
+    )
+  ) {
+    return false;
+  }
+  if (!matchesOptionalString(filter.trim, listing.trim)) {
     return false;
   }
   if (!matchesOptionalString(filter.variant, listing.variant)) {

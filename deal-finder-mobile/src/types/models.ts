@@ -48,6 +48,9 @@ export interface Deal {
   priceAdvantagePct?: number | null;
   marketSampleSize?: number | null;
   marketConfidence?: string | null;
+  marketSegmentLevel?: string | null;
+  series?: string | null;
+  trim?: string | null;
 }
 
 export interface Filter {

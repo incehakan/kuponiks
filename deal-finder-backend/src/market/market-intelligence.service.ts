@@ -17,18 +17,21 @@ import type {
   MarketAnalysisResult,
 } from "./market-intelligence.types.js";
 import {
+  applySegmentConfidencePenalty,
   brandsMatch,
   citiesMatch,
+  effectiveSeries,
   isVehicleMarketCategory,
   mileageToleranceKm,
-  modelsMatch,
   segmentLevelLabel,
+  seriesMatch,
+  trimsMatch,
   yearDeltaForLevel,
 } from "./vehicle-segment.js";
 
 export interface CandidateQuery {
   brand: string;
-  model: string;
+  series: string;
   currency: string;
   yearMin: number;
   yearMax: number;
@@ -64,9 +67,13 @@ function insufficient(
   };
 }
 
+function rowEffectiveSeries(row: ComparableListingRow): string | null {
+  return effectiveSeries(row.series, row.model);
+}
+
 /**
- * Default Prisma-backed comparable finder.
- * Brand/model equality is refined in-memory with normalizeMatchText.
+ * Default Prisma-backed comparable finder (brand + series window).
+ * Series equality refined in-memory (series ?? model).
  */
 export async function findComparableCandidates(
   query: CandidateQuery,
@@ -76,7 +83,7 @@ export async function findComparableCandidates(
       platform: { not: "mock" },
       currency: query.currency,
       brand: { not: null },
-      model: { not: null },
+      OR: [{ series: { not: null } }, { model: { not: null } }],
       year: { gte: query.yearMin, lte: query.yearMax },
       mileage: { gte: query.mileageMin, lte: query.mileageMax },
       price: { gt: 0 },
@@ -101,6 +108,8 @@ export async function findComparableCandidates(
       currency: true,
       brand: true,
       model: true,
+      series: true,
+      trim: true,
       year: true,
       mileage: true,
       city: true,
@@ -112,12 +121,12 @@ export async function findComparableCandidates(
   return rows.filter(
     (row) =>
       brandsMatch(row.brand, query.brand) &&
-      modelsMatch(row.model, query.model),
+      seriesMatch(rowEffectiveSeries(row), query.series),
   );
 }
 
 /**
- * Real-market comparable median engine (vehicles only in V1).
+ * Real-market comparable median engine (vehicles) — V1.1 series/trim segments.
  */
 export class MarketIntelligenceService {
   private readonly findCandidates: MarketIntelligenceDeps["findCandidates"];
@@ -130,10 +139,6 @@ export class MarketIntelligenceService {
     this.lookbackDays = deps.lookbackDays ?? getMarketLookbackDays();
   }
 
-  /**
-   * Analyzes a listing against the live comparable pool.
-   * Never invents a market price when sample is insufficient.
-   */
   async analyzeListing(
     listing: MarketAnalysisInput,
   ): Promise<MarketAnalysisResult> {
@@ -161,9 +166,12 @@ export class MarketIntelligenceService {
       return result;
     }
 
+    const series = effectiveSeries(listing.series, listing.model);
+    const trim = listing.trim?.trim() || null;
+
     if (
       !listing.brand?.trim() ||
-      !listing.model?.trim() ||
+      !series ||
       listing.year == null ||
       listing.mileage == null ||
       !Number.isFinite(listing.price) ||
@@ -178,13 +186,17 @@ export class MarketIntelligenceService {
       calculatedAt.getTime() - this.lookbackDays * 24 * 60 * 60 * 1000,
     );
 
-    for (const level of [1, 2, 3, 4] as const) {
+    // Trim-level L1/L2 only when trim is known; otherwise start at series L3.
+    const levels = (trim ? [1, 2, 3, 4] : [3, 4]) as Array<1 | 2 | 3 | 4>;
+
+    for (const level of levels) {
       const yearDelta = yearDeltaForLevel(level);
       const mileTol = mileageToleranceKm(listing.mileage, level);
+      const requireTrim = level === 1 || level === 2;
 
       const candidates = await this.findCandidates({
         brand: listing.brand,
-        model: listing.model,
+        series,
         currency: listing.currency,
         yearMin: listing.year - yearDelta,
         yearMax: listing.year + yearDelta,
@@ -196,7 +208,7 @@ export class MarketIntelligenceService {
         excludeExternalId: listing.externalId,
       });
 
-      let pool = candidates.filter((row) => {
+      const pool = candidates.filter((row) => {
         if (row.platform === "mock") {
           return false;
         }
@@ -206,8 +218,13 @@ export class MarketIntelligenceService {
         if (!brandsMatch(row.brand, listing.brand)) {
           return false;
         }
-        if (!modelsMatch(row.model, listing.model)) {
+        if (!seriesMatch(rowEffectiveSeries(row), series)) {
           return false;
+        }
+        if (requireTrim) {
+          if (!trim || !trimsMatch(row.trim, trim)) {
+            return false;
+          }
         }
         if (row.year == null || row.mileage == null) {
           return false;
@@ -223,7 +240,6 @@ export class MarketIntelligenceService {
             return false;
           }
         }
-        // Exclude self by id or platform+externalId
         if (listing.id && row.id === listing.id) {
           return false;
         }
@@ -254,8 +270,9 @@ export class MarketIntelligenceService {
 
       const disp = dispersionPct(filtered);
       const advantage = priceAdvantagePct(listing.price, med);
-      const confidence = resolveMarketConfidence(filtered.length, disp);
       const segment = segmentLevelLabel(level);
+      const baseConfidence = resolveMarketConfidence(filtered.length, disp);
+      const confidence = applySegmentConfidencePenalty(baseConfidence, segment);
 
       const result: MarketAnalysisResult = {
         status: "READY",
@@ -276,9 +293,6 @@ export class MarketIntelligenceService {
     return result;
   }
 
-  /**
-   * Re-analyze a persisted listing by id (batch / admin boundary).
-   */
   async reanalyzeListingById(listingId: string): Promise<MarketAnalysisResult> {
     const listing = await prisma.listing.findUnique({ where: { id: listingId } });
     if (!listing) {
@@ -293,6 +307,8 @@ export class MarketIntelligenceService {
       category: listing.category,
       brand: listing.brand,
       model: listing.model,
+      series: listing.series,
+      trim: listing.trim,
       year: listing.year,
       mileage: listing.mileage,
       city: listing.city,
@@ -315,13 +331,8 @@ export class MarketIntelligenceService {
   }
 }
 
-/** Shared Market Intelligence instance. */
 export const marketIntelligenceService = new MarketIntelligenceService();
 
-/**
- * Maps market analysis → Prisma Listing persistence fields.
- * marketAveragePrice stores the median for backward compatibility when READY.
- */
 export function marketFieldsForPersistence(market: MarketAnalysisResult): {
   marketAveragePrice: number | null;
   marketMedianPrice: number | null;
@@ -364,7 +375,6 @@ export type MarketPersistenceFields = ReturnType<
   typeof marketFieldsForPersistence
 >;
 
-/** Prisma update/create data helper (typed loosely for schema evolution). */
 export function toPrismaMarketData(
   market: MarketAnalysisResult,
 ): Prisma.ListingUpdateInput {

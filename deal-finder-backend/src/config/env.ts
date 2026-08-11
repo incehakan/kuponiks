@@ -69,6 +69,8 @@ export interface AppEnv {
   MARKET_MIN_SAMPLE?: number;
   /** Market Intelligence: lookback window in days via lastSeenAt (default 90). */
   MARKET_LOOKBACK_DAYS?: number;
+  /** Max neighbor listings re-analyzed after ingest (default 50). */
+  MARKET_REANALYZE_LIMIT?: number;
   /** Global deal score threshold for isDeal / enqueue (default 70). */
   DEAL_SCORE_THRESHOLD?: number;
   NODE_ENV: "development" | "production" | "test";
@@ -234,6 +236,14 @@ function loadEnv(): AppEnv {
     const parsed = Number.parseInt(marketLookback, 10);
     if (Number.isFinite(parsed) && parsed > 0) {
       config.MARKET_LOOKBACK_DAYS = parsed;
+    }
+  }
+
+  const reanalyzeLimit = optionalString("MARKET_REANALYZE_LIMIT");
+  if (reanalyzeLimit !== undefined) {
+    const parsed = Number.parseInt(reanalyzeLimit, 10);
+    if (Number.isFinite(parsed) && parsed > 0) {
+      config.MARKET_REANALYZE_LIMIT = parsed;
     }
   }
 

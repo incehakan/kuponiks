@@ -23,6 +23,10 @@ export interface ListingDto {
   transmission?: string | null;
   brandSource?: string | null;
   mileageSource?: string | null;
+  series?: string | null;
+  trim?: string | null;
+  seriesSource?: string | null;
+  trimSource?: string | null;
   raw?: Record<string, unknown>;
 }
 
@@ -43,4 +47,8 @@ export interface DomListingRow {
   transmission?: string | null;
   brandSource?: string | null;
   mileageSource?: string | null;
+  series?: string | null;
+  trim?: string | null;
+  seriesSource?: string | null;
+  trimSource?: string | null;
 }
