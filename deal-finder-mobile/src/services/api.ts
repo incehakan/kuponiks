@@ -419,9 +419,15 @@ function normalizeDeal(deal: Partial<Deal> & Record<string, unknown>): Deal {
 
   return {
     id: String(deal.id ?? ''),
+    listingId:
+      typeof (deal as { listingId?: string }).listingId === 'string'
+        ? (deal as { listingId: string }).listingId
+        : String(deal.id ?? ''),
     title: typeof deal.title === 'string' ? deal.title : 'İlan',
     city: typeof deal.city === 'string' ? deal.city : 'Belirtilmemiş',
+    district: (deal as { district?: string | null }).district ?? null,
     price: Number(deal.price) || 0,
+    currency: (deal as { currency?: string | null }).currency ?? 'TRY',
     marketAverage:
       Number(deal.marketAverage) ||
       Number((deal as { marketAveragePrice?: number }).marketAveragePrice) ||
@@ -456,6 +462,16 @@ function normalizeDeal(deal: Partial<Deal> & Record<string, unknown>): Deal {
     platform,
     source: typeof deal.source === 'string' ? deal.source : platform,
     sellerPhone: typeof deal.sellerPhone === 'string' ? deal.sellerPhone : undefined,
+    imageUrl: (deal as { imageUrl?: string | null }).imageUrl ?? null,
+    brand: (deal as { brand?: string | null }).brand ?? null,
+    model: (deal as { model?: string | null }).model ?? null,
+    series: (deal as { series?: string | null }).series ?? null,
+    trim: (deal as { trim?: string | null }).trim ?? null,
+    year: (deal as { year?: number | null }).year ?? null,
+    mileage: (deal as { mileage?: number | null }).mileage ?? null,
+    sellerType: (deal as { sellerType?: string | null }).sellerType ?? null,
+    description: (deal as { description?: string | null }).description ?? null,
+    marketStatus: (deal as { marketStatus?: string | null }).marketStatus ?? null,
     marketMedianPrice:
       (deal as { marketMedianPrice?: number | null }).marketMedianPrice ?? null,
     priceAdvantagePct:
@@ -466,8 +482,14 @@ function normalizeDeal(deal: Partial<Deal> & Record<string, unknown>): Deal {
       (deal as { marketConfidence?: string | null }).marketConfidence ?? null,
     marketSegmentLevel:
       (deal as { marketSegmentLevel?: string | null }).marketSegmentLevel ?? null,
-    series: (deal as { series?: string | null }).series ?? null,
-    trim: (deal as { trim?: string | null }).trim ?? null,
+    matchedAt: (deal as { matchedAt?: string | null }).matchedAt ?? null,
+    matchedFilterCount:
+      (deal as { matchedFilterCount?: number }).matchedFilterCount ?? undefined,
+    matchedFilters:
+      (deal as { matchedFilters?: Deal['matchedFilters'] }).matchedFilters ??
+      undefined,
+    firstSeenAt: (deal as { firstSeenAt?: string | null }).firstSeenAt ?? null,
+    publishedAt: (deal as { publishedAt?: string | null }).publishedAt ?? null,
   };
 }
 

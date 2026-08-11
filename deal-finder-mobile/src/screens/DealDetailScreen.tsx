@@ -15,19 +15,17 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { dealsApi, getErrorMessage } from '../services/api';
 import type { Deal } from '../types/models';
 import type { MainStackParamList } from '../types/navigation';
+import {
+  formatKm,
+  formatMatchedTaskLabel,
+  formatPriceAdvantage,
+  formatTry,
+} from '../utils/formatDeal';
 
 type DealDetailScreenProps = NativeStackScreenProps<
   MainStackParamList,
   'DealDetail'
 >;
-
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('tr-TR', {
-    style: 'currency',
-    currency: 'TRY',
-    maximumFractionDigits: 0,
-  }).format(value);
-}
 
 function scoreColor(dealScore: number): string {
   if (dealScore >= 90) {
@@ -42,6 +40,14 @@ function scoreColor(dealScore: number): string {
 function resolveListingUrl(deal: Deal): string | null {
   const url = deal.listingUrl || deal.originalUrl || deal.sourceUrl;
   return url?.trim() ? url.trim() : null;
+}
+
+function confidenceLabel(value: string | null | undefined): string {
+  const n = (value ?? '').toUpperCase();
+  if (n === 'HIGH') return 'Yüksek';
+  if (n === 'MEDIUM') return 'Orta';
+  if (n === 'LOW') return 'Düşük';
+  return value ?? '—';
 }
 
 export default function DealDetailScreen({
@@ -86,14 +92,20 @@ export default function DealDetailScreen({
 
     const url = resolveListingUrl(deal);
     if (!url) {
-      Alert.alert('İlan bağlantısı bulunamadı', 'Bu ilan için dış bağlantı tanımlı değil.');
+      Alert.alert(
+        'İlan bağlantısı bulunamadı',
+        'Bu ilan için dış bağlantı tanımlı değil.',
+      );
       return;
     }
 
     try {
       const canOpen = await Linking.canOpenURL(url);
       if (!canOpen) {
-        Alert.alert('İlan bağlantısı bulunamadı', 'Bu bağlantı cihazda açılamıyor.');
+        Alert.alert(
+          'İlan bağlantısı bulunamadı',
+          'Bu bağlantı cihazda açılamıyor.',
+        );
         return;
       }
       await Linking.openURL(url);
@@ -121,7 +133,10 @@ export default function DealDetailScreen({
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <View style={styles.centered}>
           <Text style={styles.emptyTitle}>İlan bulunamadı</Text>
-          <Pressable style={styles.secondaryButton} onPress={() => navigation.goBack()}>
+          <Pressable
+            style={styles.secondaryButton}
+            onPress={() => navigation.goBack()}
+          >
             <Text style={styles.secondaryButtonText}>Geri dön</Text>
           </Pressable>
         </View>
@@ -130,6 +145,11 @@ export default function DealDetailScreen({
   }
 
   const badgeColor = scoreColor(deal.dealScore);
+  const marketReady = deal.marketStatus === 'READY';
+  const advantage = formatPriceAdvantage(deal.priceAdvantagePct ?? deal.dealPercent);
+  const listingUrl = resolveListingUrl(deal);
+  const location = [deal.city, deal.district].filter(Boolean).join(' / ');
+  const matched = deal.matchedFilters ?? [];
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -137,45 +157,117 @@ export default function DealDetailScreen({
         <Pressable onPress={() => navigation.goBack()} hitSlop={12}>
           <Text style={styles.backText}>← Geri</Text>
         </Pressable>
-        <Text style={styles.headerTitle}>İlan Detayı</Text>
+        <Text style={styles.headerTitle}>Fırsat Detayı</Text>
         <View style={styles.headerSpacer} />
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.title}>{deal.title}</Text>
-        <Text style={styles.city}>{deal.city}</Text>
+        <Text style={styles.city}>{location || 'Konum belirtilmemiş'}</Text>
 
         <View style={[styles.scoreBadge, { backgroundColor: badgeColor }]}>
           <Text style={styles.scoreBadgeText}>
-            Kelepir Skoru {deal.dealScore}
-            {deal.dealPercent > 0 ? ` · %${deal.dealPercent} piyasa altı` : ''}
+            Fırsat Skoru {deal.dealScore}
+            {advantage ? ` · ${advantage}` : ''}
           </Text>
         </View>
 
+        <Text style={styles.sectionTitle}>Fiyat</Text>
         <View style={styles.priceCard}>
           <View style={styles.priceCol}>
             <Text style={styles.priceLabel}>İlan Fiyatı</Text>
-            <Text style={styles.priceValue}>{formatCurrency(deal.price)}</Text>
+            <Text style={styles.priceValue}>{formatTry(deal.price)}</Text>
           </View>
           <View style={styles.priceDivider} />
           <View style={styles.priceCol}>
-            <Text style={styles.priceLabel}>Piyasa Ort.</Text>
+            <Text style={styles.priceLabel}>Piyasa</Text>
             <Text style={styles.marketValue}>
-              {formatCurrency(deal.marketAverage)}
+              {marketReady && (deal.marketMedianPrice || deal.marketAverage)
+                ? formatTry(deal.marketMedianPrice ?? deal.marketAverage)
+                : 'Veri yetersiz'}
             </Text>
           </View>
         </View>
+
+        <Text style={styles.sectionTitle}>Piyasa analizi</Text>
+        <View style={styles.infoCard}>
+          {marketReady ? (
+            <>
+              <Text style={styles.infoLine}>
+                Avantaj: {advantage ?? '—'}
+              </Text>
+              <Text style={styles.infoLine}>
+                Fırsat Skoru: {deal.dealScore}/100
+              </Text>
+              <Text style={styles.infoLine}>
+                Emsal: {deal.marketSampleSize ?? '—'} ilan
+              </Text>
+              <Text style={styles.infoLine}>
+                Güven: {confidenceLabel(deal.marketConfidence)}
+              </Text>
+            </>
+          ) : (
+            <Text style={styles.infoLine}>Piyasa verisi yetersiz</Text>
+          )}
+        </View>
+
+        <Text style={styles.sectionTitle}>Araç bilgileri</Text>
+        <View style={styles.infoCard}>
+          <Text style={styles.infoLine}>
+            Marka: {deal.brand ?? '—'}
+          </Text>
+          <Text style={styles.infoLine}>
+            Seri: {deal.series ?? deal.model ?? '—'}
+          </Text>
+          <Text style={styles.infoLine}>
+            Versiyon: {deal.trim ?? '—'}
+          </Text>
+          <Text style={styles.infoLine}>
+            Yıl: {deal.year ?? '—'}
+          </Text>
+          <Text style={styles.infoLine}>
+            Kilometre: {formatKm(deal.mileage)}
+          </Text>
+          <Text style={styles.infoLine}>
+            Satıcı: {deal.sellerType ?? '—'}
+          </Text>
+        </View>
+
+        {matched.length > 0 ? (
+          <>
+            <Text style={styles.sectionTitle}>Eşleşen görev</Text>
+            <View style={styles.infoCard}>
+              {matched.length === 1 ? (
+                <Text style={styles.infoLine}>
+                  Bu ilan şu görevinizle eşleşti:{' '}
+                  {formatMatchedTaskLabel(matched[0]!)}
+                </Text>
+              ) : (
+                <Text style={styles.infoLine}>
+                  {matched.length} arama görevinizle eşleşti
+                </Text>
+              )}
+              {matched.map((filter) => (
+                <Text key={filter.id} style={styles.infoMuted}>
+                  • {formatMatchedTaskLabel(filter)}
+                </Text>
+              ))}
+            </View>
+          </>
+        ) : null}
 
         {deal.platform ? (
           <Text style={styles.platform}>Kaynak: {deal.platform}</Text>
         ) : null}
 
-        <Pressable
-          style={styles.ctaButton}
-          onPress={() => void handleOpenOriginalListing()}
-        >
-          <Text style={styles.ctaButtonText}>Orijinal İlana Git</Text>
-        </Pressable>
+        {listingUrl ? (
+          <Pressable
+            style={styles.ctaButton}
+            onPress={() => void handleOpenOriginalListing()}
+          >
+            <Text style={styles.ctaButtonText}>İlana Git</Text>
+          </Pressable>
+        ) : null}
       </ScrollView>
     </SafeAreaView>
   );
@@ -242,6 +334,13 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#A0A0C0',
   },
+  sectionTitle: {
+    marginTop: 22,
+    marginBottom: 8,
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
   scoreBadge: {
     alignSelf: 'flex-start',
     marginTop: 16,
@@ -255,7 +354,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   priceCard: {
-    marginTop: 20,
     backgroundColor: '#1A0836',
     borderRadius: 16,
     borderWidth: 1,
@@ -285,9 +383,27 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   marketValue: {
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: '700',
     color: '#A0A0C0',
+  },
+  infoCard: {
+    backgroundColor: '#1A0836',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#2A164D',
+    padding: 16,
+    gap: 6,
+  },
+  infoLine: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  infoMuted: {
+    color: '#A0A0C0',
+    fontSize: 13,
+    marginTop: 2,
   },
   platform: {
     marginTop: 14,
@@ -314,7 +430,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#3D1E6D',
   },
   secondaryButtonText: {
-    color: '#0F766E',
+    color: '#FF7A00',
     fontWeight: '700',
   },
 });

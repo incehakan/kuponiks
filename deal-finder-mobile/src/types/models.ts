@@ -31,9 +31,12 @@ export interface AuthResponse {
 
 export interface Deal {
   id: string;
+  listingId?: string;
   title: string;
   city: string;
+  district?: string | null;
   price: number;
+  currency?: string | null;
   marketAverage: number;
   dealScore: number;
   dealPercent: number;
@@ -43,18 +46,38 @@ export interface Deal {
   platform?: string;
   source?: string;
   sellerPhone?: string;
+  imageUrl?: string | null;
+  brand?: string | null;
+  model?: string | null;
+  series?: string | null;
+  trim?: string | null;
+  year?: number | null;
+  mileage?: number | null;
+  sellerType?: string | null;
+  description?: string | null;
+  marketStatus?: string | null;
   /** Market Intelligence V1 (optional). */
   marketMedianPrice?: number | null;
   priceAdvantagePct?: number | null;
   marketSampleSize?: number | null;
   marketConfidence?: string | null;
   marketSegmentLevel?: string | null;
-  series?: string | null;
-  trim?: string | null;
+  matchedAt?: string | null;
+  matchedFilterCount?: number;
+  matchedFilters?: Array<{
+    id: string;
+    name: string | null;
+    category: string;
+    brand: string | null;
+    series: string | null;
+  }>;
+  firstSeenAt?: string | null;
+  publishedAt?: string | null;
 }
 
 export interface Filter {
   id: string;
+  name?: string | null;
   category: string;
   subcategory?: string | null;
   brand?: string | null;
@@ -84,6 +107,7 @@ export interface Filter {
 
 export interface CreateFilterPayload {
   category: string;
+  name?: string | null;
   subcategory?: string | null;
   brand?: string | null;
   model?: string | null;

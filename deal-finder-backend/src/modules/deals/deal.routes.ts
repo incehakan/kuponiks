@@ -1,18 +1,59 @@
 import type { FastifyInstance, FastifyPluginAsync } from "fastify";
-import { optionalAuthenticate } from "../../middlewares/auth.middleware.js";
+import {
+  authenticate,
+  optionalAuthenticate,
+} from "../../middlewares/auth.middleware.js";
 import { env } from "../../config/env.js";
 import { mockListingService } from "../../services/mockListing.service.js";
 import { listingAlertNotificationService } from "../../services/notification.service.js";
 import { dealService } from "./deal.service.js";
 
 /**
- * Kelepir listing feed routes (public feed; optional JWT for future personalization).
+ * Deal Feed V2 — authenticated user-specific matches.
+ * Unauthenticated GET / returns empty feed (no global leakage).
  */
 export const dealRoutes: FastifyPluginAsync = async (
   app: FastifyInstance,
 ) => {
   app.get(
     "/",
+    {
+      preHandler: [optionalAuthenticate],
+    },
+    async (request, reply) => {
+      if (!request.user?.id) {
+        return reply.status(200).send({
+          deals: [],
+          authenticated: false,
+          nextCursor: null,
+          message: "Fırsat listeniz için giriş yapın.",
+        });
+      }
+
+      const query = request.query as {
+        limit?: string;
+        cursor?: string;
+        sort?: string;
+      };
+      const limit = query.limit ? Number(query.limit) : 20;
+      const sort = query.sort === "score" ? "score" : "newest";
+
+      const page = await dealService.getUserMatchedDeals(request.user.id, {
+        limit: Number.isFinite(limit) ? limit : 20,
+        ...(query.cursor ? { cursor: query.cursor } : {}),
+        sort,
+      });
+
+      return reply.status(200).send(page);
+    },
+  );
+
+  /**
+   * Optional global highlight feed (dealScore >= global threshold).
+   * Not used as the primary Home feed.
+   */
+  app.get(
+    "/highlights",
     {
       preHandler: [optionalAuthenticate],
     },
@@ -28,7 +69,7 @@ export const dealRoutes: FastifyPluginAsync = async (
   app.get(
     "/:id",
     {
-      preHandler: [optionalAuthenticate],
+      preHandler: [authenticate],
       schema: {
         params: {
           type: "object",
@@ -41,7 +82,7 @@ export const dealRoutes: FastifyPluginAsync = async (
     },
     async (request, reply) => {
       const { id } = request.params as { id: string };
-      const deal = await dealService.getDealById(id);
+      const deal = await dealService.getUserDealById(request.user!.id, id);
       return reply.status(200).send({ deal });
     },
   );

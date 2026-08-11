@@ -17,6 +17,7 @@ import {
 
 export interface CreateFilterInput {
   category: string;
+  name?: string | null;
   subcategory?: string | null;
   brand?: string | null;
   model?: string | null;
@@ -189,6 +190,9 @@ export class FilterService {
           notifyPush: notifyFlags.notifyPush,
           notifyTelegram: notifyFlags.notifyTelegram,
           notifyWhatsapp: notifyFlags.notifyWhatsapp,
+          ...(input.name !== undefined
+            ? { name: optionalTrimmed(input.name) ?? null }
+            : {}),
           ...(input.city !== undefined
             ? { city: optionalTrimmed(input.city) ?? null }
             : {}),
@@ -360,6 +364,9 @@ export class FilterService {
         data: {
           ...(updateData.category !== undefined
             ? { category: updateData.category.trim() }
+            : {}),
+          ...(updateData.name !== undefined
+            ? { name: optionalTrimmed(updateData.name) ?? null }
             : {}),
           ...(updateData.subcategory !== undefined
             ? { subcategory: optionalTrimmed(updateData.subcategory) ?? null }

@@ -19,6 +19,9 @@ export function isRealEstateCategory(categoryPath: string): boolean {
 }
 
 export function formatFilterTaskTitle(filter: Filter): string {
+  if (filter.name?.trim()) {
+    return filter.name.trim();
+  }
   if (filter.brand && filter.series) {
     return `${filter.brand} ${filter.series}${filter.trim ? ` ${filter.trim}` : ''}`;
   }
@@ -28,7 +31,7 @@ export function formatFilterTaskTitle(filter: Filter): string {
   if (filter.model) {
     return filter.model;
   }
-  return filter.category;
+  return filter.category || 'Vasıta Araması';
 }
 
 export function formatFilterSummary(filter: Filter): string {

@@ -9,6 +9,7 @@ import {
 import { getMessaging } from "firebase-admin/messaging";
 import { Expo, type ExpoPushMessage } from "expo-server-sdk";
 import { env } from "../../config/env.js";
+import { PermanentNotificationError } from "../permanent-error.js";
 import type {
   INotificationProvider,
   NotificationPayload,
@@ -36,7 +37,7 @@ function getFirebaseApp(): App {
 }
 
 /**
- * Mobile push notification provider using Firebase Cloud Messaging.
+ * Mobile push notification provider using Expo / Firebase Cloud Messaging.
  */
 export class PushProvider implements INotificationProvider {
   async send(payload: NotificationPayload): Promise<boolean> {
@@ -48,30 +49,34 @@ export class PushProvider implements INotificationProvider {
   }
 
   private async sendExpoPush(payload: NotificationPayload): Promise<boolean> {
+    const token = payload.expoPushToken?.trim();
+    if (!token) {
+      throw new PermanentNotificationError(
+        "no_token",
+        `PushProvider: missing Expo token for user ${payload.userId}`,
+      );
+    }
+
+    if (!Expo.isExpoPushToken(token)) {
+      throw new PermanentNotificationError(
+        "invalid_token",
+        `PushProvider: invalid Expo push token for user ${payload.userId}`,
+      );
+    }
+
     try {
-      const token = payload.expoPushToken?.trim();
-      if (!token) {
-        return false;
-      }
-
-      if (!Expo.isExpoPushToken(token)) {
-        console.error(
-          `PushProvider: invalid Expo push token for user ${payload.userId}`,
-        );
-        return false;
-      }
-
       const message: ExpoPushMessage = {
         to: token,
         sound: "default",
         title: payload.title,
         body: payload.message,
         data: {
-          userId: payload.userId,
           listingId: payload.listingId,
+          dealId: payload.listingId,
           url: payload.url,
           dealScore: String(payload.dealScore),
           price: String(payload.price),
+          platform: "kuponiks",
         },
         priority: "high",
       };
@@ -80,14 +85,38 @@ export class PushProvider implements INotificationProvider {
       const ticket = tickets[0];
 
       if (!ticket || ticket.status === "error") {
+        const errCode =
+          ticket && "details" in ticket
+            ? String(
+                (ticket.details as { error?: string } | undefined)?.error ?? "",
+              )
+            : "";
+        const errMessage =
+          ticket && "message" in ticket ? String(ticket.message) : "unknown";
+
+        if (
+          errCode === "DeviceNotRegistered" ||
+          errCode === "InvalidCredentials" ||
+          /not.+registered|invalid.+token/i.test(errMessage)
+        ) {
+          throw new PermanentNotificationError(
+            "invalid_token",
+            `PushProvider: permanent Expo error for user ${payload.userId}`,
+          );
+        }
+
         console.error(
-          `PushProvider: Expo push failed for user ${payload.userId}: ${ticket && "message" in ticket ? ticket.message : "unknown"}`,
+          `PushProvider: Expo push failed for user ${payload.userId}: ${errMessage}`,
         );
         return false;
       }
 
+      console.log(`[NOTIFY] channel=push status=SENT user=${payload.userId}`);
       return true;
     } catch (error) {
+      if (error instanceof PermanentNotificationError) {
+        throw error;
+      }
       const message =
         error instanceof Error ? error.message : "Unknown Expo push error";
       console.error(
@@ -100,10 +129,10 @@ export class PushProvider implements INotificationProvider {
   private async sendFcmPush(payload: NotificationPayload): Promise<boolean> {
     try {
       if (!payload.fcmToken) {
-        console.error(
+        throw new PermanentNotificationError(
+          "no_token",
           `PushProvider: missing fcmToken for user ${payload.userId}`,
         );
-        return false;
       }
 
       if (!env.FIREBASE_CREDENTIALS_PATH) {
@@ -122,8 +151,8 @@ export class PushProvider implements INotificationProvider {
           body: payload.message,
         },
         data: {
-          userId: payload.userId,
           listingId: payload.listingId,
+          dealId: payload.listingId,
           url: payload.url,
           dealScore: String(payload.dealScore),
           price: String(payload.price),
@@ -139,8 +168,12 @@ export class PushProvider implements INotificationProvider {
         },
       });
 
+      console.log(`[NOTIFY] channel=push status=SENT user=${payload.userId}`);
       return true;
     } catch (error) {
+      if (error instanceof PermanentNotificationError) {
+        throw error;
+      }
       const message =
         error instanceof Error ? error.message : "Unknown FCM error";
       console.error(

@@ -66,6 +66,7 @@ const FALLBACK_CITIES: CityItem[] = [
 const ACCESSORY_ID = 'filter-form-accessory';
 
 export interface FilterFormState {
+  name: string;
   categoryPath: string;
   brand: string | null;
   series: string | null;
@@ -91,6 +92,7 @@ export interface FilterFormState {
 }
 
 const INITIAL_FORM: FilterFormState = {
+  name: '',
   categoryPath: '',
   brand: null,
   series: null,
@@ -121,6 +123,7 @@ function toTaxonomyOptions(items: TaxonomyItem[]): SelectOption[] {
 
 function filterToForm(filter: Filter): FilterFormState {
   return {
+    name: filter.name ?? '',
     categoryPath: filter.category ?? '',
     brand: filter.brand ?? null,
     series: filter.series ?? null,
@@ -340,6 +343,7 @@ export default function FilterFormModal({
   const setCategory = (option: SelectOption | null): void => {
     setForm((prev) => ({
       ...INITIAL_FORM,
+      name: prev.name,
       categoryPath: option?.value ?? '',
       minDealScore: prev.minDealScore,
       notifyPush: prev.notifyPush,
@@ -442,6 +446,7 @@ export default function FilterFormModal({
 
     const payload: CreateFilterPayload = {
       category,
+      name: form.name.trim() || null,
       city: form.city === 'Tüm Türkiye' ? form.city : form.city,
       minDealScore: form.minDealScore,
       isActive: form.isActive,
@@ -540,6 +545,14 @@ export default function FilterFormModal({
               keyboardDismissMode="on-drag"
             >
               <Text style={styles.section}>Ne arıyorsun?</Text>
+              <Text style={styles.label}>Görev adı</Text>
+              <TextInput
+                style={styles.input}
+                value={form.name}
+                onChangeText={(v) => setForm((p) => ({ ...p, name: v }))}
+                placeholder="Örn: Honda Civic Fırsatları"
+                placeholderTextColor={colors.placeholder}
+              />
               <SearchableSelect
                 label="Kategori"
                 placeholder="Kategori seçin"

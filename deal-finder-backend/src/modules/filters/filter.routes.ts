@@ -38,6 +38,7 @@ const nullableNonNegNumber = {
 
 const filterBodyProperties = {
   category: { type: "string", minLength: 1, maxLength: 120 },
+  name: nullableString(120),
   subcategory: nullableString(120),
   brand: nullableString(80),
   model: nullableString(80),

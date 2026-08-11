@@ -1,0 +1,149 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { HttpError } from "../../lib/http-error.js";
+
+vi.mock("../../lib/prisma.js", () => ({
+  prisma: {
+    userListingMatch: {
+      findMany: vi.fn(),
+    },
+    listing: {
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+    },
+  },
+}));
+
+import { prisma } from "../../lib/prisma.js";
+import { DealService } from "./deal.service.js";
+
+const mocked = prisma as unknown as {
+  userListingMatch: { findMany: ReturnType<typeof vi.fn> };
+  listing: { findMany: ReturnType<typeof vi.fn>; findUnique: ReturnType<typeof vi.fn> };
+};
+
+const listing = {
+  id: "11111111-1111-1111-1111-111111111111",
+  title: "Honda Civic",
+  city: "İzmir",
+  district: "Bornova",
+  price: 955_000,
+  currency: "TRY",
+  marketAveragePrice: 1_050_000,
+  marketMedianPrice: 1_050_000,
+  priceAdvantagePct: 9.05,
+  marketSampleSize: 12,
+  marketConfidence: "MEDIUM",
+  marketSegmentLevel: "L3_SERIES",
+  marketStatus: "READY",
+  brand: "Honda",
+  model: "Civic",
+  series: "Civic",
+  trim: "1.6i VTEC Elegance",
+  year: 2019,
+  mileage: 80_000,
+  sellerType: "Galeriden",
+  description: "Temiz",
+  imageUrl: null,
+  dealScore: 82,
+  url: "https://www.arabam.com/ilan/x",
+  platform: "arabam",
+  createdAt: new Date("2026-08-01T10:00:00.000Z"),
+  firstSeenAt: new Date("2026-08-01T10:00:00.000Z"),
+  publishedAt: null,
+};
+
+describe("Deal Feed V2 user-specific API", () => {
+  const service = new DealService();
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("1. user sees own matched listing once with matchedFilterCount=2", async () => {
+    mocked.userListingMatch.findMany.mockResolvedValue([
+      {
+        listingId: listing.id,
+        matchedAt: new Date("2026-08-02T10:00:00.000Z"),
+        listing,
+        filter: {
+          id: "f1",
+          name: "Honda Civic",
+          category: "Vasıta > Otomobil",
+          brand: "Honda",
+          series: "Civic",
+        },
+      },
+      {
+        listingId: listing.id,
+        matchedAt: new Date("2026-08-01T10:00:00.000Z"),
+        listing,
+        filter: {
+          id: "f2",
+          name: "İzmir araçlar",
+          category: "Vasıta > Otomobil",
+          brand: null,
+          series: null,
+        },
+      },
+    ]);
+
+    const page = await service.getUserMatchedDeals("user-a", { limit: 20 });
+    expect(page.deals).toHaveLength(1);
+    expect(page.deals[0]?.matchedFilterCount).toBe(2);
+    expect(page.deals[0]?.marketMedianPrice).toBe(1_050_000);
+  });
+
+  it("2. another user detail → 404", async () => {
+    mocked.userListingMatch.findMany.mockResolvedValue([]);
+    await expect(
+      service.getUserDealById("user-b", listing.id),
+    ).rejects.toMatchObject({ statusCode: 404 } satisfies Partial<HttpError>);
+  });
+
+  it("3. owner detail 200 with matched filters", async () => {
+    mocked.userListingMatch.findMany.mockResolvedValue([
+      {
+        listingId: listing.id,
+        matchedAt: new Date(),
+        listing,
+        filter: {
+          id: "f1",
+          name: "Honda Civic",
+          category: "Vasıta > Otomobil",
+          brand: "Honda",
+          series: "Civic",
+        },
+      },
+    ]);
+    const deal = await service.getUserDealById("user-a", listing.id);
+    expect(deal.id).toBe(listing.id);
+    expect(deal.matchedFilters?.[0]?.name).toBe("Honda Civic");
+    expect(deal.listingUrl).toContain("arabam.com");
+  });
+
+  it("4. insufficient market does not expose fake median", async () => {
+    mocked.userListingMatch.findMany.mockResolvedValue([
+      {
+        listingId: listing.id,
+        matchedAt: new Date(),
+        listing: {
+          ...listing,
+          marketStatus: "INSUFFICIENT_DATA",
+          marketMedianPrice: 1_050_000,
+          priceAdvantagePct: 9,
+        },
+        filter: {
+          id: "f1",
+          name: null,
+          category: "Vasıta > Otomobil",
+          brand: "Honda",
+          series: "Civic",
+        },
+      },
+    ]);
+    const page = await service.getUserMatchedDeals("user-a");
+    expect(page.deals[0]?.marketMedianPrice).toBeNull();
+    expect(page.deals[0]?.priceAdvantagePct).toBeNull();
+    expect(page.deals[0]?.marketAverage).toBe(0);
+  });
+});

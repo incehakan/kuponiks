@@ -1,5 +1,6 @@
 import {
   NotificationChannel,
+  NotificationStatus,
   SubscriptionPlan,
   type Listing,
   type User,
@@ -12,6 +13,11 @@ import {
   resolveNotificationChannels,
 } from "../lib/subscription-plan.js";
 import {
+  buildOpportunityNotificationCopy,
+  canNotifyUserForListing,
+  filterChannelsNeedingDelivery,
+} from "../notifications/notification-eligibility.js";
+import {
   enqueueNotification,
   type NotificationJobData,
 } from "../queues/notification.queue.js";
@@ -19,8 +25,9 @@ import {
   listingMatchesFilter,
   type MatchableListing,
 } from "./filter-match.engine.js";
+import { persistUserListingMatches } from "./user-listing-match.service.js";
 
-/** Redis key prefix for 24h per-user listing notification deduplication. */
+/** Redis key prefix for short-term enqueue dedupe (DB SENT is permanent). */
 const NOTIFIED_KEY_PREFIX = "notified:";
 
 /** Dedup TTL: 24 hours in seconds. */
@@ -42,18 +49,21 @@ type UserFilterWithUser = UserFilter & { user: User };
  */
 interface UserMatchAggregate {
   user: User;
+  filterIds: string[];
   notifyPush: boolean;
   notifyTelegram: boolean;
   notifyWhatsapp: boolean;
+  /** True when at least one matched filter is eligible for opportunity notify. */
+  notifyEligible: boolean;
 }
 
 /**
- * Smart Filter Matching Engine V2 — matches listings to active user filters
- * and enqueues plan-aware notification jobs.
+ * Smart Filter Matching Engine V2 — matches listings to active user filters,
+ * persists UserListingMatch rows, and enqueues plan-aware notification jobs.
  */
 export class FilterMatchingService {
   /**
-   * Loads a listing, finds matching active filters, and enqueues notifications.
+   * Loads a listing, finds matching active filters, persists matches, and enqueues notifications.
    */
   async matchListingWithFilters(listingId: string): Promise<void> {
     try {
@@ -95,7 +105,18 @@ export class FilterMatchingService {
         return;
       }
 
-      const aggregates = this.aggregateByUser(matched);
+      const aggregates = this.aggregateByUser(matched, listing);
+
+      let matchCreated = 0;
+      for (const aggregate of aggregates.values()) {
+        const persisted = await persistUserListingMatches({
+          userId: aggregate.user.id,
+          listingId: listing.id,
+          dealScore: listing.dealScore,
+          filterIds: aggregate.filterIds,
+        });
+        matchCreated += persisted.created;
+      }
 
       const results = await Promise.allSettled(
         [...aggregates.values()].map((aggregate) =>
@@ -128,7 +149,7 @@ export class FilterMatchingService {
       }
 
       console.log(
-        `FilterMatchingService: listing ${listingId} enqueued=${enqueued} skipped=${skipped} failed=${failed}`,
+        `[NOTIFY] listing=${listingId} matchedUsers=${aggregates.size} matchRowsCreated=${matchCreated} pushQueued=${enqueued} dedupSkipped=${skipped} failed=${failed}`,
       );
 
       if (failed > 0 && enqueued === 0 && skipped === 0) {
@@ -229,27 +250,34 @@ export class FilterMatchingService {
    */
   private aggregateByUser(
     filters: UserFilterWithUser[],
+    listing: Listing,
   ): Map<string, UserMatchAggregate> {
     const aggregates = new Map<string, UserMatchAggregate>();
 
     for (const filter of filters) {
+      const eligibility = canNotifyUserForListing(listing, filter);
       const existing = aggregates.get(filter.userId);
 
       if (!existing) {
         aggregates.set(filter.userId, {
           user: filter.user,
+          filterIds: [filter.id],
           notifyPush: filter.notifyPush,
           notifyTelegram: filter.notifyTelegram,
           notifyWhatsapp: filter.notifyWhatsapp,
+          notifyEligible: eligibility.eligible,
         });
         continue;
       }
 
+      existing.filterIds.push(filter.id);
       existing.notifyPush = existing.notifyPush || filter.notifyPush;
       existing.notifyTelegram =
         existing.notifyTelegram || filter.notifyTelegram;
       existing.notifyWhatsapp =
         existing.notifyWhatsapp || filter.notifyWhatsapp;
+      existing.notifyEligible =
+        existing.notifyEligible || eligibility.eligible;
     }
 
     return aggregates;
@@ -263,50 +291,97 @@ export class FilterMatchingService {
     aggregate: UserMatchAggregate,
   ): Promise<"enqueued" | "skipped"> {
     const { user } = aggregate;
-    const notifiedKey = `${NOTIFIED_KEY_PREFIX}${user.id}:${listing.id}`;
 
+    if (!aggregate.notifyEligible) {
+      console.log(
+        `[NOTIFY] skip user=${user.id} listing=${listing.id} reason=market_or_score_ineligible`,
+      );
+      return "skipped";
+    }
+
+    const channels = resolveNotificationChannels(user.subscriptionPlan, {
+      notifyPush: aggregate.notifyPush,
+      notifyTelegram: aggregate.notifyTelegram,
+      notifyWhatsapp: aggregate.notifyWhatsapp,
+    });
+
+    if (channels.length === 0) {
+      console.log(
+        `[NOTIFY] skip user=${user.id} listing=${listing.id} reason=no_channels`,
+      );
+      return "skipped";
+    }
+
+    const { pending, skipped } = await filterChannelsNeedingDelivery(
+      user.id,
+      listing.id,
+      channels,
+    );
+
+    for (const item of skipped) {
+      await prisma.notificationLog.create({
+        data: {
+          userId: user.id,
+          listingId: listing.id,
+          channel: item.channel,
+          status: NotificationStatus.SKIPPED,
+          reason: item.reason,
+        },
+      }).catch(() => undefined);
+    }
+
+    if (pending.length === 0) {
+      console.log(
+        `[NOTIFY] skip user=${user.id} listing=${listing.id} reason=already_sent_all_channels`,
+      );
+      return "skipped";
+    }
+
+    const notifiedKey = `${NOTIFIED_KEY_PREFIX}${user.id}:${listing.id}`;
     const claimed = await redisSetNxEx(
       notifiedKey,
       "1",
       NOTIFIED_TTL_SECONDS,
     );
 
-    if (claimed !== "OK") {
-      if (claimed === null) {
-        console.warn(
-          `[FilterMatching] Redis yok — dedupe atlandı, bildirim kuyruğa alınmadı (user=${user.id})`,
-        );
-      }
+    // Redis lock is best-effort short-term guard; DB SENT is source of truth.
+    if (claimed !== "OK" && claimed !== null) {
+      console.log(
+        `[NOTIFY] skip user=${user.id} listing=${listing.id} reason=redis_enqueue_lock`,
+      );
       return "skipped";
     }
 
     try {
-      const channels = resolveNotificationChannels(user.subscriptionPlan, {
-        notifyPush: aggregate.notifyPush,
-        notifyTelegram: aggregate.notifyTelegram,
-        notifyWhatsapp: aggregate.notifyWhatsapp,
-      });
-
-      if (channels.length === 0) {
-        await redisDel(notifiedKey);
-        console.warn(
-          `FilterMatchingService: user ${user.id} matched but has no enabled channels`,
-        );
-        return "skipped";
-      }
-
-      const jobData = this.buildNotificationJob(listing, user, channels);
+      const copy = buildOpportunityNotificationCopy(listing);
+      const jobData = this.buildNotificationJob(
+        listing,
+        user,
+        pending,
+        copy,
+      );
       const priority = PLAN_PRIORITY[user.subscriptionPlan];
       const delay =
         user.subscriptionPlan === SubscriptionPlan.FREE
           ? FREE_PLAN_DELAY_MS
           : undefined;
 
-      await enqueueNotification(jobData, {
+      const jobId = await enqueueNotification(jobData, {
         priority,
         ...(delay !== undefined ? { delay } : {}),
       });
 
+      if (!jobId) {
+        await redisDel(notifiedKey);
+        console.warn(
+          `[NOTIFY] queue unavailable user=${user.id} listing=${listing.id}`,
+        );
+        return "skipped";
+      }
+
+      console.log(
+        `[NOTIFY] queued user=${user.id} listing=${listing.id} channels=${pending.join(",")} job=${jobId}`,
+      );
       return "enqueued";
     } catch (error) {
       try {
@@ -328,18 +403,14 @@ export class FilterMatchingService {
     listing: Listing,
     user: User,
     channels: NotificationChannel[],
+    copy: { title: string; message: string; telegramMessage: string },
   ): NotificationJobData {
-    const priceLabel = listing.price.toLocaleString("tr-TR", {
-      style: "currency",
-      currency: listing.currency?.trim() || "TRY",
-    });
-
     const job: NotificationJobData = {
       userId: user.id,
       listingId: listing.id,
       subscriptionPlan: user.subscriptionPlan,
-      title: "Kuponiks Fırsat Alarmı",
-      message: `${listing.title} — Kelepir skor ${listing.dealScore}/100 — ${priceLabel}`,
+      title: copy.title,
+      message: copy.message,
       price: listing.price,
       dealScore: listing.dealScore,
       url: listing.url,

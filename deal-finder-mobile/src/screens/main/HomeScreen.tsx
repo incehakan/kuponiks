@@ -31,12 +31,13 @@ interface SourceBadgeProps {
   sourceLabel: string;
 }
 
+import {
+  formatPriceAdvantage,
+  formatTry,
+} from '../../utils/formatDeal';
+
 function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('tr-TR', {
-    style: 'currency',
-    currency: 'TRY',
-    maximumFractionDigits: 0,
-  }).format(value);
+  return formatTry(value);
 }
 
 function resolveSourceLabel(deal: Deal): string {
@@ -123,12 +124,14 @@ function DealScoreBadge({
   const isHighScore = dealScore >= 80;
   const badgeStyle = isHighScore ? styles.badgeGreen : styles.badgeYellow;
   const textStyle = isHighScore ? styles.badgeGreenText : styles.badgeYellowText;
-  const percentLabel = dealPercent > 0 ? dealPercent : Math.max(dealScore - 60, 0);
+  const advantageLabel = formatPriceAdvantage(dealPercent);
 
   return (
     <View style={[styles.badge, badgeStyle]}>
       <Text style={[styles.badgeText, textStyle]}>
-        %{percentLabel} Fırsat · Skor {dealScore}
+        {advantageLabel
+          ? `${advantageLabel} · Skor ${dealScore}`
+          : `Fırsat Skoru ${dealScore}`}
       </Text>
     </View>
   );
@@ -204,9 +207,13 @@ function DealCard({
               <Text style={styles.price}>{formatCurrency(deal.price)}</Text>
             </View>
             <View style={styles.marketBlock}>
-              <Text style={styles.priceLabel}>Piyasa Ort.</Text>
+              <Text style={styles.priceLabel}>Piyasa</Text>
               <Text style={styles.marketAverage}>
-                {formatCurrency(deal.marketAverage)}
+                {deal.marketStatus === 'READY' && deal.marketMedianPrice
+                  ? formatCurrency(deal.marketMedianPrice)
+                  : deal.marketStatus === 'READY' && deal.marketAverage > 0
+                    ? formatCurrency(deal.marketAverage)
+                    : 'Veri yetersiz'}
               </Text>
             </View>
           </View>
@@ -398,9 +405,10 @@ export default function HomeScreen(): React.JSX.Element {
           }
           ListEmptyComponent={
             <View style={styles.emptyState}>
-              <Text style={styles.emptyTitle}>Henüz kelepir ilan yok</Text>
+              <Text style={styles.emptyTitle}>Henüz eşleşen fırsat bulunamadı</Text>
               <Text style={styles.emptySubtitle}>
-                Aşağı çekerek yenileyin veya alarm filtrelerinizi kontrol edin.
+                Arama görevlerinizi oluşturun; uygun ilan bulunduğunda burada
+                göreceksiniz.
               </Text>
             </View>
           }

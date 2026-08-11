@@ -24,6 +24,7 @@ enum NotificationChannel {
 enum NotificationStatus {
   SENT
   FAILED
+  SKIPPED
 }
 
 model User {
@@ -39,13 +40,16 @@ model User {
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
 
-  filters       UserFilter[]
-  notifications NotificationLog[]
+  filters        UserFilter[]
+  notifications  NotificationLog[]
+  listingMatches UserListingMatch[]
 }
 
 model UserFilter {
   id               String   @id @default(uuid()) @db.Uuid
   userId           String   @db.Uuid
+  /// Optional display name for the search task (e.g. "Honda Civic Fırsatları")
+  name             String?
   category         String
   subcategory      String?
   brand            String?
@@ -75,7 +79,8 @@ model UserFilter {
   isActive         Boolean  @default(true)
   createdAt        DateTime @default(now())
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user    User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  matches UserListingMatch[]
 
   @@index([userId])
   @@index([isActive, category])
@@ -127,6 +132,7 @@ model Listing {
   createdAt           DateTime  @default(now())
 
   notifications NotificationLog[]
+  matches       UserListingMatch[]
 
   @@unique([platform, externalId])
   @@index([dealScore])
@@ -141,12 +147,34 @@ model Listing {
   @@index([lastSeenAt])
 }
 
+/// Persisted user-filter ↔ listing match for user-specific Deal Feed.
+model UserListingMatch {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  filterId  String   @db.Uuid
+  listingId String   @db.Uuid
+  /// DealScore snapshot at match time
+  dealScore Int
+  matchedAt DateTime @default(now())
+
+  user    User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  filter  UserFilter @relation(fields: [filterId], references: [id], onDelete: Restrict)
+  listing Listing    @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, filterId, listingId])
+  @@index([userId, matchedAt])
+  @@index([userId, listingId])
+  @@index([listingId])
+}
+
 model NotificationLog {
   id        String              @id @default(uuid()) @db.Uuid
   userId    String              @db.Uuid
   listingId String              @db.Uuid
   channel   NotificationChannel
   status    NotificationStatus
+  /// Optional machine-readable reason (e.g. no_token, already_sent, market_not_ready)
+  reason    String?
   sentAt    DateTime            @default(now())
 
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -155,4 +183,5 @@ model NotificationLog {
   @@index([userId])
   @@index([listingId])
   @@index([channel, status])
+  @@index([userId, listingId, channel, status])
 }
