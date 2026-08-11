@@ -8,6 +8,9 @@ import type {
   CreateFilterPayload,
   Deal,
   Filter,
+  TaxonomyItem,
+  TaxonomyResponse,
+  UpdateFilterPayload,
   UpgradeSubscriptionPayload,
   User,
   TelegramConfig,
@@ -490,7 +493,7 @@ export const filtersApi = {
 
   updateFilter: async (
     id: string,
-    payload: Partial<CreateFilterPayload> & { isActive?: boolean },
+    payload: UpdateFilterPayload,
   ): Promise<Filter> => {
     const { data } = await api.put<Filter | { filter: Filter }>(
       `/filters/${id}`,
@@ -544,6 +547,64 @@ export const catalogApi = {
     }
 
     return [];
+  },
+};
+
+export const taxonomyApi = {
+  getVehicleBrands: async (q?: string): Promise<TaxonomyItem[]> => {
+    const { data } = await api.get<TaxonomyResponse>('/taxonomy/vehicle/brands', {
+      params: q ? { q } : undefined,
+    });
+    return Array.isArray(data?.items) ? data.items : [];
+  },
+
+  getVehicleSeries: async (
+    brand: string,
+    q?: string,
+  ): Promise<TaxonomyItem[]> => {
+    const { data } = await api.get<TaxonomyResponse>('/taxonomy/vehicle/series', {
+      params: { brand, ...(q ? { q } : {}) },
+    });
+    return Array.isArray(data?.items) ? data.items : [];
+  },
+
+  getVehicleTrims: async (
+    brand: string,
+    series: string,
+    q?: string,
+  ): Promise<TaxonomyItem[]> => {
+    const { data } = await api.get<TaxonomyResponse>('/taxonomy/vehicle/trims', {
+      params: { brand, series, ...(q ? { q } : {}) },
+    });
+    return Array.isArray(data?.items) ? data.items : [];
+  },
+
+  getVehicleFuelTypes: async (): Promise<TaxonomyItem[]> => {
+    const { data } = await api.get<TaxonomyResponse>(
+      '/taxonomy/vehicle/fuel-types',
+    );
+    return Array.isArray(data?.items) ? data.items : [];
+  },
+
+  getVehicleTransmissions: async (): Promise<TaxonomyItem[]> => {
+    const { data } = await api.get<TaxonomyResponse>(
+      '/taxonomy/vehicle/transmissions',
+    );
+    return Array.isArray(data?.items) ? data.items : [];
+  },
+
+  getVehicleSellerTypes: async (): Promise<TaxonomyItem[]> => {
+    const { data } = await api.get<TaxonomyResponse>(
+      '/taxonomy/vehicle/seller-types',
+    );
+    return Array.isArray(data?.items) ? data.items : [];
+  },
+
+  getDistricts: async (city?: string): Promise<TaxonomyItem[]> => {
+    const { data } = await api.get<TaxonomyResponse>('/taxonomy/districts', {
+      params: city ? { city } : undefined,
+    });
+    return Array.isArray(data?.items) ? data.items : [];
   },
 };
 

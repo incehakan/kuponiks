@@ -17,21 +17,23 @@ import {
 
 export interface CreateFilterInput {
   category: string;
-  subcategory?: string;
-  brand?: string;
-  model?: string;
-  variant?: string;
-  minYear?: number;
-  maxYear?: number;
-  minMileage?: number;
-  maxMileage?: number;
-  city?: string;
-  district?: string;
-  minPrice?: number;
-  maxPrice?: number;
-  fuelType?: string;
-  transmission?: string;
-  sellerType?: string;
+  subcategory?: string | null;
+  brand?: string | null;
+  model?: string | null;
+  series?: string | null;
+  trim?: string | null;
+  variant?: string | null;
+  minYear?: number | null;
+  maxYear?: number | null;
+  minMileage?: number | null;
+  maxMileage?: number | null;
+  city?: string | null;
+  district?: string | null;
+  minPrice?: number | null;
+  maxPrice?: number | null;
+  fuelType?: string | null;
+  transmission?: string | null;
+  sellerType?: string | null;
   /** Free-text keywords ("3+1, Yeşilyurt") or pre-split array. */
   keywords?: string | string[];
   excludedKeywords?: string | string[];
@@ -73,9 +75,31 @@ function assertRange(
   }
 }
 
-function optionalTrimmed(value: string | undefined): string | null | undefined {
+function maxAllowedYear(): number {
+  return new Date().getFullYear() + 1;
+}
+
+function assertYearBounds(year: number | null | undefined, label: string): void {
+  if (year == null || !Number.isFinite(year)) {
+    return;
+  }
+  const maxYear = maxAllowedYear();
+  if (year < 1900 || year > maxYear) {
+    throw new HttpError(
+      `${label} 1900 ile ${maxYear} arasında olmalıdır`,
+      400,
+    );
+  }
+}
+
+function optionalTrimmed(
+  value: string | null | undefined,
+): string | null | undefined {
   if (value === undefined) {
     return undefined;
+  }
+  if (value === null) {
+    return null;
   }
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : null;
@@ -114,13 +138,15 @@ export class FilterService {
       assertRange(input.minPrice, input.maxPrice, "fiyat");
       assertRange(input.minYear, input.maxYear, "yıl");
       assertRange(input.minMileage, input.maxMileage, "kilometre");
+      assertYearBounds(input.minYear, "Minimum yıl");
+      assertYearBounds(input.maxYear, "Maksimum yıl");
 
       if (
         input.minDealScore !== undefined &&
         (input.minDealScore < 0 || input.minDealScore > 100)
       ) {
         throw new HttpError(
-          "Minimum kelepir skoru 0 ile 100 arasında olmalıdır",
+          "Minimum fırsat skoru 0 ile 100 arasında olmalıdır",
           400,
         );
       }
@@ -164,7 +190,7 @@ export class FilterService {
           notifyTelegram: notifyFlags.notifyTelegram,
           notifyWhatsapp: notifyFlags.notifyWhatsapp,
           ...(input.city !== undefined
-            ? { city: input.city.trim() || null }
+            ? { city: optionalTrimmed(input.city) ?? null }
             : {}),
           ...(input.district !== undefined
             ? { district: optionalTrimmed(input.district) ?? null }
@@ -177,6 +203,12 @@ export class FilterService {
             : {}),
           ...(input.model !== undefined
             ? { model: optionalTrimmed(input.model) ?? null }
+            : {}),
+          ...(input.series !== undefined
+            ? { series: optionalTrimmed(input.series) ?? null }
+            : {}),
+          ...(input.trim !== undefined
+            ? { trim: optionalTrimmed(input.trim) ?? null }
             : {}),
           ...(input.variant !== undefined
             ? { variant: optionalTrimmed(input.variant) ?? null }
@@ -292,13 +324,15 @@ export class FilterService {
       assertRange(nextMinPrice, nextMaxPrice, "fiyat");
       assertRange(nextMinYear, nextMaxYear, "yıl");
       assertRange(nextMinMileage, nextMaxMileage, "kilometre");
+      assertYearBounds(nextMinYear, "Minimum yıl");
+      assertYearBounds(nextMaxYear, "Maksimum yıl");
 
       if (
         updateData.minDealScore !== undefined &&
         (updateData.minDealScore < 0 || updateData.minDealScore > 100)
       ) {
         throw new HttpError(
-          "Minimum kelepir skoru 0 ile 100 arasında olmalıdır",
+          "Minimum fırsat skoru 0 ile 100 arasında olmalıdır",
           400,
         );
       }
@@ -336,11 +370,17 @@ export class FilterService {
           ...(updateData.model !== undefined
             ? { model: optionalTrimmed(updateData.model) ?? null }
             : {}),
+          ...(updateData.series !== undefined
+            ? { series: optionalTrimmed(updateData.series) ?? null }
+            : {}),
+          ...(updateData.trim !== undefined
+            ? { trim: optionalTrimmed(updateData.trim) ?? null }
+            : {}),
           ...(updateData.variant !== undefined
             ? { variant: optionalTrimmed(updateData.variant) ?? null }
             : {}),
           ...(updateData.city !== undefined
-            ? { city: updateData.city.trim() || null }
+            ? { city: optionalTrimmed(updateData.city) ?? null }
             : {}),
           ...(updateData.district !== undefined
             ? { district: optionalTrimmed(updateData.district) ?? null }

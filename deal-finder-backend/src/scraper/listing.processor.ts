@@ -1,9 +1,9 @@
 import { Prisma } from "@prisma/client";
 import {
-  DEAL_SCORE_THRESHOLD,
   dealScoreService,
   type DealScoreService,
 } from "../analyzer/deal-score.service.js";
+import { shouldEnqueueListingForUserMatching } from "../filters/match-eligibility.js";
 import { prisma } from "../lib/prisma.js";
 import { redisExists, redisSetEx } from "../lib/redis.js";
 import {
@@ -150,7 +150,8 @@ export class ListingProcessor {
 
       let enqueuedForMatch = false;
 
-      if (scoreResult.isDeal || scoreResult.dealScore >= DEAL_SCORE_THRESHOLD) {
+      // User matching is independent of DEAL_SCORE_THRESHOLD / isDeal.
+      if (shouldEnqueueListingForUserMatching({ platform: listing.platform })) {
         const jobData = this.toMatchJobData(
           listing.id,
           input,

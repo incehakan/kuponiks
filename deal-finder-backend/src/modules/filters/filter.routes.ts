@@ -16,23 +16,45 @@ const keywordSchema = {
   ],
 } as const;
 
+const nullableString = (maxLength: number) =>
+  ({
+    anyOf: [{ type: "string", maxLength }, { type: "null" }],
+  }) as const;
+
+const nullableYear = {
+  anyOf: [
+    { type: "integer", minimum: 1900, maximum: 2100 },
+    { type: "null" },
+  ],
+} as const;
+
+const nullableNonNegInt = {
+  anyOf: [{ type: "integer", minimum: 0 }, { type: "null" }],
+} as const;
+
+const nullableNonNegNumber = {
+  anyOf: [{ type: "number", minimum: 0 }, { type: "null" }],
+} as const;
+
 const filterBodyProperties = {
   category: { type: "string", minLength: 1, maxLength: 120 },
-  subcategory: { type: "string", maxLength: 120 },
-  brand: { type: "string", maxLength: 80 },
-  model: { type: "string", maxLength: 80 },
-  variant: { type: "string", maxLength: 80 },
-  minYear: { type: "integer", minimum: 0 },
-  maxYear: { type: "integer", minimum: 0 },
-  minMileage: { type: "integer", minimum: 0 },
-  maxMileage: { type: "integer", minimum: 0 },
-  city: { type: "string", maxLength: 500 },
-  district: { type: "string", maxLength: 120 },
-  minPrice: { type: "number", minimum: 0 },
-  maxPrice: { type: "number", minimum: 0 },
-  fuelType: { type: "string", maxLength: 40 },
-  transmission: { type: "string", maxLength: 40 },
-  sellerType: { type: "string", maxLength: 40 },
+  subcategory: nullableString(120),
+  brand: nullableString(80),
+  model: nullableString(80),
+  series: nullableString(80),
+  trim: nullableString(120),
+  variant: nullableString(80),
+  minYear: nullableYear,
+  maxYear: nullableYear,
+  minMileage: nullableNonNegInt,
+  maxMileage: nullableNonNegInt,
+  city: nullableString(500),
+  district: nullableString(120),
+  minPrice: nullableNonNegNumber,
+  maxPrice: nullableNonNegNumber,
+  fuelType: nullableString(40),
+  transmission: nullableString(40),
+  sellerType: nullableString(40),
   keywords: keywordSchema,
   excludedKeywords: keywordSchema,
   minDealScore: { type: "integer", minimum: 0, maximum: 100 },

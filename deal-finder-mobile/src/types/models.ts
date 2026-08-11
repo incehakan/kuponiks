@@ -59,6 +59,8 @@ export interface Filter {
   subcategory?: string | null;
   brand?: string | null;
   model?: string | null;
+  series?: string | null;
+  trim?: string | null;
   variant?: string | null;
   minYear?: number | null;
   maxYear?: number | null;
@@ -82,28 +84,43 @@ export interface Filter {
 
 export interface CreateFilterPayload {
   category: string;
-  subcategory?: string;
-  brand?: string;
-  model?: string;
-  variant?: string;
-  minYear?: number;
-  maxYear?: number;
-  minMileage?: number;
-  maxMileage?: number;
-  city: string;
-  district?: string;
+  subcategory?: string | null;
+  brand?: string | null;
+  model?: string | null;
+  series?: string | null;
+  trim?: string | null;
+  variant?: string | null;
+  minYear?: number | null;
+  maxYear?: number | null;
+  minMileage?: number | null;
+  maxMileage?: number | null;
+  city?: string;
+  district?: string | null;
   minPrice?: number;
   maxPrice?: number;
-  fuelType?: string;
-  transmission?: string;
-  sellerType?: string;
+  fuelType?: string | null;
+  transmission?: string | null;
+  sellerType?: string | null;
   minDealScore: number;
-  keywords?: string;
+  keywords?: string | string[];
   excludedKeywords?: string | string[];
   isActive?: boolean;
   notifyPush?: boolean;
   notifyTelegram?: boolean;
   notifyWhatsapp?: boolean;
+}
+
+export type UpdateFilterPayload = Partial<CreateFilterPayload> & {
+  isActive?: boolean;
+};
+
+export interface TaxonomyItem {
+  value: string;
+  label: string;
+}
+
+export interface TaxonomyResponse {
+  items: TaxonomyItem[];
 }
 
 export interface CategoryFlatItem {

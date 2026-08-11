@@ -181,6 +181,8 @@ export class FilterMatchingService {
       subcategory: listing.subcategory,
       brand: listing.brand,
       model: listing.model,
+      series: listing.series,
+      trim: listing.trim,
       variant: listing.variant,
       year: listing.year,
       mileage: listing.mileage,

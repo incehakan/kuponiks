@@ -1,9 +1,9 @@
 import { Prisma, type Listing } from "@prisma/client";
 import {
-  DEAL_SCORE_THRESHOLD,
   dealScoreService,
   type DealScoreService,
 } from "../analyzer/deal-score.service.js";
+import { shouldEnqueueListingForUserMatching } from "../filters/match-eligibility.js";
 import { prisma } from "../lib/prisma.js";
 import { redisSetNxEx } from "../lib/redis.js";
 import {
@@ -310,9 +310,10 @@ export class ScraperService {
   private async maybeEnqueueMatch(
     listing: Listing,
     dealScore: number,
-    isDeal: boolean,
+    _isDeal: boolean,
   ): Promise<boolean> {
-    if (!(isDeal || dealScore >= DEAL_SCORE_THRESHOLD)) {
+    // User matching is independent of DEAL_SCORE_THRESHOLD / isDeal.
+    if (!shouldEnqueueListingForUserMatching({ platform: listing.platform })) {
       return false;
     }
 
