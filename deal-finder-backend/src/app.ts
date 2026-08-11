@@ -138,13 +138,23 @@ export async function buildApp(): Promise<FastifyInstance> {
   );
 
   /**
-   * Liveness probe — confirms the HTTP process is up.
+   * Liveness + minimal ops readiness (presence/availability only — no secrets).
    */
   app.get("/health", async () => {
+    const { getNotificationOpsHealth } = await import(
+      "./notifications/notification-ops-health.js"
+    );
+    const notifications = await getNotificationOpsHealth();
     return {
       status: "ok",
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
+      redis: notifications.redis,
+      notifications: {
+        expoProvider: notifications.expoProvider,
+        expoAccessToken: notifications.expoAccessToken,
+        telegramBotToken: notifications.telegramBotToken,
+      },
     };
   });
 

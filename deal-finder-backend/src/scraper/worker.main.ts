@@ -3,6 +3,7 @@ import {
   disconnectRedis,
   probeRedisConnection,
 } from "../lib/redis.js";
+import { warnMissingProductionExpoAccessToken } from "../notifications/notification-ops-health.js";
 import { closeListingMatchQueue } from "../queues/listing.queue.js";
 import {
   startListingMatchWorker,
@@ -37,6 +38,7 @@ async function start(): Promise<void> {
   let scheduler: ScraperScheduler | null = null;
 
   try {
+    warnMissingProductionExpoAccessToken();
     const redisOk = await probeRedisConnection();
     if (!redisOk) {
       console.error(

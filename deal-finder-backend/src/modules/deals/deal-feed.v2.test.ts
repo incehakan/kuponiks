@@ -146,4 +146,36 @@ describe("Deal Feed V2 user-specific API", () => {
     expect(page.deals[0]?.priceAdvantagePct).toBeNull();
     expect(page.deals[0]?.marketAverage).toBe(0);
   });
+
+  it("5. stabilization: multi-filter matches still return one feed row", async () => {
+    mocked.userListingMatch.findMany.mockResolvedValue([
+      {
+        listingId: listing.id,
+        matchedAt: new Date("2026-08-01T10:00:00.000Z"),
+        listing,
+        filter: {
+          id: "f1",
+          name: "Honda Civic",
+          category: "Vasıta > Otomobil",
+          brand: "Honda",
+          series: "Civic",
+        },
+      },
+      {
+        listingId: listing.id,
+        matchedAt: new Date("2026-08-03T10:00:00.000Z"),
+        listing,
+        filter: {
+          id: "f2",
+          name: "Kuponiks Smoke Test Filter2",
+          category: "Vasıta > Otomobil",
+          brand: "Honda",
+          series: "Civic",
+        },
+      },
+    ]);
+    const page = await service.getUserMatchedDeals("user-a", { limit: 20 });
+    expect(page.deals).toHaveLength(1);
+    expect(page.deals[0]?.matchedFilterCount).toBe(2);
+  });
 });

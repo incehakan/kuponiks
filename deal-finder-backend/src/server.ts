@@ -2,6 +2,7 @@ import { buildApp } from "./app.js";
 import { env } from "./config/env.js";
 import { disconnectPrisma } from "./lib/prisma.js";
 import { disconnectRedis, probeRedisConnection } from "./lib/redis.js";
+import { warnMissingProductionExpoAccessToken } from "./notifications/notification-ops-health.js";
 import { closeListingMatchQueue } from "./queues/listing.queue.js";
 import {
   startListingMatchWorker,
@@ -50,6 +51,7 @@ async function start(): Promise<void> {
   let scheduler: ScraperScheduler | null = null;
 
   try {
+    warnMissingProductionExpoAccessToken();
     const app = await buildApp();
 
     if (role === "worker") {

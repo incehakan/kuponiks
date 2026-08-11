@@ -1,9 +1,10 @@
-import { Prisma } from "@prisma/client";
 import { prisma } from "../lib/prisma.js";
 
 /**
- * Persist filter↔listing matches. Unique (userId, filterId, listingId) prevents duplicates.
- * Returns number of newly created rows.
+ * Persist filter↔listing matches without using exceptions for duplicates.
+ * Unique (userId, filterId, listingId) + createMany skipDuplicates:
+ * - no P2002 log noise on re-match
+ * - matchedAt stays the first-match timestamp (existing rows not updated)
  */
 export async function persistUserListingMatches(input: {
   userId: string;
@@ -16,31 +17,18 @@ export async function persistUserListingMatches(input: {
     return { created: 0, existing: 0 };
   }
 
-  let created = 0;
-  let existing = 0;
+  const result = await prisma.userListingMatch.createMany({
+    data: uniqueFilterIds.map((filterId) => ({
+      userId: input.userId,
+      filterId,
+      listingId: input.listingId,
+      dealScore: input.dealScore,
+    })),
+    skipDuplicates: true,
+  });
 
-  for (const filterId of uniqueFilterIds) {
-    try {
-      await prisma.userListingMatch.create({
-        data: {
-          userId: input.userId,
-          filterId,
-          listingId: input.listingId,
-          dealScore: input.dealScore,
-        },
-      });
-      created += 1;
-    } catch (error) {
-      if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === "P2002"
-      ) {
-        existing += 1;
-        continue;
-      }
-      throw error;
-    }
-  }
+  const created = result.count;
+  const existing = uniqueFilterIds.length - created;
 
   return { created, existing };
 }
