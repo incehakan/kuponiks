@@ -37,25 +37,25 @@ export class LetgoAdapter extends BaseScraperAdapter {
       const fromNext = this.parseNextData(html, params, limit);
       if (fromNext.length > 0) {
         console.log(`[letgo] __NEXT_DATA__ ile ${fromNext.length} ilan çıkarıldı`);
-        return this.withKelepirPricing(fromNext, params);
+        return fromNext;
       }
 
       const fromLd = this.parseJsonLd(html, params, limit);
       if (fromLd.length > 0) {
         console.log(`[letgo] JSON-LD ile ${fromLd.length} ilan çıkarıldı`);
-        return this.withKelepirPricing(fromLd, params);
+        return fromLd;
       }
 
       const fromHtml = this.parseHtmlCards(html, params, limit);
       if (fromHtml.length > 0) {
         console.log(`[letgo] HTML heuristic ile ${fromHtml.length} ilan çıkarıldı`);
-        return this.withKelepirPricing(fromHtml, params);
+        return fromHtml;
       }
 
       const fromLinks = this.parseListingLinks(html, params, limit);
       if (fromLinks.length > 0) {
         console.log(`[letgo] Link-only parse ile ${fromLinks.length} ilan çıkarıldı`);
-        return this.withKelepirPricing(fromLinks, params);
+        return fromLinks;
       }
 
       return this.resolveListingsOrDevFallback([], params, {

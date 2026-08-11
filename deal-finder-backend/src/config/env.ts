@@ -55,6 +55,16 @@ export interface AppEnv {
   SCRAPER_SCHEDULE_INTERVAL_MS?: number;
   /** Active payment provider: iyzico | paytr | garanti | revenuecat */
   ACTIVE_PAYMENT_PROVIDER?: string;
+  /**
+   * When true (and NODE_ENV !== production), scrapers may emit mock/fallback listings.
+   * Default false — live scrape prices are never rewritten for tests.
+   */
+  ENABLE_MOCK_LISTINGS?: boolean;
+  /**
+   * Comma-separated allowed CORS origins for production.
+   * Example: https://app.example.com,https://admin.example.com
+   */
+  CORS_ORIGINS?: string;
   NODE_ENV: "development" | "production" | "test";
 }
 
@@ -193,6 +203,16 @@ function loadEnv(): AppEnv {
   }
   if (telegramBotUsername !== undefined) {
     config.TELEGRAM_BOT_USERNAME = telegramBotUsername.replace(/^@/, "");
+  }
+
+  const enableMockRaw = optionalString("ENABLE_MOCK_LISTINGS");
+  config.ENABLE_MOCK_LISTINGS =
+    enableMockRaw !== undefined &&
+    ["1", "true", "yes", "on"].includes(enableMockRaw.toLowerCase());
+
+  const corsOrigins = optionalString("CORS_ORIGINS");
+  if (corsOrigins !== undefined) {
+    config.CORS_ORIGINS = corsOrigins;
   }
 
   if (config.PROXY_URL) {

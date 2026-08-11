@@ -204,15 +204,22 @@ export abstract class BaseScraperAdapter {
   }
 
   /**
+   * Mock/fallback listings only when explicitly enabled outside production.
+   */
+  protected areMockListingsEnabled(): boolean {
+    return this.isNonProduction() && env.ENABLE_MOCK_LISTINGS === true;
+  }
+
+  /**
    * Target pricing so discount ≈26% → dealScore ≈92 (85+),
    * and listing sits inside a typical 850k–1M user budget filter.
+   * ONLY used for mock/dev fallback samples — never mutates live scrape prices.
    */
   protected static readonly KELEPIR_TEST_PRICE = 920_000;
   protected static readonly KELEPIR_TEST_MARKET = 1_250_000;
 
   /**
-   * Overwrites price / marketAveragePrice for live scrape + fallback listings
-   * so the pipeline reliably fires kelepir notifications in test runs.
+   * Overwrites price / marketAveragePrice for MOCK samples only.
    */
   protected withKelepirPricing(
     listings: RawScrapedListing[],
@@ -221,8 +228,7 @@ export abstract class BaseScraperAdapter {
     const keyword = params.query?.trim();
 
     return listings.map((item, index) => {
-      // Stay inside a typical 850k–1M user budget filter; market fixed at 1.25M (~%26).
-      const price = BaseScraperAdapter.KELEPIR_TEST_PRICE; // 920_000
+      const price = BaseScraperAdapter.KELEPIR_TEST_PRICE;
       const market = BaseScraperAdapter.KELEPIR_TEST_MARKET;
 
       const titled =
@@ -247,8 +253,8 @@ export abstract class BaseScraperAdapter {
   }
 
   /**
-   * When live HTML is empty / blocked / yields zero listings, keep the pipeline
-   * alive in development & test with realistic sample listings.
+   * Returns live listings unchanged. Empty live results may yield mock samples
+   * only when ENABLE_MOCK_LISTINGS=true and NODE_ENV !== production.
    */
   protected resolveListingsOrDevFallback(
     listings: RawScrapedListing[],
@@ -256,7 +262,8 @@ export abstract class BaseScraperAdapter {
     meta: { htmlLength: number; reason?: string },
   ): RawScrapedListing[] {
     if (listings.length > 0) {
-      return this.withKelepirPricing(listings, params);
+      // Production safety: never rewrite live scrape prices for test scoring.
+      return listings;
     }
 
     const reason = meta.reason ?? "ilan bulunamadı";
@@ -264,7 +271,7 @@ export abstract class BaseScraperAdapter {
       `[${this.platform}] Parse sonucu boş (${reason}, htmlLen=${meta.htmlLength})`,
     );
 
-    if (!this.isNonProduction()) {
+    if (!this.areMockListingsEnabled()) {
       return [];
     }
 
@@ -273,7 +280,7 @@ export abstract class BaseScraperAdapter {
       params,
     );
     console.warn(
-      `[${this.platform}] DEV FALLBACK → ${fallback.length} kelepir örnek ilan (price≈920k, market=1.25M, ~%26 indirim)`,
+      `[${this.platform}] DEV MOCK FALLBACK → ${fallback.length} örnek ilan (ENABLE_MOCK_LISTINGS=true)`,
     );
     return fallback;
   }

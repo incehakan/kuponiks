@@ -17,11 +17,24 @@ import {
 
 export interface CreateFilterInput {
   category: string;
+  subcategory?: string;
+  brand?: string;
+  model?: string;
+  variant?: string;
+  minYear?: number;
+  maxYear?: number;
+  minMileage?: number;
+  maxMileage?: number;
   city?: string;
+  district?: string;
   minPrice?: number;
   maxPrice?: number;
+  fuelType?: string;
+  transmission?: string;
+  sellerType?: string;
   /** Free-text keywords ("3+1, Yeşilyurt") or pre-split array. */
   keywords?: string | string[];
+  excludedKeywords?: string | string[];
   minDealScore?: number;
   notifyTelegram?: boolean;
   notifyPush?: boolean;
@@ -47,13 +60,31 @@ function normalizeKeywords(input?: string | string[]): string[] {
     .slice(0, 50);
 }
 
+function assertRange(
+  min: number | null | undefined,
+  max: number | null | undefined,
+  label: string,
+): void {
+  if (min != null && max != null && min > max) {
+    throw new HttpError(
+      `Minimum ${label}, maksimum ${label} değerinden büyük olamaz`,
+      400,
+    );
+  }
+}
+
+function optionalTrimmed(value: string | undefined): string | null | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
 /**
  * User filter CRUD with subscription plan limits from the database.
  */
 export class FilterService {
-  /**
-   * Resolves the user's current subscription plan from the database.
-   */
   private async resolveSubscriptionPlan(
     userId: string,
   ): Promise<SubscriptionPlan> {
@@ -69,9 +100,6 @@ export class FilterService {
     return user.subscriptionPlan;
   }
 
-  /**
-   * Creates a new active filter if the user's DB plan limit allows it.
-   */
   async createFilter(
     userId: string,
     _subscriptionPlanFromToken: SubscriptionPlan | undefined,
@@ -83,16 +111,9 @@ export class FilterService {
         throw new HttpError("Kategori zorunludur", 400);
       }
 
-      if (
-        input.minPrice !== undefined &&
-        input.maxPrice !== undefined &&
-        input.minPrice > input.maxPrice
-      ) {
-        throw new HttpError(
-          "Minimum fiyat, maksimum fiyattan büyük olamaz",
-          400,
-        );
-      }
+      assertRange(input.minPrice, input.maxPrice, "fiyat");
+      assertRange(input.minYear, input.maxYear, "yıl");
+      assertRange(input.minMileage, input.maxMileage, "kilometre");
 
       if (
         input.minDealScore !== undefined &&
@@ -104,7 +125,6 @@ export class FilterService {
         );
       }
 
-      // Always trust DB plan (not JWT) so upgrades apply immediately.
       const subscriptionPlan = await this.resolveSubscriptionPlan(userId);
       const limit = getFilterLimit(subscriptionPlan);
 
@@ -123,6 +143,7 @@ export class FilterService {
       }
 
       const keywords = normalizeKeywords(input.keywords);
+      const excludedKeywords = normalizeKeywords(input.excludedKeywords);
       const notifyFlags = resolveNotifyFlagsForPlan(subscriptionPlan, {
         ...(input.notifyTelegram !== undefined
           ? { notifyTelegram: input.notifyTelegram }
@@ -138,14 +159,47 @@ export class FilterService {
           userId,
           category,
           keywords,
+          excludedKeywords,
           notifyPush: notifyFlags.notifyPush,
           notifyTelegram: notifyFlags.notifyTelegram,
           notifyWhatsapp: notifyFlags.notifyWhatsapp,
           ...(input.city !== undefined
             ? { city: input.city.trim() || null }
             : {}),
+          ...(input.district !== undefined
+            ? { district: optionalTrimmed(input.district) ?? null }
+            : {}),
+          ...(input.subcategory !== undefined
+            ? { subcategory: optionalTrimmed(input.subcategory) ?? null }
+            : {}),
+          ...(input.brand !== undefined
+            ? { brand: optionalTrimmed(input.brand) ?? null }
+            : {}),
+          ...(input.model !== undefined
+            ? { model: optionalTrimmed(input.model) ?? null }
+            : {}),
+          ...(input.variant !== undefined
+            ? { variant: optionalTrimmed(input.variant) ?? null }
+            : {}),
+          ...(input.fuelType !== undefined
+            ? { fuelType: optionalTrimmed(input.fuelType) ?? null }
+            : {}),
+          ...(input.transmission !== undefined
+            ? { transmission: optionalTrimmed(input.transmission) ?? null }
+            : {}),
+          ...(input.sellerType !== undefined
+            ? { sellerType: optionalTrimmed(input.sellerType) ?? null }
+            : {}),
           ...(input.minPrice !== undefined ? { minPrice: input.minPrice } : {}),
           ...(input.maxPrice !== undefined ? { maxPrice: input.maxPrice } : {}),
+          ...(input.minYear !== undefined ? { minYear: input.minYear } : {}),
+          ...(input.maxYear !== undefined ? { maxYear: input.maxYear } : {}),
+          ...(input.minMileage !== undefined
+            ? { minMileage: input.minMileage }
+            : {}),
+          ...(input.maxMileage !== undefined
+            ? { maxMileage: input.maxMileage }
+            : {}),
           ...(input.minDealScore !== undefined
             ? { minDealScore: input.minDealScore }
             : {}),
@@ -163,9 +217,6 @@ export class FilterService {
     }
   }
 
-  /**
-   * Lists the authenticated user's filters (active + passive) for alarm management.
-   */
   async getUserFilters(userId: string): Promise<UserFilter[]> {
     try {
       return await prisma.userFilter.findMany({
@@ -181,9 +232,6 @@ export class FilterService {
     }
   }
 
-  /**
-   * Updates a filter owned by the authenticated user.
-   */
   async updateFilter(
     filterId: string,
     userId: string,
@@ -206,7 +254,6 @@ export class FilterService {
         );
       }
 
-      // Reactivating a passive filter must respect plan limits.
       if (updateData.isActive === true && !existing.isActive) {
         const plan = await this.resolveSubscriptionPlan(userId);
         const limit = getFilterLimit(plan);
@@ -229,17 +276,22 @@ export class FilterService {
         updateData.maxPrice !== undefined
           ? updateData.maxPrice
           : existing.maxPrice;
+      const nextMinYear =
+        updateData.minYear !== undefined ? updateData.minYear : existing.minYear;
+      const nextMaxYear =
+        updateData.maxYear !== undefined ? updateData.maxYear : existing.maxYear;
+      const nextMinMileage =
+        updateData.minMileage !== undefined
+          ? updateData.minMileage
+          : existing.minMileage;
+      const nextMaxMileage =
+        updateData.maxMileage !== undefined
+          ? updateData.maxMileage
+          : existing.maxMileage;
 
-      if (
-        nextMinPrice != null &&
-        nextMaxPrice != null &&
-        nextMinPrice > nextMaxPrice
-      ) {
-        throw new HttpError(
-          "Minimum fiyat, maksimum fiyattan büyük olamaz",
-          400,
-        );
-      }
+      assertRange(nextMinPrice, nextMaxPrice, "fiyat");
+      assertRange(nextMinYear, nextMaxYear, "yıl");
+      assertRange(nextMinMileage, nextMaxMileage, "kilometre");
 
       if (
         updateData.minDealScore !== undefined &&
@@ -275,8 +327,32 @@ export class FilterService {
           ...(updateData.category !== undefined
             ? { category: updateData.category.trim() }
             : {}),
+          ...(updateData.subcategory !== undefined
+            ? { subcategory: optionalTrimmed(updateData.subcategory) ?? null }
+            : {}),
+          ...(updateData.brand !== undefined
+            ? { brand: optionalTrimmed(updateData.brand) ?? null }
+            : {}),
+          ...(updateData.model !== undefined
+            ? { model: optionalTrimmed(updateData.model) ?? null }
+            : {}),
+          ...(updateData.variant !== undefined
+            ? { variant: optionalTrimmed(updateData.variant) ?? null }
+            : {}),
           ...(updateData.city !== undefined
             ? { city: updateData.city.trim() || null }
+            : {}),
+          ...(updateData.district !== undefined
+            ? { district: optionalTrimmed(updateData.district) ?? null }
+            : {}),
+          ...(updateData.fuelType !== undefined
+            ? { fuelType: optionalTrimmed(updateData.fuelType) ?? null }
+            : {}),
+          ...(updateData.transmission !== undefined
+            ? { transmission: optionalTrimmed(updateData.transmission) ?? null }
+            : {}),
+          ...(updateData.sellerType !== undefined
+            ? { sellerType: optionalTrimmed(updateData.sellerType) ?? null }
             : {}),
           ...(updateData.minPrice !== undefined
             ? { minPrice: updateData.minPrice }
@@ -284,8 +360,27 @@ export class FilterService {
           ...(updateData.maxPrice !== undefined
             ? { maxPrice: updateData.maxPrice }
             : {}),
+          ...(updateData.minYear !== undefined
+            ? { minYear: updateData.minYear }
+            : {}),
+          ...(updateData.maxYear !== undefined
+            ? { maxYear: updateData.maxYear }
+            : {}),
+          ...(updateData.minMileage !== undefined
+            ? { minMileage: updateData.minMileage }
+            : {}),
+          ...(updateData.maxMileage !== undefined
+            ? { maxMileage: updateData.maxMileage }
+            : {}),
           ...(updateData.keywords !== undefined
             ? { keywords: normalizeKeywords(updateData.keywords) }
+            : {}),
+          ...(updateData.excludedKeywords !== undefined
+            ? {
+                excludedKeywords: normalizeKeywords(
+                  updateData.excludedKeywords,
+                ),
+              }
             : {}),
           ...(updateData.minDealScore !== undefined
             ? { minDealScore: updateData.minDealScore }
@@ -321,9 +416,6 @@ export class FilterService {
     }
   }
 
-  /**
-   * Soft-deletes a filter owned by the user (`isActive = false`).
-   */
   async deleteFilter(userId: string, filterId: string): Promise<UserFilter> {
     try {
       if (!filterId?.trim()) {

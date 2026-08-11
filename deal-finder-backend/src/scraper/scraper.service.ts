@@ -10,6 +10,7 @@ import { enqueueListingMatch } from "../queues/listing.queue.js";
 import {
   normalizeScrapedListing,
   normalizeScrapedListings,
+  toListingCreateData,
   type NormalizedListingInput,
   type RawScrapedListing,
 } from "./normalizer.js";
@@ -115,14 +116,7 @@ export class ScraperService {
 
       const listing = await prisma.listing.create({
         data: {
-          externalId: input.externalId,
-          platform: input.platform,
-          title: input.title,
-          price: input.price,
-          marketAveragePrice: input.marketAveragePrice,
-          dealScore: scoreResult.dealScore,
-          city: input.city,
-          url: input.url,
+          ...toListingCreateData(input, scoreResult.dealScore),
           rawDetails: input.rawDetails as Prisma.InputJsonValue,
         },
       });

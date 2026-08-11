@@ -30,19 +30,28 @@ export async function buildApp(): Promise<FastifyInstance> {
   });
 
   await app.register(cors, {
-    // React Native / Expo Go often send no Origin; browsers & nip.io HTTPS need explicit allow.
     origin: (origin, callback) => {
+      // Non-browser clients (RN native / curl) often omit Origin.
       if (!origin) {
         callback(null, true);
         return;
       }
 
-      const allowedOrigins = new Set([
+      const defaultDevOrigins = [
         "https://45.43.152.58.nip.io",
         "http://45.43.152.58",
         "http://localhost:8081",
+        "http://127.0.0.1:8081",
         "http://localhost:19006",
-      ]);
+        "http://127.0.0.1:19006",
+      ];
+
+      const fromEnv = (env.CORS_ORIGINS ?? "")
+        .split(",")
+        .map((value) => value.trim())
+        .filter(Boolean);
+
+      const allowedOrigins = new Set([...defaultDevOrigins, ...fromEnv]);
 
       if (
         allowedOrigins.has(origin) ||
@@ -53,8 +62,14 @@ export async function buildApp(): Promise<FastifyInstance> {
         return;
       }
 
-      // Fallback: allow all origins (mobile web / dev clients)
-      callback(null, true);
+      // Development: allow any origin for Expo web / local tooling.
+      if (env.NODE_ENV !== "production") {
+        callback(null, true);
+        return;
+      }
+
+      // Production: only allowlisted origins.
+      callback(new Error(`CORS blocked for origin: ${origin}`), false);
     },
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "Accept"],

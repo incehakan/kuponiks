@@ -5,7 +5,6 @@ import {
   type User,
   type UserFilter,
 } from "@prisma/client";
-import { env } from "../config/env.js";
 import { prisma } from "../lib/prisma.js";
 import { redisDel, redisSetNxEx } from "../lib/redis.js";
 import {
@@ -16,6 +15,10 @@ import {
   enqueueNotification,
   type NotificationJobData,
 } from "../queues/notification.queue.js";
+import {
+  listingMatchesFilter,
+  type MatchableListing,
+} from "./filter-match.engine.js";
 
 /** Redis key prefix for 24h per-user listing notification deduplication. */
 const NOTIFIED_KEY_PREFIX = "notified:";
@@ -45,7 +48,7 @@ interface UserMatchAggregate {
 }
 
 /**
- * Smart Filter Matching Engine — matches deal listings to active user filters
+ * Smart Filter Matching Engine V2 — matches listings to active user filters
  * and enqueues plan-aware notification jobs.
  */
 export class FilterMatchingService {
@@ -71,7 +74,7 @@ export class FilterMatchingService {
       const listingCategory = this.resolveListingCategory(listing);
       if (!listingCategory) {
         console.warn(
-          `FilterMatchingService: listing ${listingId} has no category in rawDetails; skipping match`,
+          `FilterMatchingService: listing ${listingId} has no category; skipping match`,
         );
         return;
       }
@@ -81,18 +84,18 @@ export class FilterMatchingService {
         listingCategory,
       );
 
-      const keywordMatched = candidateFilters.filter((filter) =>
-        this.matchesKeywords(listing, filter.keywords),
+      const matched = candidateFilters.filter((filter) =>
+        listingMatchesFilter(this.toMatchableListing(listing), filter),
       );
 
-      if (keywordMatched.length === 0) {
+      if (matched.length === 0) {
         console.log(
           `FilterMatchingService: no filter matches for listing ${listingId}`,
         );
         return;
       }
 
-      const aggregates = this.aggregateByUser(keywordMatched);
+      const aggregates = this.aggregateByUser(matched);
 
       const results = await Promise.allSettled(
         [...aggregates.values()].map((aggregate) =>
@@ -146,9 +149,13 @@ export class FilterMatchingService {
   }
 
   /**
-   * Resolves listing category from rawDetails (`category` / `kategori`).
+   * Resolves listing category from column, then rawDetails fallback.
    */
   private resolveListingCategory(listing: Listing): string | null {
+    if (listing.category?.trim()) {
+      return listing.category.trim();
+    }
+
     const raw = listing.rawDetails;
     if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
       return null;
@@ -165,31 +172,42 @@ export class FilterMatchingService {
     return null;
   }
 
+  private toMatchableListing(listing: Listing): MatchableListing {
+    return {
+      title: listing.title,
+      price: listing.price,
+      dealScore: listing.dealScore,
+      category: listing.category,
+      subcategory: listing.subcategory,
+      brand: listing.brand,
+      model: listing.model,
+      variant: listing.variant,
+      year: listing.year,
+      mileage: listing.mileage,
+      fuelType: listing.fuelType,
+      transmission: listing.transmission,
+      city: listing.city,
+      district: listing.district,
+      sellerType: listing.sellerType,
+      description: listing.description,
+      rawDetails: listing.rawDetails,
+    };
+  }
+
   /**
-   * Prisma query for active filters matching category, city, price, and deal score.
-   * Keyword filtering is applied in-memory afterwards.
+   * Broad Prisma pre-filter (category + dealScore + coarse price).
+   * Fine-grained V2 rules run in-memory via listingMatchesFilter.
    */
   private async findCandidateFilters(
     listing: Listing,
     category: string,
   ): Promise<UserFilterWithUser[]> {
-    // Dev/test: missing listing city must not block matches (city optional).
-    // Prod: no city on listing → only filters with city=null (all-Turkey).
-    const cityClause = listing.city
-      ? {
-          OR: [{ city: null }, { city: listing.city }],
-        }
-      : this.isTestMode()
-        ? {}
-        : { city: null };
-
     return prisma.userFilter.findMany({
       where: {
         isActive: true,
         category,
         minDealScore: { lte: listing.dealScore },
         AND: [
-          ...(Object.keys(cityClause).length > 0 ? [cityClause] : []),
           {
             OR: [{ minPrice: null }, { minPrice: { lte: listing.price } }],
           },
@@ -202,89 +220,6 @@ export class FilterMatchingService {
         user: true,
       },
     });
-  }
-
-  private isTestMode(): boolean {
-    return env.NODE_ENV !== "production";
-  }
-
-  /**
-   * Keyword match against title / rawDetails corpus.
-   * Test mode: case-insensitive regex, OR semantics (any keyword hits).
-   * Production: AND semantics with includes (all keywords required).
-   */
-  private matchesKeywords(listing: Listing, keywords: string[]): boolean {
-    if (!keywords || keywords.length === 0) {
-      return true;
-    }
-
-    const corpus = this.buildSearchCorpus(listing);
-    const normalizedKeywords = keywords
-      .map((keyword) => keyword.trim())
-      .filter(Boolean);
-
-    if (normalizedKeywords.length === 0) {
-      return true;
-    }
-
-    if (this.isTestMode()) {
-      return normalizedKeywords.some((keyword) =>
-        this.keywordMatchesCorpus(corpus, keyword),
-      );
-    }
-
-    return normalizedKeywords.every((keyword) =>
-      corpus.includes(keyword.toLocaleLowerCase("tr-TR")),
-    );
-  }
-
-  /**
-   * Case-insensitive content search (escaped regex) for a single keyword.
-   * "Toyota" matches "toyota Corolla 2020 hatasız" etc.
-   */
-  private keywordMatchesCorpus(corpus: string, keyword: string): boolean {
-    const trimmed = keyword.trim();
-    if (!trimmed) {
-      return true;
-    }
-
-    const escaped = trimmed.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    try {
-      return new RegExp(escaped, "iu").test(corpus);
-    } catch {
-      return corpus.includes(trimmed.toLocaleLowerCase("tr-TR"));
-    }
-  }
-
-  /**
-   * Builds a lowercase search corpus from title and rawDetails.
-   */
-  private buildSearchCorpus(listing: Listing): string {
-    const chunks: string[] = [listing.title];
-
-    const walk = (value: unknown): void => {
-      if (typeof value === "string") {
-        chunks.push(value);
-        return;
-      }
-      if (Array.isArray(value)) {
-        for (const item of value) {
-          walk(item);
-        }
-        return;
-      }
-      if (value && typeof value === "object") {
-        for (const nested of Object.values(value as Record<string, unknown>)) {
-          walk(nested);
-        }
-      }
-    };
-
-    if (listing.rawDetails !== null && listing.rawDetails !== undefined) {
-      walk(listing.rawDetails);
-    }
-
-    return chunks.join(" ").toLocaleLowerCase("tr-TR");
   }
 
   /**
@@ -328,8 +263,6 @@ export class FilterMatchingService {
     const { user } = aggregate;
     const notifiedKey = `${NOTIFIED_KEY_PREFIX}${user.id}:${listing.id}`;
 
-    // Atomic claim — prevents duplicate notifications within 24 hours.
-    // If Redis is down, skip enqueue rather than hanging HTTP/workers.
     const claimed = await redisSetNxEx(
       notifiedKey,
       "1",
@@ -374,7 +307,6 @@ export class FilterMatchingService {
 
       return "enqueued";
     } catch (error) {
-      // Release claim so a retry can re-attempt delivery.
       try {
         await redisDel(notifiedKey);
       } catch (redisError) {
@@ -390,9 +322,6 @@ export class FilterMatchingService {
     }
   }
 
-  /**
-   * Builds the notification-queue job payload from listing + user.
-   */
   private buildNotificationJob(
     listing: Listing,
     user: User,
@@ -400,7 +329,7 @@ export class FilterMatchingService {
   ): NotificationJobData {
     const priceLabel = listing.price.toLocaleString("tr-TR", {
       style: "currency",
-      currency: "TRY",
+      currency: listing.currency?.trim() || "TRY",
     });
 
     const job: NotificationJobData = {

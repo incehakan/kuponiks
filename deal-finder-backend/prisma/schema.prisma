@@ -39,51 +39,88 @@ model User {
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
 
-  filters          UserFilter[]
-  notifications    NotificationLog[]
+  filters       UserFilter[]
+  notifications NotificationLog[]
 }
 
 model UserFilter {
-  id             String   @id @default(uuid()) @db.Uuid
-  userId         String   @db.Uuid
-  category       String
-  city           String?
-  minPrice       Float?
-  maxPrice       Float?
+  id               String   @id @default(uuid()) @db.Uuid
+  userId           String   @db.Uuid
+  category         String
+  subcategory      String?
+  brand            String?
+  model            String?
+  variant          String?
+  minYear          Int?
+  maxYear          Int?
+  minMileage       Int?
+  maxMileage       Int?
+  city             String?
+  district         String?
+  minPrice         Float?
+  maxPrice         Float?
+  fuelType         String?
+  transmission     String?
+  sellerType       String?
   /// Optional free-text alarm keywords (e.g. "3+1", "Yeşilyurt", "otomatik")
-  keywords       String[]
-  minDealScore   Int      @default(70)
-  notifyTelegram Boolean  @default(false)
-  notifyPush     Boolean  @default(true)
-  notifyWhatsapp Boolean  @default(false)
-  isActive       Boolean  @default(true)
-  createdAt      DateTime @default(now())
+  keywords         String[]
+  /// Title/description must NOT contain these terms
+  excludedKeywords String[] @default([])
+  minDealScore     Int      @default(70)
+  notifyTelegram   Boolean  @default(false)
+  notifyPush       Boolean  @default(true)
+  notifyWhatsapp   Boolean  @default(false)
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([isActive, category])
+  @@index([isActive, brand, model])
 }
 
 model Listing {
-  id                 String   @id @default(uuid()) @db.Uuid
-  externalId         String   @unique
+  id                 String    @id @default(uuid()) @db.Uuid
+  externalId         String    @unique
   platform           String
   title              String
   price              Float
   marketAveragePrice Float?
   dealScore          Int
+  category           String?
+  subcategory        String?
+  brand              String?
+  model              String?
+  variant            String?
+  year               Int?
+  mileage            Int?
+  fuelType           String?
+  transmission       String?
   city               String?
+  district           String?
+  sellerType         String?
+  description        String?
+  currency           String?   @default("TRY")
+  imageUrl           String?
+  publishedAt        DateTime?
+  firstSeenAt        DateTime  @default(now())
+  lastSeenAt         DateTime  @default(now())
   url                String
   rawDetails         Json?
-  createdAt          DateTime @default(now())
+  createdAt          DateTime  @default(now())
 
   notifications NotificationLog[]
 
+  @@unique([platform, externalId])
   @@index([dealScore])
   @@index([dealScore, createdAt])
   @@index([platform, city])
-  @@unique([platform, externalId])
+  @@index([category, subcategory])
+  @@index([brand, model])
+  @@index([city, price])
+  @@index([year])
+  @@index([firstSeenAt])
 }
 
 model NotificationLog {

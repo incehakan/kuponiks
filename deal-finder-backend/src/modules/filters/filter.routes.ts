@@ -5,6 +5,42 @@ import {
 } from "../../middlewares/auth.middleware.js";
 import { filterService } from "./filter.service.js";
 
+const keywordSchema = {
+  anyOf: [
+    { type: "string", maxLength: 500 },
+    {
+      type: "array",
+      maxItems: 50,
+      items: { type: "string", minLength: 1, maxLength: 80 },
+    },
+  ],
+} as const;
+
+const filterBodyProperties = {
+  category: { type: "string", minLength: 1, maxLength: 120 },
+  subcategory: { type: "string", maxLength: 120 },
+  brand: { type: "string", maxLength: 80 },
+  model: { type: "string", maxLength: 80 },
+  variant: { type: "string", maxLength: 80 },
+  minYear: { type: "integer", minimum: 0 },
+  maxYear: { type: "integer", minimum: 0 },
+  minMileage: { type: "integer", minimum: 0 },
+  maxMileage: { type: "integer", minimum: 0 },
+  city: { type: "string", maxLength: 500 },
+  district: { type: "string", maxLength: 120 },
+  minPrice: { type: "number", minimum: 0 },
+  maxPrice: { type: "number", minimum: 0 },
+  fuelType: { type: "string", maxLength: 40 },
+  transmission: { type: "string", maxLength: 40 },
+  sellerType: { type: "string", maxLength: 40 },
+  keywords: keywordSchema,
+  excludedKeywords: keywordSchema,
+  minDealScore: { type: "integer", minimum: 0, maximum: 100 },
+  notifyTelegram: { type: "boolean" },
+  notifyPush: { type: "boolean" },
+  notifyWhatsapp: { type: "boolean" },
+} as const;
+
 /**
  * Filter management routes.
  * GET is public (empty list without auth); mutations require JWT.
@@ -12,11 +48,6 @@ import { filterService } from "./filter.service.js";
 export const filterRoutes: FastifyPluginAsync = async (
   app: FastifyInstance,
 ) => {
-  /**
-   * Public listing endpoint:
-   * - With valid JWT → user's active filters
-   * - Without JWT → empty filters (categories/cities remain on their own public routes)
-   */
   app.get(
     "/",
     {
@@ -46,46 +77,16 @@ export const filterRoutes: FastifyPluginAsync = async (
           type: "object",
           required: ["category"],
           additionalProperties: false,
-          properties: {
-            category: { type: "string", minLength: 1, maxLength: 120 },
-            city: { type: "string", maxLength: 500 },
-            minPrice: { type: "number", minimum: 0 },
-            maxPrice: { type: "number", minimum: 0 },
-            keywords: {
-              anyOf: [
-                { type: "string", maxLength: 500 },
-                {
-                  type: "array",
-                  maxItems: 50,
-                  items: { type: "string", minLength: 1, maxLength: 80 },
-                },
-              ],
-            },
-            minDealScore: { type: "integer", minimum: 0, maximum: 100 },
-            notifyTelegram: { type: "boolean" },
-            notifyPush: { type: "boolean" },
-            notifyWhatsapp: { type: "boolean" },
-          },
+          properties: filterBodyProperties,
         },
       },
     },
     async (request, reply) => {
-      const body = request.body as {
-        category: string;
-        city?: string;
-        minPrice?: number;
-        maxPrice?: number;
-        keywords?: string | string[];
-        minDealScore?: number;
-        notifyTelegram?: boolean;
-        notifyPush?: boolean;
-        notifyWhatsapp?: boolean;
-      };
-
+      const body = request.body as Record<string, unknown>;
       const filter = await filterService.createFilter(
         request.user!.id,
         request.user!.subscriptionPlan,
-        body,
+        body as unknown as Parameters<typeof filterService.createFilter>[2],
       );
 
       return reply.status(201).send({ filter });
@@ -109,24 +110,7 @@ export const filterRoutes: FastifyPluginAsync = async (
           additionalProperties: false,
           minProperties: 1,
           properties: {
-            category: { type: "string", minLength: 1, maxLength: 120 },
-            city: { type: "string", maxLength: 500 },
-            minPrice: { type: "number", minimum: 0 },
-            maxPrice: { type: "number", minimum: 0 },
-            keywords: {
-              anyOf: [
-                { type: "string", maxLength: 500 },
-                {
-                  type: "array",
-                  maxItems: 50,
-                  items: { type: "string", minLength: 1, maxLength: 80 },
-                },
-              ],
-            },
-            minDealScore: { type: "integer", minimum: 0, maximum: 100 },
-            notifyTelegram: { type: "boolean" },
-            notifyPush: { type: "boolean" },
-            notifyWhatsapp: { type: "boolean" },
+            ...filterBodyProperties,
             isActive: { type: "boolean" },
           },
         },
@@ -134,23 +118,12 @@ export const filterRoutes: FastifyPluginAsync = async (
     },
     async (request, reply) => {
       const { id } = request.params as { id: string };
-      const body = request.body as {
-        category?: string;
-        city?: string;
-        minPrice?: number;
-        maxPrice?: number;
-        keywords?: string | string[];
-        minDealScore?: number;
-        notifyTelegram?: boolean;
-        notifyPush?: boolean;
-        notifyWhatsapp?: boolean;
-        isActive?: boolean;
-      };
+      const body = request.body as Record<string, unknown>;
 
       const filter = await filterService.updateFilter(
         id,
         request.user!.id,
-        body,
+        body as unknown as Parameters<typeof filterService.updateFilter>[2],
       );
 
       return reply.status(200).send({ filter });

@@ -51,9 +51,10 @@ export const dealRoutes: FastifyPluginAsync = async (
    * Auth is intentionally disabled for local testing.
    */
   app.post("/generate-mock", async (_request, reply) => {
-    if (env.NODE_ENV === "production" || process.env.NODE_ENV === "production") {
+    if (env.NODE_ENV === "production" || !env.ENABLE_MOCK_LISTINGS) {
       return reply.status(403).send({
-        message: "Bu servis canlı ortamda kullanılamaz.",
+        message:
+          "Mock ilan üretimi kapalı. NODE_ENV!==production ve ENABLE_MOCK_LISTINGS=true gerekli.",
       });
     }
 

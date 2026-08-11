@@ -87,6 +87,12 @@ export class ListingProcessor {
           price: input.price,
           marketAveragePrice: input.marketAveragePrice,
           dealScore: scoreResult.dealScore,
+          category:
+            typeof input.rawDetails?.category === "string"
+              ? input.rawDetails.category
+              : typeof input.rawDetails?.kategori === "string"
+                ? input.rawDetails.kategori
+                : null,
           ...(input.city !== undefined ? { city: input.city } : {}),
           url: input.url,
           ...(rawDetailsJson !== undefined

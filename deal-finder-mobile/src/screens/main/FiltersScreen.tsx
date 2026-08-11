@@ -357,7 +357,7 @@ export default function FiltersScreen(): React.JSX.Element {
     setEditingFilterId(filter.id);
     setForm({
       categoryPath: filter.category ?? '',
-      cities: resolveCitiesFromFilter(filter.city),
+      cities: resolveCitiesFromFilter(filter.city ?? undefined),
       keywords: Array.isArray(filter.keywords)
         ? filter.keywords.join(', ')
         : '',

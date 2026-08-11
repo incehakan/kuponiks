@@ -48,11 +48,24 @@ export interface Deal {
 export interface Filter {
   id: string;
   category: string;
-  city: string;
+  subcategory?: string | null;
+  brand?: string | null;
+  model?: string | null;
+  variant?: string | null;
+  minYear?: number | null;
+  maxYear?: number | null;
+  minMileage?: number | null;
+  maxMileage?: number | null;
+  city?: string | null;
+  district?: string | null;
   minPrice?: number;
   maxPrice?: number;
+  fuelType?: string | null;
+  transmission?: string | null;
+  sellerType?: string | null;
   minDealScore: number;
   keywords?: string[];
+  excludedKeywords?: string[];
   isActive?: boolean;
   notifyPush?: boolean;
   notifyTelegram?: boolean;
@@ -61,11 +74,24 @@ export interface Filter {
 
 export interface CreateFilterPayload {
   category: string;
+  subcategory?: string;
+  brand?: string;
+  model?: string;
+  variant?: string;
+  minYear?: number;
+  maxYear?: number;
+  minMileage?: number;
+  maxMileage?: number;
   city: string;
+  district?: string;
   minPrice?: number;
   maxPrice?: number;
+  fuelType?: string;
+  transmission?: string;
+  sellerType?: string;
   minDealScore: number;
   keywords?: string;
+  excludedKeywords?: string | string[];
   isActive?: boolean;
   notifyPush?: boolean;
   notifyTelegram?: boolean;

@@ -1,4 +1,5 @@
 import type { FastifyInstance, FastifyPluginAsync } from "fastify";
+import { env } from "../config/env.js";
 import {
   enqueueScrapeJob,
   type ScrapePlatform,
@@ -29,13 +30,20 @@ export const scraperRoutes: FastifyPluginAsync = async (
 ) => {
   /**
    * POST /api/scraper/trigger-test
-   * Enqueues an immediate scrape job for arabam | letgo | sahibinden | hepsiemlak.
-   * Keyword is forwarded to the adapter as `query` for title/search matching.
+   * Development-only: enqueues an immediate scrape job.
+   * Disabled in production (no anonymous scrape triggering).
    */
   app.post("/trigger-test", async (request, reply) => {
+    if (env.NODE_ENV === "production") {
+      return reply.status(403).send({
+        statusCode: 403,
+        error: "Forbidden",
+        message: "Scraper test endpoint production ortamında kapalıdır.",
+      });
+    }
+
     const body = (request.body ?? {}) as TriggerTestBody;
     const platformRaw = body.platform?.trim().toLowerCase();
-    // Prefer explicit `keyword`; fall back to `query` alias.
     const keyword = (body.keyword ?? body.query)?.trim() || undefined;
 
     if (!platformRaw || !TEST_PLATFORMS.has(platformRaw as ScrapePlatform)) {
@@ -61,7 +69,6 @@ export const scraperRoutes: FastifyPluginAsync = async (
       platform,
       triggeredBy: "manual",
       limit: body.limit ?? 10,
-      // Keyword goes straight to adapter.search({ query })
       ...(keyword ? { query: keyword } : {}),
       ...(body.city?.trim() ? { city: body.city.trim() } : {}),
       ...(body.category?.trim() ? { category: body.category.trim() } : {}),
@@ -75,28 +82,16 @@ export const scraperRoutes: FastifyPluginAsync = async (
       });
     }
 
-    console.log("══════════════════════════════════════════════════════════");
-    console.log("[SCRAPER TEST] trigger-test KUYRUĞA EKLENDİ");
-    console.log(`  jobId     = ${jobId}`);
-    console.log(`  platform  = ${platform}`);
-    console.log(`  keyword   = ${keyword ?? "(yok)"}  → adaptöre query olarak aktarılacak`);
-    console.log("  beklenen  = price≈920.000 TL | market=1.250.000 TL | skor≈92 | ~%26 indirim");
-    console.log("  filtre    = min≈850k – max≈1M bütçe bandına oturmalı");
-    console.log("  sonraki   = worker → adaptör → normalize → ingest → ★ KELEPİR EŞLEŞME logları");
-    console.log("══════════════════════════════════════════════════════════");
+    console.log(
+      `[SCRAPER TEST] trigger-test jobId=${jobId} platform=${platform} keyword=${keyword ?? "-"}`,
+    );
 
     return reply.status(202).send({
       ok: true,
-      message: "Scrape job kuyruğa eklendi. Worker kelepir eşleşmesini konsola yazacak.",
+      message: "Scrape job kuyruğa eklendi.",
       jobId,
       platform,
       keyword: keyword ?? null,
-      expectedPricing: {
-        price: 920_000,
-        marketAveragePrice: 1_250_000,
-        approxDiscountPercent: 26.4,
-        approxDealScore: 92,
-      },
       queue: "scraper-queue",
     });
   });

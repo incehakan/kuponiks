@@ -21,10 +21,33 @@ export interface RawScrapedListing {
   fiyat?: number | string;
   category?: string;
   kategori?: string;
+  subcategory?: string;
+  brand?: string;
+  marka?: string;
+  model?: string;
+  variant?: string;
+  year?: number | string;
+  yil?: number | string;
+  mileage?: number | string;
+  kilometre?: number | string;
+  km?: number | string;
+  fuelType?: string;
+  yakit?: number | string;
+  transmission?: string;
+  vites?: string;
   city?: string;
   sehir?: string;
   il?: string;
   location?: string;
+  district?: string;
+  ilce?: string;
+  sellerType?: string;
+  saticiTipi?: string;
+  currency?: string;
+  imageUrl?: string;
+  image?: string;
+  photoUrl?: string;
+  publishedAt?: string | Date;
   url?: string;
   link?: string;
   href?: string;
@@ -49,7 +72,6 @@ export interface RawScrapedListing {
 
 /**
  * Normalized listing shape ready for Prisma `Listing` persistence.
- * Category is stored inside `rawDetails` (Listing model has no category column).
  */
 export interface NormalizedListingInput {
   externalId: string;
@@ -57,7 +79,21 @@ export interface NormalizedListingInput {
   title: string;
   price: number;
   category: string;
+  subcategory: string | null;
+  brand: string | null;
+  model: string | null;
+  variant: string | null;
+  year: number | null;
+  mileage: number | null;
+  fuelType: string | null;
+  transmission: string | null;
   city: string | null;
+  district: string | null;
+  sellerType: string | null;
+  description: string | null;
+  currency: string;
+  imageUrl: string | null;
+  publishedAt: Date | null;
   url: string;
   marketAveragePrice: number;
   rawDetails: Record<string, unknown>;
@@ -87,8 +123,52 @@ function pickString(
 }
 
 /**
+ * Parses a positive integer from trusted numeric fields only (no guessing from title).
+ */
+function pickPositiveInt(
+  raw: RawScrapedListing,
+  keys: string[],
+): number | null {
+  for (const key of keys) {
+    const value = raw[key];
+    if (typeof value === "number" && Number.isFinite(value)) {
+      const rounded = Math.round(value);
+      if (rounded >= 0) {
+        return rounded;
+      }
+    }
+    if (typeof value === "string") {
+      const digits = value.replace(/[^\d]/g, "");
+      if (!digits) {
+        continue;
+      }
+      const parsed = Number.parseInt(digits, 10);
+      if (Number.isFinite(parsed) && parsed >= 0) {
+        return parsed;
+      }
+    }
+  }
+  return null;
+}
+
+function pickDate(raw: RawScrapedListing, keys: string[]): Date | null {
+  for (const key of keys) {
+    const value = raw[key];
+    if (value instanceof Date && !Number.isNaN(value.getTime())) {
+      return value;
+    }
+    if (typeof value === "string" && value.trim()) {
+      const parsed = new Date(value);
+      if (!Number.isNaN(parsed.getTime())) {
+        return parsed;
+      }
+    }
+  }
+  return null;
+}
+
+/**
  * Parses Turkish / locale-flavored price strings into a number.
- * Delegates to shared `cleanPrice` helper.
  */
 export function parsePrice(value: unknown): number | null {
   return cleanPrice(value);
@@ -133,6 +213,29 @@ function resolvePlatform(raw: RawScrapedListing, fallback = "generic"): string {
 }
 
 /**
+ * Only maps fields that are explicitly present on the raw payload / rawDetails.
+ * Does not infer brand/model from titles.
+ */
+function pickFromRawDetails(
+  rawDetails: Record<string, unknown> | undefined,
+  keys: string[],
+): string | null {
+  if (!rawDetails) {
+    return null;
+  }
+  for (const key of keys) {
+    const value = rawDetails[key];
+    if (typeof value === "string" && value.trim()) {
+      return value.trim();
+    }
+    if (typeof value === "number" && Number.isFinite(value)) {
+      return String(value);
+    }
+  }
+  return null;
+}
+
+/**
  * Normalizes a single raw scraped listing into the Prisma Listing input shape.
  * Returns null when required fields (title, price, url/externalId) are missing.
  */
@@ -166,8 +269,20 @@ export function normalizeScrapedListing(
       raw.marketAveragePrice ?? raw.marketAverage ?? raw.piyasaOrt,
     ) ?? price;
 
-  const description =
-    pickString(raw, ["description", "aciklama"]) ?? undefined;
+  const description = pickString(raw, ["description", "aciklama"]);
+  const subcategory = pickString(raw, ["subcategory"]);
+  const brand = pickString(raw, ["brand", "marka"]);
+  const model = pickString(raw, ["model"]);
+  const variant = pickString(raw, ["variant"]);
+  const year = pickPositiveInt(raw, ["year", "yil"]);
+  const mileage = pickPositiveInt(raw, ["mileage", "kilometre", "km"]);
+  const fuelType = pickString(raw, ["fuelType", "yakit"]);
+  const transmission = pickString(raw, ["transmission", "vites"]);
+  const district = pickString(raw, ["district", "ilce"]);
+  const sellerType = pickString(raw, ["sellerType", "saticiTipi"]);
+  const currency = pickString(raw, ["currency"]) ?? "TRY";
+  const imageUrl = pickString(raw, ["imageUrl", "image", "photoUrl"]);
+  const publishedAt = pickDate(raw, ["publishedAt"]);
 
   const keywordsRaw = raw.keywords;
   const keywords = Array.isArray(keywordsRaw)
@@ -176,24 +291,67 @@ export function normalizeScrapedListing(
       ? keywordsRaw.split(/[,;\n]+/).map((part) => part.trim()).filter(Boolean)
       : [];
 
+  const nestedRaw =
+    raw.rawDetails && typeof raw.rawDetails === "object" && !Array.isArray(raw.rawDetails)
+      ? (raw.rawDetails as Record<string, unknown>)
+      : undefined;
+
+  // Prefer explicit top-level fields; optionally promote already-normalized rawDetails keys.
+  const resolvedBrand =
+    brand ?? pickFromRawDetails(nestedRaw, ["brand", "marka"]);
+  const resolvedModel = model ?? pickFromRawDetails(nestedRaw, ["model"]);
+  const resolvedVariant =
+    variant ?? pickFromRawDetails(nestedRaw, ["variant"]);
+  const resolvedFuel =
+    fuelType ?? pickFromRawDetails(nestedRaw, ["fuelType", "yakit"]);
+  const resolvedTransmission =
+    transmission ?? pickFromRawDetails(nestedRaw, ["transmission", "vites"]);
+  const resolvedDistrict =
+    district ?? pickFromRawDetails(nestedRaw, ["district", "ilce"]);
+  const resolvedSeller =
+    sellerType ?? pickFromRawDetails(nestedRaw, ["sellerType", "saticiTipi"]);
+  const resolvedSubcategory =
+    subcategory ?? pickFromRawDetails(nestedRaw, ["subcategory"]);
+
+  const rawDetails: Record<string, unknown> = {
+    ...(nestedRaw ?? {}),
+    category,
+    kategori: category,
+    ...(description ? { description } : {}),
+    ...(keywords.length > 0 ? { keywords } : {}),
+    ...(resolvedBrand ? { brand: resolvedBrand } : {}),
+    ...(resolvedModel ? { model: resolvedModel } : {}),
+    ...(year != null ? { year } : {}),
+    ...(mileage != null ? { mileage } : {}),
+    source: platform,
+    originalUrl: url,
+    scrapedAt: new Date().toISOString(),
+  };
+
   return {
     externalId,
     platform,
     title,
     price,
     category,
+    subcategory: resolvedSubcategory,
+    brand: resolvedBrand,
+    model: resolvedModel,
+    variant: resolvedVariant,
+    year,
+    mileage,
+    fuelType: resolvedFuel,
+    transmission: resolvedTransmission,
     city,
+    district: resolvedDistrict,
+    sellerType: resolvedSeller,
+    description,
+    currency,
+    imageUrl,
+    publishedAt,
     url,
     marketAveragePrice: marketAverage,
-    rawDetails: {
-      category,
-      kategori: category,
-      ...(description ? { description } : {}),
-      ...(keywords.length > 0 ? { keywords } : {}),
-      source: platform,
-      originalUrl: url,
-      scrapedAt: new Date().toISOString(),
-    },
+    rawDetails,
   };
 }
 
@@ -214,4 +372,64 @@ export function normalizeScrapedListings(
   }
 
   return results;
+}
+
+/**
+ * Maps NormalizedListingInput → Prisma create data (shared by ingest paths).
+ */
+export function toListingCreateData(
+  input: NormalizedListingInput,
+  dealScore: number,
+): {
+  externalId: string;
+  platform: string;
+  title: string;
+  price: number;
+  marketAveragePrice: number;
+  dealScore: number;
+  category: string;
+  subcategory: string | null;
+  brand: string | null;
+  model: string | null;
+  variant: string | null;
+  year: number | null;
+  mileage: number | null;
+  fuelType: string | null;
+  transmission: string | null;
+  city: string | null;
+  district: string | null;
+  sellerType: string | null;
+  description: string | null;
+  currency: string;
+  imageUrl: string | null;
+  publishedAt: Date | null;
+  url: string;
+  rawDetails: Record<string, unknown>;
+} {
+  return {
+    externalId: input.externalId,
+    platform: input.platform,
+    title: input.title,
+    price: input.price,
+    marketAveragePrice: input.marketAveragePrice,
+    dealScore,
+    category: input.category,
+    subcategory: input.subcategory,
+    brand: input.brand,
+    model: input.model,
+    variant: input.variant,
+    year: input.year,
+    mileage: input.mileage,
+    fuelType: input.fuelType,
+    transmission: input.transmission,
+    city: input.city,
+    district: input.district,
+    sellerType: input.sellerType,
+    description: input.description,
+    currency: input.currency,
+    imageUrl: input.imageUrl,
+    publishedAt: input.publishedAt,
+    url: input.url,
+    rawDetails: input.rawDetails,
+  };
 }
