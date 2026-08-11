@@ -43,6 +43,11 @@ export interface Deal {
   platform?: string;
   source?: string;
   sellerPhone?: string;
+  /** Market Intelligence V1 (optional). */
+  marketMedianPrice?: number | null;
+  priceAdvantagePct?: number | null;
+  marketSampleSize?: number | null;
+  marketConfidence?: string | null;
 }
 
 export interface Filter {

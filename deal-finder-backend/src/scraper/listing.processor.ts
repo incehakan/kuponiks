@@ -7,6 +7,11 @@ import {
 import { prisma } from "../lib/prisma.js";
 import { redisExists, redisSetEx } from "../lib/redis.js";
 import {
+  marketFieldsForPersistence,
+  marketIntelligenceService,
+  type MarketIntelligenceService,
+} from "../market/market-intelligence.service.js";
+import {
   enqueueListingMatch,
   type ListingMatchJobData,
 } from "../queues/listing.queue.js";
@@ -28,7 +33,14 @@ export interface IncomingListingInput {
   city?: string;
   url: string;
   rawDetails?: Record<string, unknown>;
-  marketAveragePrice: number;
+  /** Optional; ignored as fake market — MI computes median. */
+  marketAveragePrice?: number | null;
+  category?: string | null;
+  brand?: string | null;
+  model?: string | null;
+  year?: number | null;
+  mileage?: number | null;
+  currency?: string | null;
 }
 
 /**
@@ -49,10 +61,13 @@ export type ProcessListingResult =
     };
 
 /**
- * Ingests scraped listings: dedupe → score → persist → optionally enqueue for matching.
+ * Ingests scraped listings: dedupe → Market Intelligence → DealScore V2 → persist → match.
  */
 export class ListingProcessor {
-  constructor(private readonly scorer: DealScoreService = dealScoreService) {}
+  constructor(
+    private readonly scorer: DealScoreService = dealScoreService,
+    private readonly market: MarketIntelligenceService = marketIntelligenceService,
+  ) {}
 
   /**
    * Processes a single inbound listing end-to-end.
@@ -71,13 +86,42 @@ export class ListingProcessor {
         return { status: "duplicate", externalId: input.externalId };
       }
 
-      const scoreResult = this.scorer.calculateDealScore(
-        input.price,
-        input.marketAveragePrice,
-        this.buildRawDetailsForScoring(input),
+      const category =
+        input.category ??
+        (typeof input.rawDetails?.category === "string"
+          ? input.rawDetails.category
+          : typeof input.rawDetails?.kategori === "string"
+            ? input.rawDetails.kategori
+            : null);
+
+      const marketResult = await this.market.analyzeListing({
+        externalId: input.externalId,
+        platform: input.platform,
+        price: input.price,
+        currency: input.currency ?? "TRY",
+        category,
+        brand: input.brand ?? null,
+        model: input.model ?? null,
+        year: input.year ?? null,
+        mileage: input.mileage ?? null,
+        city: input.city ?? null,
+      });
+
+      const scoreResult = this.scorer.calculateFromMarket(
+        {
+          brand: input.brand ?? null,
+          model: input.model ?? null,
+          year: input.year ?? null,
+          mileage: input.mileage ?? null,
+          price: input.price,
+          currency: input.currency ?? "TRY",
+          city: input.city ?? null,
+        },
+        marketResult,
       );
 
       const rawDetailsJson = this.toPrismaJson(input.rawDetails);
+      const marketFields = marketFieldsForPersistence(marketResult);
 
       const listing = await prisma.listing.create({
         data: {
@@ -85,15 +129,15 @@ export class ListingProcessor {
           platform: input.platform,
           title: input.title,
           price: input.price,
-          marketAveragePrice: input.marketAveragePrice,
           dealScore: scoreResult.dealScore,
-          category:
-            typeof input.rawDetails?.category === "string"
-              ? input.rawDetails.category
-              : typeof input.rawDetails?.kategori === "string"
-                ? input.rawDetails.kategori
-                : null,
+          category,
+          ...marketFields,
           ...(input.city !== undefined ? { city: input.city } : {}),
+          ...(input.brand != null ? { brand: input.brand } : {}),
+          ...(input.model != null ? { model: input.model } : {}),
+          ...(input.year != null ? { year: input.year } : {}),
+          ...(input.mileage != null ? { mileage: input.mileage } : {}),
+          ...(input.currency != null ? { currency: input.currency } : {}),
           url: input.url,
           ...(rawDetailsJson !== undefined
             ? { rawDetails: rawDetailsJson }
@@ -107,7 +151,12 @@ export class ListingProcessor {
       let enqueuedForMatch = false;
 
       if (scoreResult.isDeal || scoreResult.dealScore >= DEAL_SCORE_THRESHOLD) {
-        const jobData = this.toMatchJobData(listing.id, input, scoreResult.dealScore);
+        const jobData = this.toMatchJobData(
+          listing.id,
+          input,
+          scoreResult.dealScore,
+          marketFields.marketAveragePrice,
+        );
         await enqueueListingMatch(jobData);
         enqueuedForMatch = true;
       }
@@ -175,26 +224,6 @@ export class ListingProcessor {
     if (!Number.isFinite(input.price) || input.price <= 0) {
       throw new Error("ListingProcessor: price must be a positive number");
     }
-    if (
-      !Number.isFinite(input.marketAveragePrice) ||
-      input.marketAveragePrice <= 0
-    ) {
-      throw new Error(
-        "ListingProcessor: marketAveragePrice must be a positive number",
-      );
-    }
-  }
-
-  /**
-   * Merges title into rawDetails so keyword analysis covers the headline.
-   */
-  private buildRawDetailsForScoring(
-    input: IncomingListingInput,
-  ): Record<string, unknown> {
-    return {
-      title: input.title,
-      ...(input.rawDetails ?? {}),
-    };
   }
 
   /**
@@ -217,6 +246,7 @@ export class ListingProcessor {
     listingId: string,
     input: IncomingListingInput,
     dealScore: number,
+    marketAveragePrice: number | null,
   ): ListingMatchJobData {
     const job: ListingMatchJobData = {
       listingId,
@@ -224,10 +254,13 @@ export class ListingProcessor {
       platform: input.platform,
       title: input.title,
       price: input.price,
-      marketAveragePrice: input.marketAveragePrice,
       dealScore,
       url: input.url,
     };
+
+    if (marketAveragePrice != null) {
+      job.marketAveragePrice = marketAveragePrice;
+    }
 
     if (input.city !== undefined) {
       job.city = input.city;

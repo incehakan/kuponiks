@@ -78,15 +78,13 @@ export class ScraperWorker {
     );
 
     for (const item of normalized.slice(0, 5)) {
+      const market = item.marketAveragePrice;
       const discount =
-        item.marketAveragePrice > 0
-          ? (
-              ((item.marketAveragePrice - item.price) / item.marketAveragePrice) *
-              100
-            ).toFixed(1)
+        market != null && market > 0
+          ? (((item.price - market) / market) * -100).toFixed(1)
           : "?";
       console.log(
-        `[SCRAPER WORKER] aday → "${item.title}" | fiyat=${item.price} | piyasa=${item.marketAveragePrice} | indirim≈%${discount}`,
+        `[SCRAPER WORKER] aday → "${item.title}" | fiyat=${item.price} | piyasa=${market ?? "-"} | indirim≈%${discount}`,
       );
     }
 

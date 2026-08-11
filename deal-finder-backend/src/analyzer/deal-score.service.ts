@@ -1,159 +1,222 @@
 /**
+ * Deal Score V2 — explainable 0–100 score from Market Intelligence.
+ *
+ * A) Price advantage …… max 75
+ * B) Market confidence … max 15
+ * C) Data completeness … max 10
+ */
+
+import { getDealScoreThreshold } from "../market/market-config.js";
+import type {
+  MarketAnalysisResult,
+  MarketConfidence,
+} from "../market/market-intelligence.types.js";
+
+/**
  * Result of a deal-score evaluation for a listing.
  */
 export interface DealScoreResult {
   dealScore: number;
   isDeal: boolean;
-  /** Discount vs market average as a percentage (positive = cheaper than market). */
+  /** Discount vs market median as a percentage (positive = cheaper than market). */
   discountPercent: number;
-  /** Keywords that adjusted the score. */
+  /** Keywords that adjusted the score (legacy; unused in V2). */
   matchedKeywords: string[];
+  priceScore: number;
+  confidenceScore: number;
+  completenessScore: number;
 }
 
-/**
- * Keyword rule applied against listing text (title / description / rawDetails).
- */
-interface KeywordRule {
-  keyword: string;
-  /** Score delta applied when the keyword is found (negative = risk). */
-  delta: number;
-  reason: "risk" | "urgency" | "positive";
+export interface DealScoreVehicleFields {
+  brand?: string | null;
+  model?: string | null;
+  year?: number | null;
+  mileage?: number | null;
+  price: number;
+  currency?: string | null;
+  city?: string | null;
 }
 
-/** Minimum score required to treat a listing as a deal. */
-export const DEAL_SCORE_THRESHOLD = 70;
+/** Minimum score required to treat a listing as a deal (env-overridable). */
+export const DEAL_SCORE_THRESHOLD = getDealScoreThreshold();
 
-/**
- * Risk / urgency keywords commonly found in Turkish vehicle & marketplace listings.
- */
-const KEYWORD_RULES: readonly KeywordRule[] = [
-  { keyword: "ağır hasar", delta: -25, reason: "risk" },
-  { keyword: "agir hasar", delta: -25, reason: "risk" },
-  { keyword: "tavan boyalı", delta: -15, reason: "risk" },
-  { keyword: "tavan boyali", delta: -15, reason: "risk" },
-  { keyword: "çıtır hasarlı", delta: -10, reason: "risk" },
-  { keyword: "citir hasarli", delta: -10, reason: "risk" },
-  { keyword: "hasar kaydı", delta: -12, reason: "risk" },
-  { keyword: "hasar kaydi", delta: -12, reason: "risk" },
-  { keyword: "tramer", delta: -12, reason: "risk" },
-  { keyword: "pert", delta: -30, reason: "risk" },
-  { keyword: "acilen", delta: 5, reason: "urgency" },
-  { keyword: "acil satılık", delta: 5, reason: "urgency" },
-  { keyword: "acil satilik", delta: 5, reason: "urgency" },
-  { keyword: "pazarlık payı", delta: 3, reason: "positive" },
-  { keyword: "pazarlik payi", delta: 3, reason: "positive" },
-] as const;
-
-/**
- * Clamps a numeric value into the inclusive [min, max] range.
- */
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
 
+function lerp(
+  x0: number,
+  x1: number,
+  y0: number,
+  y1: number,
+  x: number,
+): number {
+  if (x1 === x0) {
+    return y1;
+  }
+  const t = (x - x0) / (x1 - x0);
+  return y0 + t * (y1 - y0);
+}
+
 /**
- * Deal Score Engine — converts price vs market average (+ text signals)
- * into a 0–100 kelepir score.
+ * Piecewise price advantage → score (max 75).
+ *
+ * <=0% → 0
+ * 0–5% → 0–25
+ * 5–10% → 25–50
+ * 10–15% → 50–65
+ * 15–25% → 65–75
+ * >25% → 75 (capped)
+ */
+export function priceAdvantageToScore(advantagePct: number): number {
+  if (!Number.isFinite(advantagePct) || advantagePct <= 0) {
+    return 0;
+  }
+  if (advantagePct <= 5) {
+    return clamp(lerp(0, 5, 0, 25, advantagePct), 0, 25);
+  }
+  if (advantagePct <= 10) {
+    return clamp(lerp(5, 10, 25, 50, advantagePct), 25, 50);
+  }
+  if (advantagePct <= 15) {
+    return clamp(lerp(10, 15, 50, 65, advantagePct), 50, 65);
+  }
+  if (advantagePct <= 25) {
+    return clamp(lerp(15, 25, 65, 75, advantagePct), 65, 75);
+  }
+  return 75;
+}
+
+export function confidenceToScore(
+  confidence: MarketConfidence | null | undefined,
+): number {
+  if (confidence === "HIGH") {
+    return 15;
+  }
+  if (confidence === "MEDIUM") {
+    return 10;
+  }
+  if (confidence === "LOW") {
+    return 5;
+  }
+  return 0;
+}
+
+/**
+ * Vehicle completeness over 7 core fields → 0–10.
+ */
+export function dataCompletenessScore(fields: DealScoreVehicleFields): number {
+  const checks = [
+    Boolean(fields.brand?.trim()),
+    Boolean(fields.model?.trim()),
+    fields.year != null && Number.isFinite(fields.year),
+    fields.mileage != null && Number.isFinite(fields.mileage),
+    Number.isFinite(fields.price) && fields.price > 0,
+    Boolean(fields.currency?.trim()),
+    Boolean(fields.city?.trim()),
+  ];
+  const filled = checks.filter(Boolean).length;
+  return Math.round((filled / checks.length) * 10);
+}
+
+/**
+ * Deal Score Engine V2 — Market Intelligence driven.
  */
 export class DealScoreService {
   /**
-   * Calculates a deal score from listing price, market average, and optional raw text details.
-   *
-   * Discount example: market 1_000_000, listing 800_000 → 20% discount.
-   * Base score maps ~20% discount to the deal threshold (70).
+   * V2 primary API: score from market analysis + listing completeness fields.
+   */
+  calculateFromMarket(
+    fields: DealScoreVehicleFields,
+    market: MarketAnalysisResult,
+  ): DealScoreResult {
+    if (!Number.isFinite(fields.price) || fields.price <= 0) {
+      throw new Error(
+        `DealScoreService: invalid price "${String(fields.price)}". Expected a positive number.`,
+      );
+    }
+
+    if (market.status !== "READY" || market.marketMedianPrice == null) {
+      return {
+        dealScore: 0,
+        isDeal: false,
+        discountPercent: 0,
+        matchedKeywords: [],
+        priceScore: 0,
+        confidenceScore: 0,
+        completenessScore: dataCompletenessScore(fields),
+      };
+    }
+
+    const advantage =
+      market.priceAdvantagePct ??
+      ((market.marketMedianPrice - fields.price) / market.marketMedianPrice) *
+        100;
+
+    const priceScore = Math.round(priceAdvantageToScore(advantage));
+    const confidenceScore = confidenceToScore(market.confidence);
+    const completenessScore = dataCompletenessScore(fields);
+    const dealScore = clamp(
+      priceScore + confidenceScore + completenessScore,
+      0,
+      100,
+    );
+
+    return {
+      dealScore,
+      isDeal: dealScore >= DEAL_SCORE_THRESHOLD,
+      discountPercent: Number(advantage.toFixed(2)),
+      matchedKeywords: [],
+      priceScore,
+      confidenceScore,
+      completenessScore,
+    };
+  }
+
+  /**
+   * @deprecated Prefer calculateFromMarket. Legacy signature kept for scripts;
+   * synthesizes a READY market result from an explicit median (never from listing price).
    */
   calculateDealScore(
     price: number,
-    marketAveragePrice: number,
-    rawDetails?: Record<string, unknown>,
+    marketMedianPrice: number,
+    _rawDetails?: Record<string, unknown>,
   ): DealScoreResult {
     if (!Number.isFinite(price) || price <= 0) {
       throw new Error(
         `DealScoreService: invalid price "${String(price)}". Expected a positive number.`,
       );
     }
-
-    if (!Number.isFinite(marketAveragePrice) || marketAveragePrice <= 0) {
+    if (!Number.isFinite(marketMedianPrice) || marketMedianPrice <= 0) {
       throw new Error(
-        `DealScoreService: invalid marketAveragePrice "${String(marketAveragePrice)}". Expected a positive number.`,
+        `DealScoreService: invalid marketMedianPrice "${String(marketMedianPrice)}". Expected a positive number.`,
       );
     }
 
-    const discountPercent =
-      ((marketAveragePrice - price) / marketAveragePrice) * 100;
+    const advantage =
+      ((marketMedianPrice - price) / marketMedianPrice) * 100;
 
-    // 20% below market ≈ score 70 (deal threshold); scales linearly, clamped 0–100.
-    let dealScore = clamp(Math.round(discountPercent * 3.5), 0, 100);
-
-    const textCorpus = this.buildTextCorpus(rawDetails);
-    const { delta, matchedKeywords } = this.analyzeText(textCorpus);
-
-    dealScore = clamp(dealScore + delta, 0, 100);
-
-    return {
-      dealScore,
-      isDeal: dealScore >= DEAL_SCORE_THRESHOLD,
-      discountPercent: Number(discountPercent.toFixed(2)),
-      matchedKeywords,
-    };
-  }
-
-  /**
-   * Collects searchable text from rawDetails (and nested string fields).
-   */
-  private buildTextCorpus(rawDetails?: Record<string, unknown>): string {
-    if (!rawDetails) {
-      return "";
-    }
-
-    const chunks: string[] = [];
-
-    const walk = (value: unknown): void => {
-      if (typeof value === "string") {
-        chunks.push(value);
-        return;
-      }
-
-      if (Array.isArray(value)) {
-        for (const item of value) {
-          walk(item);
-        }
-        return;
-      }
-
-      if (value && typeof value === "object") {
-        for (const nested of Object.values(value as Record<string, unknown>)) {
-          walk(nested);
-        }
-      }
-    };
-
-    walk(rawDetails);
-    return chunks.join(" ").toLocaleLowerCase("tr-TR");
-  }
-
-  /**
-   * Detects risk / urgency keywords and returns the cumulative score revision.
-   */
-  private analyzeText(text: string): {
-    delta: number;
-    matchedKeywords: string[];
-  } {
-    if (!text) {
-      return { delta: 0, matchedKeywords: [] };
-    }
-
-    let delta = 0;
-    const matchedKeywords: string[] = [];
-
-    for (const rule of KEYWORD_RULES) {
-      if (text.includes(rule.keyword.toLocaleLowerCase("tr-TR"))) {
-        delta += rule.delta;
-        matchedKeywords.push(rule.keyword);
-      }
-    }
-
-    return { delta, matchedKeywords };
+    return this.calculateFromMarket(
+      {
+        price,
+        brand: "x",
+        model: "y",
+        year: 2020,
+        mileage: 1,
+        currency: "TRY",
+        city: "x",
+      },
+      {
+        status: "READY",
+        marketMedianPrice,
+        sampleSize: 15,
+        priceAdvantagePct: Number(advantage.toFixed(2)),
+        confidence: "HIGH",
+        segmentLevel: "L2",
+        dispersionPct: 10,
+        calculatedAt: new Date(),
+      },
+    );
   }
 }
 

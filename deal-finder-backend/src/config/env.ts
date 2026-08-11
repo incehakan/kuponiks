@@ -65,6 +65,12 @@ export interface AppEnv {
    * Example: https://app.example.com,https://admin.example.com
    */
   CORS_ORIGINS?: string;
+  /** Market Intelligence: minimum comparable sample size (default 5). */
+  MARKET_MIN_SAMPLE?: number;
+  /** Market Intelligence: lookback window in days via lastSeenAt (default 90). */
+  MARKET_LOOKBACK_DAYS?: number;
+  /** Global deal score threshold for isDeal / enqueue (default 70). */
+  DEAL_SCORE_THRESHOLD?: number;
   NODE_ENV: "development" | "production" | "test";
 }
 
@@ -213,6 +219,30 @@ function loadEnv(): AppEnv {
   const corsOrigins = optionalString("CORS_ORIGINS");
   if (corsOrigins !== undefined) {
     config.CORS_ORIGINS = corsOrigins;
+  }
+
+  const marketMinSample = optionalString("MARKET_MIN_SAMPLE");
+  if (marketMinSample !== undefined) {
+    const parsed = Number.parseInt(marketMinSample, 10);
+    if (Number.isFinite(parsed) && parsed > 0) {
+      config.MARKET_MIN_SAMPLE = parsed;
+    }
+  }
+
+  const marketLookback = optionalString("MARKET_LOOKBACK_DAYS");
+  if (marketLookback !== undefined) {
+    const parsed = Number.parseInt(marketLookback, 10);
+    if (Number.isFinite(parsed) && parsed > 0) {
+      config.MARKET_LOOKBACK_DAYS = parsed;
+    }
+  }
+
+  const dealScoreThreshold = optionalString("DEAL_SCORE_THRESHOLD");
+  if (dealScoreThreshold !== undefined) {
+    const parsed = Number.parseInt(dealScoreThreshold, 10);
+    if (Number.isFinite(parsed) && parsed > 0 && parsed <= 100) {
+      config.DEAL_SCORE_THRESHOLD = parsed;
+    }
   }
 
   if (config.PROXY_URL) {

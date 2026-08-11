@@ -101,7 +101,8 @@ export interface NormalizedListingInput {
   imageUrl: string | null;
   publishedAt: Date | null;
   url: string;
-  marketAveragePrice: number;
+  /** Optional scraper-provided market hint only — never filled with listing.price. */
+  marketAveragePrice: number | null;
   rawDetails: Record<string, unknown>;
 }
 
@@ -262,10 +263,10 @@ export function normalizeScrapedListing(
     return null;
   }
 
-  const marketAverage =
-    parsePrice(
-      raw.marketAveragePrice ?? raw.marketAverage ?? raw.piyasaOrt,
-    ) ?? price;
+  // Never fall back to listing.price — Market Intelligence owns real medians.
+  const marketAverage = parsePrice(
+    raw.marketAveragePrice ?? raw.marketAverage ?? raw.piyasaOrt,
+  );
 
   const description = pickString(raw, ["description", "aciklama"]);
   const subcategory = pickString(raw, ["subcategory"]);
@@ -401,12 +402,31 @@ export function normalizeScrapedListings(
 export function toListingCreateData(
   input: NormalizedListingInput,
   dealScore: number,
+  market?: {
+    marketAveragePrice: number | null;
+    marketMedianPrice: number | null;
+    marketSampleSize: number | null;
+    marketConfidence: string | null;
+    marketDispersionPct: number | null;
+    priceAdvantagePct: number | null;
+    marketCalculatedAt: Date | null;
+    marketSegmentLevel: string | null;
+    marketStatus: string;
+  },
 ): {
   externalId: string;
   platform: string;
   title: string;
   price: number;
-  marketAveragePrice: number;
+  marketAveragePrice: number | null;
+  marketMedianPrice: number | null;
+  marketSampleSize: number | null;
+  marketConfidence: string | null;
+  marketDispersionPct: number | null;
+  priceAdvantagePct: number | null;
+  marketCalculatedAt: Date | null;
+  marketSegmentLevel: string | null;
+  marketStatus: string | null;
   dealScore: number;
   category: string;
   subcategory: string | null;
@@ -432,7 +452,15 @@ export function toListingCreateData(
     platform: input.platform,
     title: input.title,
     price: input.price,
-    marketAveragePrice: input.marketAveragePrice,
+    marketAveragePrice: market?.marketAveragePrice ?? input.marketAveragePrice,
+    marketMedianPrice: market?.marketMedianPrice ?? null,
+    marketSampleSize: market?.marketSampleSize ?? null,
+    marketConfidence: market?.marketConfidence ?? null,
+    marketDispersionPct: market?.marketDispersionPct ?? null,
+    priceAdvantagePct: market?.priceAdvantagePct ?? null,
+    marketCalculatedAt: market?.marketCalculatedAt ?? null,
+    marketSegmentLevel: market?.marketSegmentLevel ?? null,
+    marketStatus: market?.marketStatus ?? null,
     dealScore,
     category: input.category,
     subcategory: input.subcategory,

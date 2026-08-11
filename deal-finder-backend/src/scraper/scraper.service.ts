@@ -6,6 +6,11 @@ import {
 } from "../analyzer/deal-score.service.js";
 import { prisma } from "../lib/prisma.js";
 import { redisSetNxEx } from "../lib/redis.js";
+import {
+  marketFieldsForPersistence,
+  marketIntelligenceService,
+  type MarketIntelligenceService,
+} from "../market/market-intelligence.service.js";
 import { enqueueListingMatch } from "../queues/listing.queue.js";
 import {
   normalizeScrapedListing,
@@ -54,11 +59,14 @@ export interface ScraperBatchSummary {
 }
 
 /**
- * Persists scraped listings, blocks duplicates via `externalId`,
- * and triggers the kelepir score engine after insert.
+ * Persists scraped listings, runs Market Intelligence + DealScore V2,
+ * then enqueues filter matching when score clears the threshold.
  */
 export class ScraperService {
-  constructor(private readonly scorer: DealScoreService = dealScoreService) {}
+  constructor(
+    private readonly scorer: DealScoreService = dealScoreService,
+    private readonly market: MarketIntelligenceService = marketIntelligenceService,
+  ) {}
 
   /**
    * Normalizes + ingests a single raw scraped listing.
@@ -80,11 +88,12 @@ export class ScraperService {
 
   /**
    * Ingests an already-normalized listing payload.
-   * New listing: firstSeenAt/lastSeenAt via DB defaults.
-   * Re-scrape of same platform+externalId: update mutable fields, bump lastSeenAt, keep firstSeenAt.
+   * Flow: analyze market → DealScore V2 → persist → match (if deal).
+   * Pass `{ quiet: true }` to skip match/notification enqueue (test scrapes).
    */
   async ingestNormalizedListing(
     input: NormalizedListingInput,
+    options: { quiet?: boolean } = {},
   ): Promise<ScraperIngestResult> {
     try {
       const existing = await prisma.listing.findFirst({
@@ -106,20 +115,43 @@ export class ScraperService {
         return this.updateExistingListing(byExternalOnly, input);
       }
 
-      const scoreResult = this.scorer.calculateDealScore(
-        input.price,
-        input.marketAveragePrice,
+      const marketResult = await this.market.analyzeListing({
+        externalId: input.externalId,
+        platform: input.platform,
+        price: input.price,
+        currency: input.currency,
+        category: input.category,
+        brand: input.brand,
+        model: input.model,
+        year: input.year,
+        mileage: input.mileage,
+        city: input.city,
+      });
+
+      const scoreResult = this.scorer.calculateFromMarket(
         {
-          ...input.rawDetails,
-          title: input.title,
-          category: input.category,
+          brand: input.brand,
+          model: input.model,
+          year: input.year,
+          mileage: input.mileage,
+          price: input.price,
+          currency: input.currency,
+          city: input.city,
         },
+        marketResult,
       );
 
+      if (marketResult.status === "READY") {
+        console.log(
+          `[MARKET] listing=${input.platform}:${input.externalId} segment=${marketResult.segmentLevel} sample=${marketResult.sampleSize} median=${marketResult.marketMedianPrice} advantage=${marketResult.priceAdvantagePct} confidence=${marketResult.confidence} score=${scoreResult.dealScore}`,
+        );
+      }
+
+      const marketFields = marketFieldsForPersistence(marketResult);
       const now = new Date();
       const listing = await prisma.listing.create({
         data: {
-          ...toListingCreateData(input, scoreResult.dealScore),
+          ...toListingCreateData(input, scoreResult.dealScore, marketFields),
           rawDetails: input.rawDetails as Prisma.InputJsonValue,
           firstSeenAt: now,
           lastSeenAt: now,
@@ -127,14 +159,16 @@ export class ScraperService {
       });
 
       console.log(
-        `[SCRAPER] İlan kaydedildi → id=${listing.id}, skor=${scoreResult.dealScore}, title="${listing.title}"`,
+        `[SCRAPER] İlan kaydedildi → id=${listing.id}, skor=${scoreResult.dealScore}, market=${marketResult.status}, title="${listing.title}"`,
       );
 
-      const enqueuedForMatch = await this.maybeEnqueueMatch(
-        listing,
-        scoreResult.dealScore,
-        scoreResult.isDeal,
-      );
+      const enqueuedForMatch = options.quiet
+        ? false
+        : await this.maybeEnqueueMatch(
+            listing,
+            scoreResult.dealScore,
+            scoreResult.isDeal,
+          );
 
       return {
         status: "created",
@@ -176,22 +210,40 @@ export class ScraperService {
     existing: Listing,
     input: NormalizedListingInput,
   ): Promise<ScraperIngestResult> {
-    const scoreResult = this.scorer.calculateDealScore(
-      input.price,
-      input.marketAveragePrice,
+    const marketResult = await this.market.analyzeListing({
+      id: existing.id,
+      externalId: input.externalId,
+      platform: input.platform,
+      price: input.price,
+      currency: input.currency,
+      category: input.category,
+      brand: input.brand,
+      model: input.model,
+      year: input.year,
+      mileage: input.mileage,
+      city: input.city,
+    });
+
+    const scoreResult = this.scorer.calculateFromMarket(
       {
-        ...input.rawDetails,
-        title: input.title,
-        category: input.category,
+        brand: input.brand,
+        model: input.model,
+        year: input.year,
+        mileage: input.mileage,
+        price: input.price,
+        currency: input.currency,
+        city: input.city,
       },
+      marketResult,
     );
+
+    const marketFields = marketFieldsForPersistence(marketResult);
 
     const listing = await prisma.listing.update({
       where: { id: existing.id },
       data: {
         title: input.title,
         price: input.price,
-        marketAveragePrice: input.marketAveragePrice,
         dealScore: scoreResult.dealScore,
         category: input.category,
         subcategory: input.subcategory,
@@ -212,12 +264,13 @@ export class ScraperService {
         rawDetails: input.rawDetails as Prisma.InputJsonValue,
         lastSeenAt: new Date(),
         ...(input.publishedAt ? { publishedAt: input.publishedAt } : {}),
+        ...marketFields,
         // firstSeenAt intentionally untouched
       },
     });
 
     console.log(
-      `[SCRAPER] İlan güncellendi (firstSeenAt korundu) → id=${listing.id} externalId=${listing.externalId} lastSeenAt=${listing.lastSeenAt.toISOString()}`,
+      `[SCRAPER] İlan güncellendi (firstSeenAt korundu) → id=${listing.id} externalId=${listing.externalId} market=${marketResult.status} skor=${scoreResult.dealScore} lastSeenAt=${listing.lastSeenAt.toISOString()}`,
     );
 
     return {

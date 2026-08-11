@@ -422,20 +422,27 @@ function normalizeDeal(deal: Partial<Deal> & Record<string, unknown>): Deal {
     marketAverage:
       Number(deal.marketAverage) ||
       Number((deal as { marketAveragePrice?: number }).marketAveragePrice) ||
-      Number(deal.price) ||
+      Number((deal as { marketMedianPrice?: number }).marketMedianPrice) ||
       0,
     dealScore: Number(deal.dealScore) || 0,
     dealPercent: (() => {
       const explicit = Number(deal.dealPercent);
-      if (Number.isFinite(explicit) && explicit > 0) {
+      if (Number.isFinite(explicit)) {
         return Math.round(explicit);
+      }
+      const advantage = Number(
+        (deal as { priceAdvantagePct?: number }).priceAdvantagePct,
+      );
+      if (Number.isFinite(advantage)) {
+        return Math.round(advantage);
       }
       const price = Number(deal.price) || 0;
       const market =
         Number(deal.marketAverage) ||
         Number((deal as { marketAveragePrice?: number }).marketAveragePrice) ||
+        Number((deal as { marketMedianPrice?: number }).marketMedianPrice) ||
         0;
-      if (market > 0 && price > 0 && market > price) {
+      if (market > 0 && price > 0) {
         return Math.round(((market - price) / market) * 100);
       }
       return 0;
@@ -446,6 +453,14 @@ function normalizeDeal(deal: Partial<Deal> & Record<string, unknown>): Deal {
     platform,
     source: typeof deal.source === 'string' ? deal.source : platform,
     sellerPhone: typeof deal.sellerPhone === 'string' ? deal.sellerPhone : undefined,
+    marketMedianPrice:
+      (deal as { marketMedianPrice?: number | null }).marketMedianPrice ?? null,
+    priceAdvantagePct:
+      (deal as { priceAdvantagePct?: number | null }).priceAdvantagePct ?? null,
+    marketSampleSize:
+      (deal as { marketSampleSize?: number | null }).marketSampleSize ?? null,
+    marketConfidence:
+      (deal as { marketConfidence?: string | null }).marketConfidence ?? null,
   };
 }
 

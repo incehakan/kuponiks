@@ -81,34 +81,44 @@ model UserFilter {
 }
 
 model Listing {
-  id                 String    @id @default(uuid()) @db.Uuid
-  externalId         String    @unique
-  platform           String
-  title              String
-  price              Float
-  marketAveragePrice Float?
-  dealScore          Int
-  category           String?
-  subcategory        String?
-  brand              String?
-  model              String?
-  variant            String?
-  year               Int?
-  mileage            Int?
-  fuelType           String?
-  transmission       String?
-  city               String?
-  district           String?
-  sellerType         String?
-  description        String?
-  currency           String?   @default("TRY")
-  imageUrl           String?
-  publishedAt        DateTime?
-  firstSeenAt        DateTime  @default(now())
-  lastSeenAt         DateTime  @default(now())
-  url                String
-  rawDetails         Json?
-  createdAt          DateTime  @default(now())
+  id                  String    @id @default(uuid()) @db.Uuid
+  externalId          String    @unique
+  platform            String
+  title               String
+  price               Float
+  marketAveragePrice  Float?
+  /// Semantic median from Market Intelligence (BC: also written to marketAveragePrice when READY)
+  marketMedianPrice   Float?
+  marketSampleSize    Int?
+  marketConfidence    String?
+  marketDispersionPct Float?
+  priceAdvantagePct   Float?
+  marketCalculatedAt  DateTime?
+  marketSegmentLevel  String?
+  /// READY | INSUFFICIENT_DATA | UNSUPPORTED_CATEGORY
+  marketStatus        String?
+  dealScore           Int
+  category            String?
+  subcategory         String?
+  brand               String?
+  model               String?
+  variant             String?
+  year                Int?
+  mileage             Int?
+  fuelType            String?
+  transmission        String?
+  city                String?
+  district            String?
+  sellerType          String?
+  description         String?
+  currency            String?   @default("TRY")
+  imageUrl            String?
+  publishedAt         DateTime?
+  firstSeenAt         DateTime  @default(now())
+  lastSeenAt          DateTime  @default(now())
+  url                 String
+  rawDetails          Json?
+  createdAt           DateTime  @default(now())
 
   notifications NotificationLog[]
 
@@ -121,6 +131,7 @@ model Listing {
   @@index([city, price])
   @@index([year])
   @@index([firstSeenAt])
+  @@index([lastSeenAt])
 }
 
 model NotificationLog {

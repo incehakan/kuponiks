@@ -16,6 +16,11 @@ export interface DealListItem {
   listingUrl: string;
   platform: string;
   createdAt: Date;
+  /** Market Intelligence V1 (optional, backward-compatible). */
+  marketMedianPrice?: number | null;
+  priceAdvantagePct?: number | null;
+  marketSampleSize?: number | null;
+  marketConfidence?: string | null;
 }
 
 /**
@@ -47,6 +52,10 @@ export class DealService {
           city: true,
           price: true,
           marketAveragePrice: true,
+          marketMedianPrice: true,
+          priceAdvantagePct: true,
+          marketSampleSize: true,
+          marketConfidence: true,
           dealScore: true,
           url: true,
           platform: true,
@@ -55,13 +64,16 @@ export class DealService {
       });
 
       return listings.map((listing) => {
-        const marketAverage = listing.marketAveragePrice ?? listing.price;
+        const marketAverage =
+          listing.marketMedianPrice ?? listing.marketAveragePrice ?? 0;
         const dealPercent =
-          marketAverage > 0
-            ? Math.round(
-                ((marketAverage - listing.price) / marketAverage) * 100,
-              )
-            : 0;
+          listing.priceAdvantagePct != null
+            ? Math.round(listing.priceAdvantagePct)
+            : marketAverage > 0
+              ? Math.round(
+                  ((marketAverage - listing.price) / marketAverage) * 100,
+                )
+              : 0;
 
         return {
           id: listing.id,
@@ -74,6 +86,10 @@ export class DealService {
           listingUrl: listing.url,
           platform: listing.platform,
           createdAt: listing.createdAt,
+          marketMedianPrice: listing.marketMedianPrice,
+          priceAdvantagePct: listing.priceAdvantagePct,
+          marketSampleSize: listing.marketSampleSize,
+          marketConfidence: listing.marketConfidence,
         };
       });
     } catch (error) {
@@ -101,6 +117,10 @@ export class DealService {
           city: true,
           price: true,
           marketAveragePrice: true,
+          marketMedianPrice: true,
+          priceAdvantagePct: true,
+          marketSampleSize: true,
+          marketConfidence: true,
           dealScore: true,
           url: true,
           platform: true,
@@ -112,11 +132,14 @@ export class DealService {
         throw new HttpError("İlan bulunamadı", 404, "NotFoundError");
       }
 
-      const marketAverage = listing.marketAveragePrice ?? listing.price;
+      const marketAverage =
+        listing.marketMedianPrice ?? listing.marketAveragePrice ?? 0;
       const dealPercent =
-        marketAverage > 0
-          ? Math.round(((marketAverage - listing.price) / marketAverage) * 100)
-          : 0;
+        listing.priceAdvantagePct != null
+          ? Math.round(listing.priceAdvantagePct)
+          : marketAverage > 0
+            ? Math.round(((marketAverage - listing.price) / marketAverage) * 100)
+            : 0;
 
       return {
         id: listing.id,
@@ -129,6 +152,10 @@ export class DealService {
         listingUrl: listing.url,
         platform: listing.platform,
         createdAt: listing.createdAt,
+        marketMedianPrice: listing.marketMedianPrice,
+        priceAdvantagePct: listing.priceAdvantagePct,
+        marketSampleSize: listing.marketSampleSize,
+        marketConfidence: listing.marketConfidence,
       };
     } catch (error) {
       if (error instanceof HttpError) {

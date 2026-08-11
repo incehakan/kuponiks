@@ -92,11 +92,13 @@ export class ListingAlertNotificationService {
       }
     }
 
-    const marketAverage = listing.marketAveragePrice ?? listing.price;
+    const marketAverage = listing.marketAveragePrice;
     const discountRate =
-      marketAverage > 0
-        ? Math.round(((marketAverage - listing.price) / marketAverage) * 100)
-        : 0;
+      listing.priceAdvantagePct != null
+        ? Math.round(listing.priceAdvantagePct)
+        : marketAverage != null && marketAverage > 0
+          ? Math.round(((marketAverage - listing.price) / marketAverage) * 100)
+          : 0;
 
     const cityName = listing.city?.trim() || "Türkiye";
     const title = "Kuponiks Fırsat Alarmı";
