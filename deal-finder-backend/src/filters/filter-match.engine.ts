@@ -1,7 +1,10 @@
 /**
  * Pure Filter Matching Engine V2 — no Prisma / Redis side effects.
- * Used by FilterMatchingService and unit tests.
+ * Used by FilterMatchingService, ListingAlertNotificationService, and unit tests.
  */
+
+import { normalizeMatchText } from "../lib/text-normalize.js";
+import { categoriesMatchForFilter } from "../scraper/utils/category.js";
 
 export interface MatchableListing {
   title: string;
@@ -45,10 +48,7 @@ export interface MatchableFilter {
   minDealScore?: number | null;
 }
 
-/** Turkish-aware trim + lowercase for comparable strings. */
-export function normalizeMatchText(value: string | null | undefined): string {
-  return (value ?? "").trim().toLocaleLowerCase("tr-TR");
-}
+export { normalizeMatchText } from "../lib/text-normalize.js";
 
 /**
  * Equality for optional string criteria.
@@ -217,9 +217,7 @@ export function listingMatchesFilter(
     return false;
   }
 
-  if (
-    normalizeMatchText(filter.category) !== normalizeMatchText(listingCategory)
-  ) {
+  if (!categoriesMatchForFilter(filter.category, listingCategory)) {
     return false;
   }
 

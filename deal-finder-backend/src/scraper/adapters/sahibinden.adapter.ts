@@ -5,6 +5,7 @@ import {
   prepareStealthPage,
   waitForCloudflareClearance,
 } from "../puppeteer/stealth-browser.js";
+import { cleanPrice } from "../utils/clean-price.js";
 import {
   BaseScraperAdapter,
   type ScrapeSearchParams,
@@ -318,7 +319,7 @@ export class SahibindenAdapter extends BaseScraperAdapter {
       return null;
     }
 
-    const price = this.parsePriceText(row.priceText);
+    const price = cleanPrice(row.priceText);
     if (price == null) {
       console.warn(
         `[sahibinden] Fiyat parse edilemedi, satır atlandı → title="${row.title}" priceText="${row.priceText ?? ""}"`,
@@ -341,40 +342,8 @@ export class SahibindenAdapter extends BaseScraperAdapter {
       city,
       category: params.category ?? "Vasıta > Otomobil",
       platform: "sahibinden",
+      currency: "TRY",
     });
-  }
-
-  private parsePriceText(raw: string | null | undefined): number | null {
-    if (!raw) {
-      return null;
-    }
-
-    const cleaned = raw
-      .replace(/TL/gi, "")
-      .replace(/₺/g, "")
-      .replace(/\u00a0/g, " ")
-      .trim();
-
-    const digits = cleaned.replace(/[^\d.,]/g, "");
-    if (!digits) {
-      return null;
-    }
-
-    let normalized = digits;
-    if (digits.includes(",") && digits.includes(".")) {
-      normalized = digits.replace(/\./g, "").replace(",", ".");
-    } else if (/^\d{1,3}(\.\d{3})+$/.test(digits)) {
-      normalized = digits.replace(/\./g, "");
-    } else if (digits.includes(",")) {
-      const parts = digits.split(",");
-      normalized =
-        parts.length === 2 && (parts[1]?.length ?? 0) <= 2
-          ? `${parts[0]!.replace(/\./g, "")}.${parts[1]}`
-          : digits.replace(/,/g, "");
-    }
-
-    const value = Number.parseFloat(normalized);
-    return Number.isFinite(value) && value > 0 ? Math.round(value) : null;
   }
 
   private normalizeCity(raw: string | null): string | null {

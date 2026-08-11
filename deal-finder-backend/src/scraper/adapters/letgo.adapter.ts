@@ -357,19 +357,12 @@ export class LetgoAdapter extends BaseScraperAdapter {
       seen.add(absoluteUrl);
       index += 1;
 
-      const price = BaseScraperAdapter.KELEPIR_TEST_PRICE;
-      results.push(
-        this.buildRawListing({
-          id: absoluteUrl,
-          title:
-            this.guessTitleNearHref(html, href) ??
-            `${params.query ?? "İlan"} #${index}`,
-          price,
-          url: absoluteUrl,
-          platform: "letgo",
-          category: params.category ?? null,
-          city: params.city ?? null,
-        }),
+      // Link-only rows have no reliable price — do not invent KELEPIR test prices.
+      const title =
+        this.guessTitleNearHref(html, href) ??
+        `${params.query ?? "İlan"} #${index}`;
+      console.warn(
+        `[letgo] Link-only satır atlandı (fiyat yok) → "${title.slice(0, 60)}"`,
       );
     }
 

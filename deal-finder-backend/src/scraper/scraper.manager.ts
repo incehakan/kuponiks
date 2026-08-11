@@ -1,11 +1,14 @@
 import type { RawScrapedListing } from "./normalizer.js";
 import type { ListingDto } from "./types/listing.dto.js";
 import { cleanPrice } from "./utils/clean-price.js";
+import { inferCurrencyFromPriceText } from "./utils/normalize-currency.js";
+import { splitCityDistrict } from "./utils/location.js";
 import { canonicalizeExternalId } from "./utils/external-id.js";
 import type { BaseScraperAdapter } from "./adapters/base.adapter.js";
 import type { ScrapeSearchParams } from "./adapters/base.adapter.js";
 import { normalizeScrapedListings } from "./normalizer.js";
 import type { NormalizedListingInput } from "./normalizer.js";
+import { logBatchDataQuality } from "./utils/data-quality.js";
 
 export class ScraperAdapterError extends Error {
   constructor(
@@ -32,9 +35,14 @@ export function toListingDto(
     price?: number | string | null;
     priceText?: string | null;
     city?: string | null;
+    district?: string | null;
     url?: string | null;
     category?: string | null;
     description?: string | null;
+    model?: string | null;
+    year?: string | number | null;
+    mileage?: string | number | null;
+    imageUrl?: string | null;
   },
   defaults: { category?: string; city?: string } = {},
 ): ListingDto | null {
@@ -54,9 +62,18 @@ export function toListingDto(
     return null;
   }
 
-  const city = row.city?.trim() || defaults.city?.trim() || null;
+  const location = splitCityDistrict(
+    row.city?.trim() || defaults.city?.trim() || null,
+  );
+  const city = location.city;
+  const district = row.district?.trim() || location.district;
   const category =
     row.category?.trim() || defaults.category?.trim() || "Genel";
+  const currency = inferCurrencyFromPriceText(
+    typeof row.priceText === "string"
+      ? row.priceText
+      : String(row.price ?? ""),
+  );
 
   const dto: ListingDto = {
     externalId,
@@ -70,6 +87,24 @@ export function toListingDto(
 
   if (row.description?.trim()) {
     dto.description = row.description.trim();
+  }
+  if (district) {
+    dto.district = district;
+  }
+  if (row.model?.trim()) {
+    dto.model = row.model.trim();
+  }
+  if (row.year != null && String(row.year).trim()) {
+    dto.year = row.year;
+  }
+  if (row.mileage != null && String(row.mileage).trim()) {
+    dto.mileage = row.mileage;
+  }
+  if (currency) {
+    dto.currency = currency;
+  }
+  if (row.imageUrl?.trim()) {
+    dto.imageUrl = row.imageUrl.trim();
   }
 
   return dto;
@@ -90,8 +125,26 @@ export function listingDtoToRaw(dto: ListingDto): RawScrapedListing {
   if (dto.city) {
     raw.city = dto.city;
   }
+  if (dto.district) {
+    raw.district = dto.district;
+  }
   if (dto.description) {
     raw.description = dto.description;
+  }
+  if (dto.model) {
+    raw.model = dto.model;
+  }
+  if (dto.year != null) {
+    raw.year = dto.year;
+  }
+  if (dto.mileage != null) {
+    raw.mileage = dto.mileage;
+  }
+  if (dto.currency) {
+    raw.currency = dto.currency;
+  }
+  if (dto.imageUrl) {
+    raw.imageUrl = dto.imageUrl;
   }
   if (dto.marketAveragePrice != null) {
     raw.marketAveragePrice = dto.marketAveragePrice;
@@ -117,6 +170,7 @@ export async function runAdapterPipeline(
       ...(params.category ? { category: params.category } : {}),
       ...(params.city ? { city: params.city } : {}),
     });
+    logBatchDataQuality(adapter.platform, normalized);
     return { rawCount: raw.length, normalized, error: null };
   } catch (cause) {
     const message =

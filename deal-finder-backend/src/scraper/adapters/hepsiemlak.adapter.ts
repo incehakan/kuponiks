@@ -229,6 +229,8 @@ export class HepsiemlakAdapter extends BaseScraperAdapter {
           city: row.city,
           url: row.url,
           category: params.category ?? "Emlak",
+          ...(row.district != null ? { district: row.district } : {}),
+          ...(row.imageUrl != null ? { imageUrl: row.imageUrl } : {}),
         },
         {
           category: params.category ?? "Emlak",
@@ -237,11 +239,7 @@ export class HepsiemlakAdapter extends BaseScraperAdapter {
       );
 
       if (dto) {
-        const raw = listingDtoToRaw(dto);
-        if (row.imageUrl) {
-          raw.imageUrl = row.imageUrl;
-        }
-        out.push(raw);
+        out.push(listingDtoToRaw(dto));
       } else if (row.title && cleanPrice(row.priceText) == null) {
         console.warn(
           `[hepsiemlak] Fiyat parse edilemedi, satır atlandı → "${row.title}"`,

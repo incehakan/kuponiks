@@ -140,9 +140,16 @@ export const HEPSIEMLAK_EXTRACT_SCRIPT = `(() => {
     const locationEl = el.querySelector(
       ".list-view-location, .location, [class*='location'], [class*='city'], [class*='district']",
     );
-    const city = locationEl
+    const locationText = locationEl
       ? (locationEl.textContent || "").replace(/\\s+/g, " ").trim()
       : null;
+    let city = locationText;
+    let district = null;
+    if (locationText && /[/,|]/.test(locationText)) {
+      const parts = locationText.split(/\\s*[/,|]\\s*/).map((p) => p.trim()).filter(Boolean);
+      city = parts[0] || null;
+      district = parts.length > 1 ? parts.slice(1).join(" / ") : null;
+    }
 
     const imgEl = el.querySelector(
       "img[src], img[data-src], img[data-lazy], picture img",
@@ -163,6 +170,7 @@ export const HEPSIEMLAK_EXTRACT_SCRIPT = `(() => {
       title: title,
       priceText: priceText,
       city: city,
+      district: district,
       url: absoluteUrl.split("?")[0],
       imageUrl: imageUrl,
     });

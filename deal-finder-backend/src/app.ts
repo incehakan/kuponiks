@@ -37,6 +37,27 @@ export async function buildApp(): Promise<FastifyInstance> {
         return;
       }
 
+      const fromEnv = (env.CORS_ORIGINS ?? "")
+        .split(",")
+        .map((value) => value.trim())
+        .filter(Boolean);
+
+      if (env.NODE_ENV === "production") {
+        const allowedOrigins = new Set(fromEnv);
+
+        if (
+          allowedOrigins.has(origin) ||
+          origin.endsWith(".exp.direct") ||
+          origin.startsWith("exp://")
+        ) {
+          callback(null, true);
+          return;
+        }
+
+        callback(new Error(`CORS blocked for origin: ${origin}`), false);
+        return;
+      }
+
       const defaultDevOrigins = [
         "https://45.43.152.58.nip.io",
         "http://45.43.152.58",
@@ -45,11 +66,6 @@ export async function buildApp(): Promise<FastifyInstance> {
         "http://localhost:19006",
         "http://127.0.0.1:19006",
       ];
-
-      const fromEnv = (env.CORS_ORIGINS ?? "")
-        .split(",")
-        .map((value) => value.trim())
-        .filter(Boolean);
 
       const allowedOrigins = new Set([...defaultDevOrigins, ...fromEnv]);
 
@@ -63,13 +79,7 @@ export async function buildApp(): Promise<FastifyInstance> {
       }
 
       // Development: allow any origin for Expo web / local tooling.
-      if (env.NODE_ENV !== "production") {
-        callback(null, true);
-        return;
-      }
-
-      // Production: only allowlisted origins.
-      callback(new Error(`CORS blocked for origin: ${origin}`), false);
+      callback(null, true);
     },
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "Accept"],

@@ -328,9 +328,22 @@ export abstract class BaseScraperAdapter {
     price?: string | number | null | undefined;
     url?: string | null | undefined;
     city?: string | null | undefined;
+    district?: string | null | undefined;
     category?: string | null | undefined;
+    subcategory?: string | null | undefined;
     description?: string | null | undefined;
     platform?: string | null | undefined;
+    currency?: string | null | undefined;
+    imageUrl?: string | null | undefined;
+    sellerType?: string | null | undefined;
+    publishedAt?: string | Date | null | undefined;
+    brand?: string | null | undefined;
+    model?: string | null | undefined;
+    variant?: string | null | undefined;
+    year?: string | number | null | undefined;
+    mileage?: string | number | null | undefined;
+    fuelType?: string | null | undefined;
+    transmission?: string | null | undefined;
   }): RawScrapedListing {
     const raw: RawScrapedListing = {};
 
@@ -349,14 +362,53 @@ export abstract class BaseScraperAdapter {
     if (fields.city) {
       raw.city = fields.city;
     }
+    if (fields.district) {
+      raw.district = fields.district;
+    }
     if (fields.category) {
       raw.category = fields.category;
+    }
+    if (fields.subcategory) {
+      raw.subcategory = fields.subcategory;
     }
     if (fields.description) {
       raw.description = fields.description;
     }
     if (fields.platform) {
       raw.platform = fields.platform;
+    }
+    if (fields.currency) {
+      raw.currency = fields.currency;
+    }
+    if (fields.imageUrl) {
+      raw.imageUrl = fields.imageUrl;
+    }
+    if (fields.sellerType) {
+      raw.sellerType = fields.sellerType;
+    }
+    if (fields.publishedAt) {
+      raw.publishedAt = fields.publishedAt;
+    }
+    if (fields.brand) {
+      raw.brand = fields.brand;
+    }
+    if (fields.model) {
+      raw.model = fields.model;
+    }
+    if (fields.variant) {
+      raw.variant = fields.variant;
+    }
+    if (fields.year != null && fields.year !== "") {
+      raw.year = fields.year;
+    }
+    if (fields.mileage != null && fields.mileage !== "") {
+      raw.mileage = fields.mileage;
+    }
+    if (fields.fuelType) {
+      raw.fuelType = fields.fuelType;
+    }
+    if (fields.transmission) {
+      raw.transmission = fields.transmission;
     }
 
     return raw;

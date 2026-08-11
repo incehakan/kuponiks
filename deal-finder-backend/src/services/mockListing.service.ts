@@ -160,6 +160,13 @@ export class MockListingService {
    * Seeds 3 kelepir listings; first is always the guaranteed Honda Civic İzmir listing.
    */
   async createDefaultMockBatch(): Promise<Listing[]> {
+    const { env } = await import("../config/env.js");
+    if (env.NODE_ENV === "production" || !env.ENABLE_MOCK_LISTINGS) {
+      throw new Error(
+        "Mock listing üretimi kapalı (NODE_ENV!==production && ENABLE_MOCK_LISTINGS=true gerekli)",
+      );
+    }
+
     // Fixed indices: guaranteed Honda Civic İzmir, Yamaha İzmir, Honda Civic İstanbul
     const indices = [0, 1, 2];
     const created: Listing[] = [];

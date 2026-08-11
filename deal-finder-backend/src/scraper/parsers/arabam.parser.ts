@@ -56,11 +56,14 @@ export const ARABAM_EXTRACT_SCRIPT = `(() => {
 
     const titleEl =
       el.querySelector(".listing-text-new.listing-title-lines") ||
-      el.querySelector(".listing-modelname .listing-text-new") ||
-      el.querySelector(".listing-text-new") ||
       el.querySelector("h3 .listing-text-new, h2 .listing-text-new");
     const title = titleEl
       ? (titleEl.textContent || "").replace(/\\s+/g, " ").trim()
+      : null;
+
+    const modelEl = el.querySelector(".listing-modelname .listing-text-new");
+    const modelName = modelEl
+      ? (modelEl.textContent || "").replace(/\\s+/g, " ").trim()
       : null;
 
     const priceEl = el.querySelector("span.listing-price, .listing-price");
@@ -72,11 +75,28 @@ export const ARABAM_EXTRACT_SCRIPT = `(() => {
       el.querySelectorAll("td.listing-text span[title], td.listing-text a span"),
     );
     let city = null;
+    let district = null;
     if (citySpans.length > 0) {
-      city = citySpans
+      const parts = citySpans
         .map((s) => (s.getAttribute("title") || s.textContent || "").trim())
-        .filter(Boolean)
-        .join(" / ");
+        .filter(Boolean);
+      city = parts[0] || null;
+      district = parts.length > 1 ? parts.slice(1).join(" / ") : null;
+    }
+
+    // Structured table cells only (not title regex): year ≈ 4 digits, mileage contains km.
+    let year = null;
+    let mileage = null;
+    const cellTexts = Array.from(el.querySelectorAll("td")).map((td) =>
+      (td.textContent || "").replace(/\\s+/g, " ").trim(),
+    );
+    for (const text of cellTexts) {
+      if (!year && /^(19|20)\\d{2}$/.test(text)) {
+        year = text;
+      }
+      if (!mileage && /\\bkm\\b/i.test(text) && /\\d/.test(text)) {
+        mileage = text;
+      }
     }
 
     const imgEl =
@@ -86,15 +106,19 @@ export const ARABAM_EXTRACT_SCRIPT = `(() => {
       (imgEl && (imgEl.getAttribute("src") || imgEl.getAttribute("data-src"))) ||
       null;
 
-    if (!title && !priceText) {
+    if (!title && !priceText && !modelName) {
       continue;
     }
 
     results.push({
       externalId: externalId,
-      title: title,
+      title: title || modelName,
+      model: modelName,
       priceText: priceText,
       city: city,
+      district: district,
+      year: year,
+      mileage: mileage,
       url: absoluteUrl.split("?")[0],
       imageUrl: imageUrl,
     });

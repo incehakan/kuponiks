@@ -187,6 +187,11 @@ export class ArabamAdapter extends BaseScraperAdapter {
           city: row.city,
           url: row.url,
           category: params.category ?? "Vasıta > Otomobil",
+          ...(row.district != null ? { district: row.district } : {}),
+          ...(row.model != null ? { model: row.model } : {}),
+          ...(row.year != null ? { year: row.year } : {}),
+          ...(row.mileage != null ? { mileage: row.mileage } : {}),
+          ...(row.imageUrl != null ? { imageUrl: row.imageUrl } : {}),
         },
         {
           category: params.category ?? "Vasıta > Otomobil",
@@ -195,11 +200,7 @@ export class ArabamAdapter extends BaseScraperAdapter {
       );
 
       if (dto) {
-        const raw = listingDtoToRaw(dto);
-        if (row.imageUrl) {
-          raw.imageUrl = row.imageUrl;
-        }
-        out.push(raw);
+        out.push(listingDtoToRaw(dto));
       } else if (row.title && cleanPrice(row.priceText) == null) {
         console.warn(
           `[arabam] Fiyat parse edilemedi, satır atlandı → "${row.title}"`,

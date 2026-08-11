@@ -1,6 +1,11 @@
 import { Expo, type ExpoPushMessage, type ExpoPushTicket } from "expo-server-sdk";
 import type { Listing, User, UserFilter } from "@prisma/client";
 import { env } from "../config/env.js";
+import {
+  listingMatchesFilter,
+  type MatchableFilter,
+  type MatchableListing,
+} from "../filters/filter-match.engine.js";
 import { prisma } from "../lib/prisma.js";
 
 export interface ExpoPushPayload {
@@ -203,191 +208,67 @@ export class ListingAlertNotificationService {
     return tickets;
   }
 
+  /**
+   * Sync notification path uses the same central V2 matcher as async FilterMatchingService.
+   */
   private evaluateFilter(
     listing: Listing,
     filter: UserFilter,
   ): MatchEvaluation {
-    if (listing.dealScore < filter.minDealScore) {
-      return {
-        matched: false,
-        reason: `dealScore ${listing.dealScore} < minDealScore ${filter.minDealScore}`,
-      };
-    }
-
-    if (!this.matchesCategory(listing, filter.category)) {
-      return {
-        matched: false,
-        reason: `kategori uyuşmadı (filtre=${filter.category})`,
-      };
-    }
-
-    if (!this.matchesCity(listing.city, filter.city)) {
-      return {
-        matched: false,
-        reason: `şehir uyuşmadı (ilan=${listing.city ?? "-"}, filtre=${filter.city ?? "-"})`,
-      };
-    }
-
-    if (filter.minPrice != null && listing.price < filter.minPrice) {
-      return {
-        matched: false,
-        reason: `fiyat ${listing.price} < minPrice ${filter.minPrice}`,
-      };
-    }
-
-    if (filter.maxPrice != null && listing.price > filter.maxPrice) {
-      return {
-        matched: false,
-        reason: `fiyat ${listing.price} > maxPrice ${filter.maxPrice}`,
-      };
-    }
-
-    if (!this.matchesKeywords(listing, filter.keywords)) {
-      return {
-        matched: false,
-        reason: `keywords OR eşleşmedi (${(filter.keywords ?? []).join(", ") || "yok"})`,
-      };
-    }
-
-    return { matched: true };
-  }
-
-  private matchesCategory(listing: Listing, filterCategory: string): boolean {
-    const listingCategory = this.resolveListingCategory(listing);
-    if (!listingCategory) {
-      return false;
-    }
-
-    const left = listingCategory.toLocaleLowerCase("tr-TR");
-    const right = filterCategory.trim().toLocaleLowerCase("tr-TR");
-
-    return (
-      left === right ||
-      left.includes(right) ||
-      right.includes(left) ||
-      left.split(">").pop()?.trim() === right.split(">").pop()?.trim()
+    const matched = listingMatchesFilter(
+      this.toMatchableListing(listing),
+      this.toMatchableFilter(filter),
     );
+
+    return matched
+      ? { matched: true }
+      : { matched: false, reason: "V2 matcher kriterleri karşılanmadı" };
   }
 
-  private matchesCity(
-    listingCity: string | null,
-    filterCity: string | null,
-  ): boolean {
-    if (!filterCity || !filterCity.trim()) {
-      return true;
-    }
-
-    const normalizedFilter = filterCity.toLocaleLowerCase("tr-TR");
-    if (
-      normalizedFilter.includes("tüm türkiye") ||
-      normalizedFilter.includes("tum turkiye")
-    ) {
-      return true;
-    }
-
-    // Test/dev: missing listing city must not block keyword/budget matches.
-    if (!listingCity) {
-      if (env.NODE_ENV !== "production") {
-        return true;
-      }
-      return false;
-    }
-
-    const city = listingCity.toLocaleLowerCase("tr-TR");
-    return normalizedFilter
-      .split(",")
-      .map((part) => part.trim())
-      .filter(Boolean)
-      .some((part) => part === city || city.includes(part) || part.includes(city));
+  private toMatchableListing(listing: Listing): MatchableListing {
+    return {
+      title: listing.title,
+      price: listing.price,
+      dealScore: listing.dealScore,
+      category: listing.category,
+      subcategory: listing.subcategory,
+      brand: listing.brand,
+      model: listing.model,
+      variant: listing.variant,
+      year: listing.year,
+      mileage: listing.mileage,
+      fuelType: listing.fuelType,
+      transmission: listing.transmission,
+      city: listing.city,
+      district: listing.district,
+      sellerType: listing.sellerType,
+      description: listing.description,
+      rawDetails: listing.rawDetails,
+    };
   }
 
-  /**
-   * Keyword match — test mode uses case-insensitive regex OR semantics
-   * so "Toyota" filter hits titles containing Toyota (any case).
-   */
-  private matchesKeywords(listing: Listing, keywords: string[]): boolean {
-    if (!keywords || keywords.length === 0) {
-      return true;
-    }
-
-    const corpus = this.buildCorpus(listing);
-    const normalizedKeywords = keywords
-      .map((keyword) => keyword.trim())
-      .filter(Boolean);
-
-    if (normalizedKeywords.length === 0) {
-      return true;
-    }
-
-    if (env.NODE_ENV !== "production") {
-      return normalizedKeywords.some((keyword) =>
-        this.keywordMatchesCorpus(corpus, keyword),
-      );
-    }
-
-    const lowerCorpus = corpus.toLocaleLowerCase("tr-TR");
-    return normalizedKeywords.some((keyword) =>
-      lowerCorpus.includes(keyword.toLocaleLowerCase("tr-TR")),
-    );
-  }
-
-  private keywordMatchesCorpus(corpus: string, keyword: string): boolean {
-    const trimmed = keyword.trim();
-    if (!trimmed) {
-      return true;
-    }
-
-    const escaped = trimmed.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    try {
-      return new RegExp(escaped, "iu").test(corpus);
-    } catch {
-      return corpus
-        .toLocaleLowerCase("tr-TR")
-        .includes(trimmed.toLocaleLowerCase("tr-TR"));
-    }
-  }
-
-  private buildCorpus(listing: Listing): string {
-    const parts: string[] = [listing.title];
-
-    const raw = listing.rawDetails;
-    if (raw && typeof raw === "object" && !Array.isArray(raw)) {
-      const details = raw as Record<string, unknown>;
-      for (const key of ["description", "keywords", "category", "kategori"]) {
-        const value = details[key];
-        if (typeof value === "string") {
-          parts.push(value);
-        } else if (Array.isArray(value)) {
-          parts.push(
-            value.filter((item): item is string => typeof item === "string").join(" "),
-          );
-        }
-      }
-    }
-
-    if (listing.city) {
-      parts.push(listing.city);
-    }
-
-    // Keep original casing for unicode-aware regex; flags handle case.
-    return parts.join(" ");
-  }
-
-  private resolveListingCategory(listing: Listing): string | null {
-    const raw = listing.rawDetails;
-    if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
-      return null;
-    }
-
-    const details = raw as Record<string, unknown>;
-    for (const key of ["category", "kategori"] as const) {
-      const value = details[key];
-      if (typeof value === "string" && value.trim()) {
-        return value.trim();
-      }
-    }
-
-    return null;
+  private toMatchableFilter(filter: UserFilter): MatchableFilter {
+    return {
+      category: filter.category,
+      subcategory: filter.subcategory,
+      brand: filter.brand,
+      model: filter.model,
+      variant: filter.variant,
+      minYear: filter.minYear,
+      maxYear: filter.maxYear,
+      minMileage: filter.minMileage,
+      maxMileage: filter.maxMileage,
+      minPrice: filter.minPrice,
+      maxPrice: filter.maxPrice,
+      city: filter.city,
+      district: filter.district,
+      fuelType: filter.fuelType,
+      transmission: filter.transmission,
+      sellerType: filter.sellerType,
+      keywords: filter.keywords,
+      excludedKeywords: filter.excludedKeywords,
+      minDealScore: filter.minDealScore,
+    };
   }
 }
 

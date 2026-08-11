@@ -1,5 +1,11 @@
-import { cleanPrice } from "./utils/clean-price.js";
 import { canonicalizeExternalId } from "./utils/external-id.js";
+import { splitCityDistrict } from "./utils/location.js";
+import { normalizeCurrency } from "./utils/normalize-currency.js";
+import {
+  parseMileage,
+  parsePrice,
+  parseYear,
+} from "./utils/parse-number.js";
 
 /**
  * Raw listing payload as returned by heterogeneous scrapers / APIs.
@@ -101,7 +107,7 @@ export interface NormalizedListingInput {
 
 function asNonEmptyString(value: unknown): string | null {
   if (typeof value === "string" && value.trim().length > 0) {
-    return value.trim();
+    return value.trim().replace(/\s+/g, " ");
   }
   if (typeof value === "number" && Number.isFinite(value)) {
     return String(value);
@@ -125,27 +131,21 @@ function pickString(
 /**
  * Parses a positive integer from trusted numeric fields only (no guessing from title).
  */
-function pickPositiveInt(
-  raw: RawScrapedListing,
-  keys: string[],
-): number | null {
+function pickYear(raw: RawScrapedListing, keys: string[]): number | null {
   for (const key of keys) {
-    const value = raw[key];
-    if (typeof value === "number" && Number.isFinite(value)) {
-      const rounded = Math.round(value);
-      if (rounded >= 0) {
-        return rounded;
-      }
+    const parsed = parseYear(raw[key]);
+    if (parsed != null) {
+      return parsed;
     }
-    if (typeof value === "string") {
-      const digits = value.replace(/[^\d]/g, "");
-      if (!digits) {
-        continue;
-      }
-      const parsed = Number.parseInt(digits, 10);
-      if (Number.isFinite(parsed) && parsed >= 0) {
-        return parsed;
-      }
+  }
+  return null;
+}
+
+function pickMileage(raw: RawScrapedListing, keys: string[]): number | null {
+  for (const key of keys) {
+    const parsed = parseMileage(raw[key]);
+    if (parsed != null) {
+      return parsed;
     }
   }
   return null;
@@ -170,9 +170,7 @@ function pickDate(raw: RawScrapedListing, keys: string[]): Date | null {
 /**
  * Parses Turkish / locale-flavored price strings into a number.
  */
-export function parsePrice(value: unknown): number | null {
-  return cleanPrice(value);
-}
+export { parsePrice };
 
 function resolveExternalId(
   raw: RawScrapedListing,
@@ -274,15 +272,23 @@ export function normalizeScrapedListing(
   const brand = pickString(raw, ["brand", "marka"]);
   const model = pickString(raw, ["model"]);
   const variant = pickString(raw, ["variant"]);
-  const year = pickPositiveInt(raw, ["year", "yil"]);
-  const mileage = pickPositiveInt(raw, ["mileage", "kilometre", "km"]);
+  const year = pickYear(raw, ["year", "yil"]);
+  const mileage = pickMileage(raw, ["mileage", "kilometre", "km"]);
   const fuelType = pickString(raw, ["fuelType", "yakit"]);
   const transmission = pickString(raw, ["transmission", "vites"]);
-  const district = pickString(raw, ["district", "ilce"]);
+  const explicitDistrict = pickString(raw, ["district", "ilce"]);
   const sellerType = pickString(raw, ["sellerType", "saticiTipi"]);
-  const currency = pickString(raw, ["currency"]) ?? "TRY";
+  const currency =
+    normalizeCurrency(pickString(raw, ["currency"])) ??
+    normalizeCurrency(String(raw.price ?? raw.fiyat ?? "")) ??
+    "TRY";
   const imageUrl = pickString(raw, ["imageUrl", "image", "photoUrl"]);
   const publishedAt = pickDate(raw, ["publishedAt"]);
+
+  const locationParts = splitCityDistrict(city);
+  const resolvedCity = locationParts.city;
+  const districtFromCity =
+    explicitDistrict ?? locationParts.district;
 
   const keywordsRaw = raw.keywords;
   const keywords = Array.isArray(keywordsRaw)
@@ -307,12 +313,13 @@ export function normalizeScrapedListing(
   const resolvedTransmission =
     transmission ?? pickFromRawDetails(nestedRaw, ["transmission", "vites"]);
   const resolvedDistrict =
-    district ?? pickFromRawDetails(nestedRaw, ["district", "ilce"]);
+    districtFromCity ?? pickFromRawDetails(nestedRaw, ["district", "ilce"]);
   const resolvedSeller =
     sellerType ?? pickFromRawDetails(nestedRaw, ["sellerType", "saticiTipi"]);
   const resolvedSubcategory =
     subcategory ?? pickFromRawDetails(nestedRaw, ["subcategory"]);
 
+  // Preserve property-specific extras (roomCount, grossM2, etc.) inside rawDetails.
   const rawDetails: Record<string, unknown> = {
     ...(nestedRaw ?? {}),
     category,
@@ -342,7 +349,7 @@ export function normalizeScrapedListing(
     mileage,
     fuelType: resolvedFuel,
     transmission: resolvedTransmission,
-    city,
+    city: resolvedCity,
     district: resolvedDistrict,
     sellerType: resolvedSeller,
     description,

@@ -11,6 +11,12 @@ export interface ListingDto {
   category: string;
   marketAveragePrice?: number;
   description?: string;
+  district?: string | null;
+  model?: string | null;
+  year?: string | number | null;
+  mileage?: string | number | null;
+  currency?: string | null;
+  imageUrl?: string | null;
   raw?: Record<string, unknown>;
 }
 
@@ -21,4 +27,8 @@ export interface DomListingRow {
   city: string | null;
   url: string | null;
   imageUrl?: string | null;
+  district?: string | null;
+  model?: string | null;
+  year?: string | null;
+  mileage?: string | null;
 }
