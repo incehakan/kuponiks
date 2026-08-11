@@ -84,20 +84,19 @@ export const ARABAM_EXTRACT_SCRIPT = `(() => {
       district = parts.length > 1 ? parts.slice(1).join(" / ") : null;
     }
 
-    // Structured table cells only (not title regex): year ≈ 4 digits, mileage contains km.
+    // Year: dedicated year column (listing-text with YYYY only) — not title scan.
     let year = null;
-    let mileage = null;
-    const cellTexts = Array.from(el.querySelectorAll("td")).map((td) =>
-      (td.textContent || "").replace(/\\s+/g, " ").trim(),
-    );
-    for (const text of cellTexts) {
-      if (!year && /^(19|20)\\d{2}$/.test(text)) {
+    const yearCells = Array.from(el.querySelectorAll("td.listing-text"));
+    for (const td of yearCells) {
+      const text = (td.textContent || "").replace(/\\s+/g, " ").trim();
+      if (/^(19|20)\\d{2}$/.test(text)) {
         year = text;
-      }
-      if (!mileage && /\\bkm\\b/i.test(text) && /\\d/.test(text)) {
-        mileage = text;
+        break;
       }
     }
+
+    // List layout has no dedicated km column; mileage comes from JSON-LD merge in adapter.
+    const mileage = null;
 
     const imgEl =
       el.querySelector("img.listing-image") ||

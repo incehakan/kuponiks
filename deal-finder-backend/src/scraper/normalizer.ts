@@ -335,6 +335,20 @@ export function normalizeScrapedListing(
     scrapedAt: new Date().toISOString(),
   };
 
+  // Keep provenance keys from adapter (sourceBrand / brandSource / …).
+  if (nestedRaw?.sourceBrand != null) {
+    rawDetails.sourceBrand = nestedRaw.sourceBrand;
+  }
+  if (nestedRaw?.brandSource != null) {
+    rawDetails.brandSource = nestedRaw.brandSource;
+  }
+  if (nestedRaw?.sourceMileage != null) {
+    rawDetails.sourceMileage = nestedRaw.sourceMileage;
+  }
+  if (nestedRaw?.mileageSource != null) {
+    rawDetails.mileageSource = nestedRaw.mileageSource;
+  }
+
   return {
     externalId,
     platform,

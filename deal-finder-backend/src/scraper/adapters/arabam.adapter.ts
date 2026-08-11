@@ -17,12 +17,19 @@ import {
   ARABAM_WAIT_SELECTOR,
 } from "../parsers/arabam.parser.js";
 import { logDomProbe } from "../parsers/dom-probe.js";
+import {
+  ARABAM_LDJSON_EXTRACT_SCRIPT,
+  mapArabamLdVehicle,
+  parseArabamUrlTaxonomy,
+  type ArabamLdVehicle,
+} from "../utils/arabam-structured.js";
 
 const MAX_RETRIES = 3;
 
 /**
  * Arabam.com adapter — puppeteer-extra + stealth.
  * Search: https://www.arabam.com/ikinci-el?searchText={keyword}&take=50
+ * Brand/mileage: schema.org JSON-LD Vehicle (+ URL taxonomy fallback for brand).
  */
 export class ArabamAdapter extends BaseScraperAdapter {
   readonly platform = "arabam";
@@ -73,7 +80,6 @@ export class ArabamAdapter extends BaseScraperAdapter {
           });
         }
 
-        // Listing table often hydrates a beat after DOMContentLoaded.
         await this.randomDelay(2_000, 3_500);
 
         let selectorReady = false;
@@ -103,13 +109,17 @@ export class ArabamAdapter extends BaseScraperAdapter {
         }
 
         const rows = await this.extractDomRows(page);
-        console.log(`[arabam] Canlı DOM satır=${rows.length}`);
+        const ldVehicles = await this.extractLdVehicles(page);
+        console.log(
+          `[arabam] Canlı DOM satır=${rows.length} JSON-LD Vehicle=${ldVehicles.length}`,
+        );
 
         if (rows.length === 0) {
           await logDomProbe(this.platform, page, ARABAM_PROBE_SCRIPT);
         }
 
-        const liveDeals = this.mapRows(rows, params).slice(0, limit);
+        const enriched = this.mergeStructuredData(rows, ldVehicles);
+        const liveDeals = this.mapRows(enriched, params).slice(0, limit);
 
         if (liveDeals.length >= 1) {
           console.log(`[arabam] Canlı DOM → ${liveDeals.length} ilan`);
@@ -172,6 +182,82 @@ export class ArabamAdapter extends BaseScraperAdapter {
     return Array.isArray(rows) ? (rows as DomListingRow[]) : [];
   }
 
+  private async extractLdVehicles(page: Page): Promise<ArabamLdVehicle[]> {
+    const raw = await page.evaluate(ARABAM_LDJSON_EXTRACT_SCRIPT);
+    if (!Array.isArray(raw)) {
+      return [];
+    }
+    return raw
+      .filter((item): item is Record<string, unknown> =>
+        Boolean(item && typeof item === "object"),
+      )
+      .map((item) => mapArabamLdVehicle(item));
+  }
+
+  /**
+   * Joins DOM rows with JSON-LD Vehicle nodes by canonical URL.
+   * Brand fallback: deterministic /ilan/{seller}-{sale}-{brand}-… taxonomy only.
+   */
+  private mergeStructuredData(
+    rows: DomListingRow[],
+    vehicles: ArabamLdVehicle[],
+  ): DomListingRow[] {
+    const byUrl = new Map<string, ArabamLdVehicle>();
+    for (const vehicle of vehicles) {
+      if (!vehicle.url) {
+        continue;
+      }
+      const key = this.canonicalizeListingUrl(vehicle.url);
+      if (key) {
+        byUrl.set(key, vehicle);
+      }
+    }
+
+    return rows.map((row) => {
+      const key = this.canonicalizeListingUrl(row.url);
+      const ld = key ? byUrl.get(key) : undefined;
+      const taxonomy = parseArabamUrlTaxonomy(row.url);
+
+      const brand = ld?.brand ?? taxonomy.brand;
+      const brandSource =
+        ld?.brand != null ? "json-ld" : taxonomy.brandSource;
+
+      const mileage = ld?.mileage ?? null;
+      const mileageSource = ld?.mileage != null ? "json-ld" : null;
+
+      const year =
+        row.year ?? (ld?.year != null ? String(ld.year) : null);
+
+      return {
+        ...row,
+        ...(brand ? { brand } : {}),
+        ...(brandSource ? { brandSource } : {}),
+        ...(mileage != null ? { mileage } : {}),
+        ...(mileageSource ? { mileageSource } : {}),
+        ...(year ? { year } : {}),
+        ...(taxonomy.sellerType || ld?.sellerType
+          ? { sellerType: ld?.sellerType ?? taxonomy.sellerType }
+          : {}),
+        ...(ld?.fuelType ? { fuelType: ld.fuelType } : {}),
+        ...(ld?.transmission ? { transmission: ld.transmission } : {}),
+      };
+    });
+  }
+
+  private canonicalizeListingUrl(url: string | null | undefined): string | null {
+    if (!url?.trim()) {
+      return null;
+    }
+    try {
+      const parsed = new URL(
+        url.startsWith("http") ? url : `https://www.arabam.com${url}`,
+      );
+      return parsed.pathname.replace(/\/+$/, "").toLowerCase();
+    } catch {
+      return null;
+    }
+  }
+
   private mapRows(
     rows: DomListingRow[],
     params: ScrapeSearchParams,
@@ -189,9 +275,19 @@ export class ArabamAdapter extends BaseScraperAdapter {
           category: params.category ?? "Vasıta > Otomobil",
           ...(row.district != null ? { district: row.district } : {}),
           ...(row.model != null ? { model: row.model } : {}),
+          ...(row.brand != null ? { brand: row.brand } : {}),
           ...(row.year != null ? { year: row.year } : {}),
           ...(row.mileage != null ? { mileage: row.mileage } : {}),
           ...(row.imageUrl != null ? { imageUrl: row.imageUrl } : {}),
+          ...(row.sellerType != null ? { sellerType: row.sellerType } : {}),
+          ...(row.fuelType != null ? { fuelType: row.fuelType } : {}),
+          ...(row.transmission != null
+            ? { transmission: row.transmission }
+            : {}),
+          ...(row.brandSource != null ? { brandSource: row.brandSource } : {}),
+          ...(row.mileageSource != null
+            ? { mileageSource: row.mileageSource }
+            : {}),
         },
         {
           category: params.category ?? "Vasıta > Otomobil",

@@ -4,7 +4,7 @@
  */
 
 const INVALID_NUMERIC_HINT =
-  /fiyat\s*sorun|takasa?\s*a[cç][iı]k|bilinmiyor|sorunuz|anla[sş][iı]l[iı]r|görüşülür|^\s*[-–—.]+\s*$/i;
+  /fiyat\s*sorun|takasa?\s*a[cç][iı]k|bilinmiyor|sorunuz|anla[sş][iı]l[iı]r|görüşülür|km\s*bilgisi\s*yok|^\s*[-–—.]+\s*$/i;
 
 function hasInvalidHint(value: string): boolean {
   return INVALID_NUMERIC_HINT.test(value);
@@ -65,7 +65,7 @@ export function parsePrice(value: unknown): number | null {
 }
 
 /**
- * Parses mileage strings such as "98.500 km" / "98 500 KM".
+ * Parses mileage strings such as "98.500 km" / "98 500 KM" / "98500 km" / "98 bin km".
  */
 export function parseMileage(value: unknown): number | null {
   if (typeof value === "number") {
@@ -82,6 +82,19 @@ export function parseMileage(value: unknown): number | null {
   const trimmed = value.replace(/\u00a0/g, " ").trim();
   if (!trimmed || hasInvalidHint(trimmed)) {
     return null;
+  }
+
+  // Explicit "N bin km" (Turkish thousands) — only when "bin" is present.
+  const binMatch = trimmed.match(
+    /^(\d{1,3}(?:[.\s]\d{3})*|\d+)\s*bin\s*(?:km)?$/i,
+  );
+  if (binMatch?.[1]) {
+    const baseDigits = binMatch[1].replace(/[^\d]/g, "");
+    const base = Number.parseInt(baseDigits, 10);
+    if (!Number.isFinite(base) || base < 0) {
+      return null;
+    }
+    return base * 1000;
   }
 
   const digits = trimmed.replace(/[^\d]/g, "");

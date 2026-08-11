@@ -13,10 +13,16 @@ export interface ListingDto {
   description?: string;
   district?: string | null;
   model?: string | null;
+  brand?: string | null;
   year?: string | number | null;
   mileage?: string | number | null;
   currency?: string | null;
   imageUrl?: string | null;
+  sellerType?: string | null;
+  fuelType?: string | null;
+  transmission?: string | null;
+  brandSource?: string | null;
+  mileageSource?: string | null;
   raw?: Record<string, unknown>;
 }
 
@@ -30,5 +36,11 @@ export interface DomListingRow {
   district?: string | null;
   model?: string | null;
   year?: string | null;
-  mileage?: string | null;
+  mileage?: string | number | null;
+  brand?: string | null;
+  sellerType?: string | null;
+  fuelType?: string | null;
+  transmission?: string | null;
+  brandSource?: string | null;
+  mileageSource?: string | null;
 }

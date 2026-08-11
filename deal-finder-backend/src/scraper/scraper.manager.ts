@@ -40,9 +40,15 @@ export function toListingDto(
     category?: string | null;
     description?: string | null;
     model?: string | null;
+    brand?: string | null;
     year?: string | number | null;
     mileage?: string | number | null;
     imageUrl?: string | null;
+    sellerType?: string | null;
+    fuelType?: string | null;
+    transmission?: string | null;
+    brandSource?: string | null;
+    mileageSource?: string | null;
   },
   defaults: { category?: string; city?: string } = {},
 ): ListingDto | null {
@@ -94,10 +100,13 @@ export function toListingDto(
   if (row.model?.trim()) {
     dto.model = row.model.trim();
   }
+  if (row.brand?.trim()) {
+    dto.brand = row.brand.trim();
+  }
   if (row.year != null && String(row.year).trim()) {
     dto.year = row.year;
   }
-  if (row.mileage != null && String(row.mileage).trim()) {
+  if (row.mileage != null && String(row.mileage).trim() !== "") {
     dto.mileage = row.mileage;
   }
   if (currency) {
@@ -105,6 +114,21 @@ export function toListingDto(
   }
   if (row.imageUrl?.trim()) {
     dto.imageUrl = row.imageUrl.trim();
+  }
+  if (row.sellerType?.trim()) {
+    dto.sellerType = row.sellerType.trim();
+  }
+  if (row.fuelType?.trim()) {
+    dto.fuelType = row.fuelType.trim();
+  }
+  if (row.transmission?.trim()) {
+    dto.transmission = row.transmission.trim();
+  }
+  if (row.brandSource?.trim()) {
+    dto.brandSource = row.brandSource.trim();
+  }
+  if (row.mileageSource?.trim()) {
+    dto.mileageSource = row.mileageSource.trim();
   }
 
   return dto;
@@ -134,6 +158,9 @@ export function listingDtoToRaw(dto: ListingDto): RawScrapedListing {
   if (dto.model) {
     raw.model = dto.model;
   }
+  if (dto.brand) {
+    raw.brand = dto.brand;
+  }
   if (dto.year != null) {
     raw.year = dto.year;
   }
@@ -146,9 +173,36 @@ export function listingDtoToRaw(dto: ListingDto): RawScrapedListing {
   if (dto.imageUrl) {
     raw.imageUrl = dto.imageUrl;
   }
+  if (dto.sellerType) {
+    raw.sellerType = dto.sellerType;
+  }
+  if (dto.fuelType) {
+    raw.fuelType = dto.fuelType;
+  }
+  if (dto.transmission) {
+    raw.transmission = dto.transmission;
+  }
   if (dto.marketAveragePrice != null) {
     raw.marketAveragePrice = dto.marketAveragePrice;
   }
+
+  const provenance: Record<string, unknown> = {};
+  if (dto.brand) {
+    provenance.sourceBrand = dto.brand;
+  }
+  if (dto.brandSource) {
+    provenance.brandSource = dto.brandSource;
+  }
+  if (dto.mileage != null) {
+    provenance.sourceMileage = dto.mileage;
+  }
+  if (dto.mileageSource) {
+    provenance.mileageSource = dto.mileageSource;
+  }
+  if (Object.keys(provenance).length > 0) {
+    raw.rawDetails = provenance;
+  }
+
   return raw;
 }
 
