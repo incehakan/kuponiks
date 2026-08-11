@@ -1,0 +1,85 @@
+services:
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - deal_finder_net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: deal-finder-backend:latest
+    restart: unless-stopped
+    command: ["node", "dist/server.js"]
+    ports:
+      - "${PORT:-3000}:3000"
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      PROCESS_ROLE: api
+      PORT: 3000
+      REDIS_URL: redis://redis:6379
+      FIREBASE_CREDENTIALS_PATH: /app/firebase-service-account.json
+    volumes:
+      # Mount Firebase service-account JSON (path must match FIREBASE_CREDENTIALS_PATH)
+      - ${FIREBASE_CREDENTIALS_HOST_PATH:-./firebase-service-account.json}:/app/firebase-service-account.json:ro
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - deal_finder_net
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "-qO-",
+          "http://127.0.0.1:3000/health",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+
+  worker:
+    image: deal-finder-backend:latest
+    restart: unless-stopped
+    command: ["node", "dist/scraper/worker.main.js"]
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      PROCESS_ROLE: worker
+      REDIS_URL: redis://redis:6379
+      FIREBASE_CREDENTIALS_PATH: /app/firebase-service-account.json
+    volumes:
+      - ${FIREBASE_CREDENTIALS_HOST_PATH:-./firebase-service-account.json}:/app/firebase-service-account.json:ro
+      - browser_data:/app/.browser-data
+    depends_on:
+      redis:
+        condition: service_healthy
+      app:
+        condition: service_started
+    networks:
+      - deal_finder_net
+
+networks:
+  deal_finder_net:
+    driver: bridge
+
+volumes:
+  redis_data:
+  browser_data:

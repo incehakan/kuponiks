@@ -1,0 +1,88 @@
+{
+  "title": "Aradığınız Sayfaya Ulaşılamıyor",
+  "htmlLength": 592802,
+  "waitSelectorHits": {
+    ".list-view-content": 0,
+    ".card-link": 0,
+    "a.card-link": 0,
+    ".listing-item": 0,
+    ".listing-detail": 0,
+    "[class*='list-view']": 0,
+    "[class*='RealtyCard']": 0,
+    "[class*='realty-card']": 0,
+    "li[class*='listing']": 0,
+    "article[class*='listing']": 0,
+    "a[href*='-satilik']": 3,
+    "a[href*='-kiralik']": 2,
+    "a[href*='satilik']": 5,
+    "a[href*='ilan']": 5
+  },
+  "topCardClasses": [
+    {
+      "name": "quick-links__item",
+      "count": 9
+    },
+    {
+      "name": "quick-links",
+      "count": 9
+    },
+    {
+      "name": "quick-links__wrapper",
+      "count": 9
+    },
+    {
+      "name": "home-search-section",
+      "count": 9
+    },
+    {
+      "name": "error-suggestion",
+      "count": 9
+    },
+    {
+      "name": "he-footer__part",
+      "count": 3
+    },
+    {
+      "name": "he-footer__content",
+      "count": 3
+    },
+    {
+      "name": "he-footer__links",
+      "count": 3
+    },
+    {
+      "name": "he-footer-app__icon",
+      "count": 2
+    },
+    {
+      "name": "he-footer-app__content",
+      "count": 2
+    },
+    {
+      "name": "he-footer-app",
+      "count": 2
+    },
+    {
+      "name": "he-footer-links__item",
+      "count": 1
+    },
+    {
+      "name": "he-footer-links",
+      "count": 1
+    },
+    {
+      "name": "he-footer__wrapper",
+      "count": 1
+    }
+  ],
+  "sampleHrefs": [
+    "https://www.hepsiemlak.com/firsat-satilik-evler",
+    "https://www.hepsiemlak.com/firsat-kiralik-evler",
+    "https://www.hepsiemlak.com/satilik/arsa",
+    "https://www.hepsiemlak.com/fiyati-dusen-satilik-ilanlar",
+    "https://www.hepsiemlak.com/fiyati-dusen-kiralik-ilanlar",
+    "https://www.hepsiemlak.com/yatirimlik-satilik-evler",
+    "https://www.hepsiemlak.com/satilik-sahibinden/daire",
+    "https://www.hepsiemlak.com/kiralik-sahibinden/daire"
+  ]
+}

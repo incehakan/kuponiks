@@ -1,0 +1,103 @@
+// Prisma schema for deal-finder notification engine
+// Connection URL is configured in prisma.config.ts (Prisma ORM v7+)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum SubscriptionPlan {
+  FREE
+  PRO
+  VIP
+}
+
+enum NotificationChannel {
+  PUSH
+  WHATSAPP
+  TELEGRAM
+}
+
+enum NotificationStatus {
+  SENT
+  FAILED
+}
+
+model User {
+  id               String           @id @default(uuid()) @db.Uuid
+  fullName         String
+  phoneNumber      String           @unique
+  passwordHash     String
+  telegramChatId   String?
+  fcmDeviceToken   String?
+  /// Expo Push Token (ExponentPushToken[...]) for mobile push notifications
+  expoPushToken    String?
+  subscriptionPlan SubscriptionPlan @default(FREE)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  filters          UserFilter[]
+  notifications    NotificationLog[]
+}
+
+model UserFilter {
+  id             String   @id @default(uuid()) @db.Uuid
+  userId         String   @db.Uuid
+  category       String
+  city           String?
+  minPrice       Float?
+  maxPrice       Float?
+  /// Optional free-text alarm keywords (e.g. "3+1", "Yeşilyurt", "otomatik")
+  keywords       String[]
+  minDealScore   Int      @default(70)
+  notifyTelegram Boolean  @default(false)
+  notifyPush     Boolean  @default(true)
+  notifyWhatsapp Boolean  @default(false)
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isActive, category])
+}
+
+model Listing {
+  id                 String   @id @default(uuid()) @db.Uuid
+  externalId         String   @unique
+  platform           String
+  title              String
+  price              Float
+  marketAveragePrice Float?
+  dealScore          Int
+  city               String?
+  url                String
+  rawDetails         Json?
+  createdAt          DateTime @default(now())
+
+  notifications NotificationLog[]
+
+  @@index([dealScore])
+  @@index([dealScore, createdAt])
+  @@index([platform, city])
+  @@unique([platform, externalId])
+}
+
+model NotificationLog {
+  id        String              @id @default(uuid()) @db.Uuid
+  userId    String              @db.Uuid
+  listingId String              @db.Uuid
+  channel   NotificationChannel
+  status    NotificationStatus
+  sentAt    DateTime            @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([listingId])
+  @@index([channel, status])
+}

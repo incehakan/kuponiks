@@ -1,0 +1,48 @@
+{
+  "expo": {
+    "name": "Kuponiks",
+    "slug": "Kuponiks",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#12022B"
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#12022B"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "backgroundColor": "#12022B"
+    },
+    "plugins": [
+      "expo-secure-store",
+      "expo-asset",
+      "expo-font",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#8A2BE2",
+          "defaultChannel": "deal-alerts"
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "76bc1832-876b-4f6c-a650-e0cf40fd3ad2"
+      }
+    },
+    "owner": "hakanince05"
+  }
+}

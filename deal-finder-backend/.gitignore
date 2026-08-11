@@ -1,0 +1,7 @@
+logs/
+.browser-data/
+.env
+node_modules/
+dist/
+*.log
+firebase-service-account.json

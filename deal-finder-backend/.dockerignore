@@ -1,0 +1,29 @@
+# Dependencies & build artifacts
+node_modules
+dist
+coverage
+*.log
+npm-debug.log*
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+firebase-service-account.json
+*.pem
+
+# VCS / IDE
+.git
+.gitignore
+.cursor
+.cursorrules
+.vscode
+.idea
+
+# Docs & misc
+README.md
+Dockerfile
+docker-compose.yml
+.dockerignore
+**/*.md
+agent-transcripts
