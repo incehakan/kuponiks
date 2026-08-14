@@ -4,6 +4,7 @@ import {
   optionalAuthenticate,
 } from "../../middlewares/auth.middleware.js";
 import { filterService } from "./filter.service.js";
+import { normalizeEmptyNumericFilterFields } from "./optional-numeric.js";
 
 const keywordSchema = {
   anyOf: [
@@ -71,6 +72,11 @@ const filterBodyProperties = {
 export const filterRoutes: FastifyPluginAsync = async (
   app: FastifyInstance,
 ) => {
+  app.addHook("preValidation", async (request) => {
+    if (request.method === "POST" || request.method === "PUT") {
+      normalizeEmptyNumericFilterFields(request.body);
+    }
+  });
   app.get(
     "/",
     {

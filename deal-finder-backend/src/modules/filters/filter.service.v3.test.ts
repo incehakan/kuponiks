@@ -192,4 +192,19 @@ describe("Filter API validation + series/trim persist", () => {
     expect(data.series).toBe("Civic");
     expect(data.trim).toBeNull();
   });
+
+  it("10. empty string maxMileage → null not 0", async () => {
+    await service.createFilter("u1", "PRO", {
+      category: "Vasıta > Otomobil",
+      brand: "Honda",
+      series: "Civic",
+      maxMileage: "" as unknown as number,
+      minYear: "   " as unknown as number,
+      minMileage: 0,
+    });
+    const data = mockedPrisma.userFilter.create.mock.calls[0]?.[0]?.data;
+    expect(data.maxMileage).toBeNull();
+    expect(data.minYear).toBeNull();
+    expect(data.minMileage).toBe(0);
+  });
 });

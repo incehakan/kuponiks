@@ -10,6 +10,7 @@ import {
   limitReachedMessage,
   resolveNotifyFlagsForPlan,
 } from "../../lib/subscription-plan.js";
+import { toNullableOptionalNumber } from "./optional-numeric.js";
 
 /**
  * User filter CRUD with subscription plan limits from the database.
@@ -106,6 +107,20 @@ function optionalTrimmed(
   return trimmed.length > 0 ? trimmed : null;
 }
 
+function optionalNumeric(
+  label: string,
+  raw: unknown,
+): number | null | undefined {
+  if (raw === undefined) {
+    return undefined;
+  }
+  const parsed = toNullableOptionalNumber(raw);
+  if (parsed !== undefined && parsed !== null && Number.isNaN(parsed)) {
+    throw new HttpError(`${label} için geçerli bir sayı girin`, 400);
+  }
+  return parsed;
+}
+
 /**
  * User filter CRUD with subscription plan limits from the database.
  */
@@ -136,11 +151,18 @@ export class FilterService {
         throw new HttpError("Kategori zorunludur", 400);
       }
 
-      assertRange(input.minPrice, input.maxPrice, "fiyat");
-      assertRange(input.minYear, input.maxYear, "yıl");
-      assertRange(input.minMileage, input.maxMileage, "kilometre");
-      assertYearBounds(input.minYear, "Minimum yıl");
-      assertYearBounds(input.maxYear, "Maksimum yıl");
+      const minPrice = optionalNumeric("Minimum fiyat", input.minPrice);
+      const maxPrice = optionalNumeric("Maksimum fiyat", input.maxPrice);
+      const minYear = optionalNumeric("Minimum yıl", input.minYear);
+      const maxYear = optionalNumeric("Maksimum yıl", input.maxYear);
+      const minMileage = optionalNumeric("Minimum kilometre", input.minMileage);
+      const maxMileage = optionalNumeric("Maksimum kilometre", input.maxMileage);
+
+      assertRange(minPrice, maxPrice, "fiyat");
+      assertRange(minYear, maxYear, "yıl");
+      assertRange(minMileage, maxMileage, "kilometre");
+      assertYearBounds(minYear, "Minimum yıl");
+      assertYearBounds(maxYear, "Maksimum yıl");
 
       if (
         input.minDealScore !== undefined &&
@@ -226,16 +248,12 @@ export class FilterService {
           ...(input.sellerType !== undefined
             ? { sellerType: optionalTrimmed(input.sellerType) ?? null }
             : {}),
-          ...(input.minPrice !== undefined ? { minPrice: input.minPrice } : {}),
-          ...(input.maxPrice !== undefined ? { maxPrice: input.maxPrice } : {}),
-          ...(input.minYear !== undefined ? { minYear: input.minYear } : {}),
-          ...(input.maxYear !== undefined ? { maxYear: input.maxYear } : {}),
-          ...(input.minMileage !== undefined
-            ? { minMileage: input.minMileage }
-            : {}),
-          ...(input.maxMileage !== undefined
-            ? { maxMileage: input.maxMileage }
-            : {}),
+          ...(minPrice !== undefined ? { minPrice } : {}),
+          ...(maxPrice !== undefined ? { maxPrice } : {}),
+          ...(minYear !== undefined ? { minYear } : {}),
+          ...(maxYear !== undefined ? { maxYear } : {}),
+          ...(minMileage !== undefined ? { minMileage } : {}),
+          ...(maxMileage !== undefined ? { maxMileage } : {}),
           ...(input.minDealScore !== undefined
             ? { minDealScore: input.minDealScore }
             : {}),
@@ -304,26 +322,29 @@ export class FilterService {
         }
       }
 
+      const minPrice = optionalNumeric("Minimum fiyat", updateData.minPrice);
+      const maxPrice = optionalNumeric("Maksimum fiyat", updateData.maxPrice);
+      const minYear = optionalNumeric("Minimum yıl", updateData.minYear);
+      const maxYear = optionalNumeric("Maksimum yıl", updateData.maxYear);
+      const minMileage = optionalNumeric(
+        "Minimum kilometre",
+        updateData.minMileage,
+      );
+      const maxMileage = optionalNumeric(
+        "Maksimum kilometre",
+        updateData.maxMileage,
+      );
+
       const nextMinPrice =
-        updateData.minPrice !== undefined
-          ? updateData.minPrice
-          : existing.minPrice;
+        minPrice !== undefined ? minPrice : existing.minPrice;
       const nextMaxPrice =
-        updateData.maxPrice !== undefined
-          ? updateData.maxPrice
-          : existing.maxPrice;
-      const nextMinYear =
-        updateData.minYear !== undefined ? updateData.minYear : existing.minYear;
-      const nextMaxYear =
-        updateData.maxYear !== undefined ? updateData.maxYear : existing.maxYear;
+        maxPrice !== undefined ? maxPrice : existing.maxPrice;
+      const nextMinYear = minYear !== undefined ? minYear : existing.minYear;
+      const nextMaxYear = maxYear !== undefined ? maxYear : existing.maxYear;
       const nextMinMileage =
-        updateData.minMileage !== undefined
-          ? updateData.minMileage
-          : existing.minMileage;
+        minMileage !== undefined ? minMileage : existing.minMileage;
       const nextMaxMileage =
-        updateData.maxMileage !== undefined
-          ? updateData.maxMileage
-          : existing.maxMileage;
+        maxMileage !== undefined ? maxMileage : existing.maxMileage;
 
       assertRange(nextMinPrice, nextMaxPrice, "fiyat");
       assertRange(nextMinYear, nextMaxYear, "yıl");
@@ -401,24 +422,12 @@ export class FilterService {
           ...(updateData.sellerType !== undefined
             ? { sellerType: optionalTrimmed(updateData.sellerType) ?? null }
             : {}),
-          ...(updateData.minPrice !== undefined
-            ? { minPrice: updateData.minPrice }
-            : {}),
-          ...(updateData.maxPrice !== undefined
-            ? { maxPrice: updateData.maxPrice }
-            : {}),
-          ...(updateData.minYear !== undefined
-            ? { minYear: updateData.minYear }
-            : {}),
-          ...(updateData.maxYear !== undefined
-            ? { maxYear: updateData.maxYear }
-            : {}),
-          ...(updateData.minMileage !== undefined
-            ? { minMileage: updateData.minMileage }
-            : {}),
-          ...(updateData.maxMileage !== undefined
-            ? { maxMileage: updateData.maxMileage }
-            : {}),
+          ...(minPrice !== undefined ? { minPrice } : {}),
+          ...(maxPrice !== undefined ? { maxPrice } : {}),
+          ...(minYear !== undefined ? { minYear } : {}),
+          ...(maxYear !== undefined ? { maxYear } : {}),
+          ...(minMileage !== undefined ? { minMileage } : {}),
+          ...(maxMileage !== undefined ? { maxMileage } : {}),
           ...(updateData.keywords !== undefined
             ? { keywords: normalizeKeywords(updateData.keywords) }
             : {}),

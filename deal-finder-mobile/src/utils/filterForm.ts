@@ -46,8 +46,16 @@ export function formatFilterSummary(filter: Filter): string {
       `${filter.minYear ?? '…'}–${filter.maxYear ?? '…'}`,
     );
   }
-  if (filter.maxMileage != null) {
-    parts.push(`Max ${filter.maxMileage.toLocaleString('tr-TR')} km`);
+  if (filter.minMileage != null || filter.maxMileage != null) {
+    if (filter.minMileage != null && filter.maxMileage != null) {
+      parts.push(
+        `${filter.minMileage.toLocaleString('tr-TR')}–${filter.maxMileage.toLocaleString('tr-TR')} km`,
+      );
+    } else if (filter.maxMileage != null) {
+      parts.push(`Max ${filter.maxMileage.toLocaleString('tr-TR')} km`);
+    } else {
+      parts.push(`Min ${filter.minMileage!.toLocaleString('tr-TR')} km`);
+    }
   }
   if (filter.maxPrice != null) {
     parts.push(`Max ${filter.maxPrice.toLocaleString('tr-TR')} TL`);
@@ -59,13 +67,26 @@ export function formatFilterSummary(filter: Filter): string {
   return parts.filter(Boolean).join(' · ');
 }
 
-export function parseOptionalInt(raw: string): number | undefined {
+export function parseOptionalNumber(raw: unknown): number | undefined {
+  if (raw === undefined || raw === null) {
+    return undefined;
+  }
+  if (typeof raw === 'number') {
+    return Number.isFinite(raw) ? raw : Number.NaN;
+  }
+  if (typeof raw !== 'string') {
+    return Number.NaN;
+  }
   const trimmed = raw.trim().replace(/\./g, '').replace(/,/g, '');
   if (!trimmed) {
     return undefined;
   }
   const n = Number(trimmed);
   return Number.isFinite(n) ? Math.round(n) : Number.NaN;
+}
+
+export function parseOptionalInt(raw: string): number | undefined {
+  return parseOptionalNumber(raw);
 }
 
 export function splitKeywordInput(raw: string): string[] {
