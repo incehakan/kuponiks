@@ -660,24 +660,66 @@ export const userApi = {
   },
 };
 
+function isInternalNotification(item: NotificationItem): boolean {
+  const status = (item.status ?? '').toUpperCase();
+  const reason = (item.reason ?? '').toLowerCase();
+  if (status && status !== 'SENT') {
+    return true;
+  }
+  if (
+    reason === 'already_sent' ||
+    reason === 'no_token' ||
+    reason === 'inactive_filter' ||
+    reason === 'market_not_ready' ||
+    reason === 'permanent_token_error'
+  ) {
+    return true;
+  }
+  return false;
+}
+
+function mapNotificationItem(item: NotificationItem): NotificationItem | null {
+  if (isInternalNotification(item)) {
+    return null;
+  }
+
+  const listingId = item.listingId || item.dealId || '';
+  const createdAt = item.createdAt || item.sentAt || new Date().toISOString();
+  const userFacing =
+    item.type === 'deal' || item.title === 'Yeni fırsat bulundu!';
+
+  return {
+    id: item.id,
+    type: 'deal',
+    title: userFacing ? item.title || 'Yeni fırsat bulundu!' : 'Yeni fırsat bulundu!',
+    message:
+      item.message ||
+      item.title ||
+      '',
+    listingId,
+    dealId: item.dealId || listingId,
+    imageUrl: toDisplayListingImageUrl(item.imageUrl),
+    dealScore: item.dealScore ?? null,
+    priceAdvantagePct: item.priceAdvantagePct ?? null,
+    platform: item.platform ?? null,
+    createdAt,
+    sentAt: item.sentAt || createdAt,
+  };
+}
+
 export const notificationsApi = {
   getNotifications: async (): Promise<NotificationItem[]> => {
     const { data } = await api.get<{ notifications?: NotificationItem[] } | NotificationItem[]>(
       '/notifications',
     );
-    if (Array.isArray(data)) {
-      return data.map((item) => ({
-        ...item,
-        imageUrl: toDisplayListingImageUrl(item.imageUrl),
-      }));
-    }
-    if (data && typeof data === 'object' && Array.isArray(data.notifications)) {
-      return data.notifications.map((item) => ({
-        ...item,
-        imageUrl: toDisplayListingImageUrl(item.imageUrl),
-      }));
-    }
-    return [];
+    const raw = Array.isArray(data)
+      ? data
+      : data && typeof data === 'object' && Array.isArray(data.notifications)
+        ? data.notifications
+        : [];
+    return raw
+      .map((item) => mapNotificationItem(item))
+      .filter((item): item is NotificationItem => item != null);
   },
 };
 

@@ -10,6 +10,19 @@ import { prisma } from "../lib/prisma.js";
 import { scraperService } from "../scraper/scraper.service.js";
 
 describe("Arabam V2.2 structured brand/mileage", () => {
+  it("Car JSON-LD image array prefers 580x435 and skips placeholders", () => {
+    const vehicle = mapArabamLdVehicle({
+      "@type": "Car",
+      url: "https://www.arabam.com/ilan/sahibinden-satilik-honda-civic/x/42819518",
+      brand: { "@type": "Brand", name: "Honda" },
+      image: [
+        "https://arbimg1.mncdn.com/ilanfotograflari/noImage/01/01/1/noimage5_160x120.jpg",
+        "https://arbstorage.mncdn.com/ilanfotograflari/2026/08/14/42819518/a_image_for_silan_42819518_580x435.jpg",
+      ],
+    });
+    expect(vehicle.imageUrl).toContain("_580x435.jpg");
+  });
+
   it("1. explicit JSON-LD brand -> Listing.brand", () => {
     const vehicle = mapArabamLdVehicle({
       "@type": "Vehicle",

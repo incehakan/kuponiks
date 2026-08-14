@@ -27,6 +27,7 @@ export interface ListingDto {
   trim?: string | null;
   seriesSource?: string | null;
   trimSource?: string | null;
+  imageSource?: string | null;
   raw?: Record<string, unknown>;
 }
 
@@ -51,4 +52,5 @@ export interface DomListingRow {
   trim?: string | null;
   seriesSource?: string | null;
   trimSource?: string | null;
+  imageSource?: string | null;
 }

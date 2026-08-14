@@ -3,6 +3,8 @@
  * No title-regex brand/mileage/series guessing.
  */
 
+import { preferMobileListingImageUrl } from "../../lib/listing-image.js";
+
 export interface ArabamLdVehicle {
   url: string | null;
   brand: string | null;
@@ -267,23 +269,26 @@ function asMileageValue(value: unknown): number | null {
 }
 
 function asImageUrl(value: unknown): string | null {
-  if (typeof value === "string" && value.trim()) {
-    return value.trim();
-  }
-  if (Array.isArray(value)) {
-    for (const item of value) {
-      const nested = asImageUrl(item);
-      if (nested) {
-        return nested;
-      }
+  const candidates: string[] = [];
+  const collect = (input: unknown): void => {
+    if (typeof input === "string" && input.trim()) {
+      candidates.push(input.trim());
+      return;
     }
-    return null;
-  }
-  if (value && typeof value === "object") {
-    const record = value as { url?: unknown; contentUrl?: unknown };
-    return asImageUrl(record.url) ?? asImageUrl(record.contentUrl);
-  }
-  return null;
+    if (Array.isArray(input)) {
+      for (const item of input) {
+        collect(item);
+      }
+      return;
+    }
+    if (input && typeof input === "object") {
+      const record = input as { url?: unknown; contentUrl?: unknown };
+      collect(record.url);
+      collect(record.contentUrl);
+    }
+  };
+  collect(value);
+  return preferMobileListingImageUrl(candidates);
 }
 
 function asYearValue(value: unknown): number | null {
@@ -362,10 +367,10 @@ export const ARABAM_LDJSON_EXTRACT_SCRIPT = `(() => {
     for (const item of items) {
       if (!item || typeof item !== "object") continue;
       const type = item["@type"];
-      const isVehicle =
-        type === "Vehicle" ||
-        (Array.isArray(type) && type.indexOf("Vehicle") !== -1);
-      if (!isVehicle) continue;
+      const types = Array.isArray(type) ? type : [type];
+      const isVehicleLike =
+        types.indexOf("Vehicle") !== -1 || types.indexOf("Car") !== -1;
+      if (!isVehicleLike) continue;
       out.push(item);
     }
   }

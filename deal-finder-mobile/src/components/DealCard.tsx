@@ -49,8 +49,13 @@ function DealCard({
         pressed && styles.pressed,
       ]}
     >
-      <View style={styles.media}>
-        <DealListingImage uri={deal.imageUrl} style={styles.image} />
+      <View style={styles.media} collapsable={false}>
+        <DealListingImage
+          uri={deal.imageUrl}
+          style={styles.image}
+          variant="card"
+          fallbackLabel="Fotoğraf yok"
+        />
         <View style={styles.scoreWrap}>
           <DealScoreBadge score={deal.dealScore} size="sm" />
         </View>
@@ -111,8 +116,10 @@ const styles = StyleSheet.create({
     opacity: 0.92,
   },
   media: {
-    height: 188,
+    width: '100%',
+    aspectRatio: 16 / 9,
     backgroundColor: colors.surfaceElevated,
+    overflow: 'hidden',
   },
   image: {
     width: '100%',

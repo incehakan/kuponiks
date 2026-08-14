@@ -102,20 +102,36 @@ export const ARABAM_EXTRACT_SCRIPT = `(() => {
       el.querySelector("img.listing-image") ||
       el.querySelector("img[src*='ilanfotograf'], img[src*='arbstorage'], img[data-src*='ilanfotograf']");
     const srcset = imgEl && imgEl.getAttribute("srcset");
-    const srcsetFirst = srcset
-      ? (srcset.split(",")[0] || "").trim().split(" ")[0]
-      : null;
-    const imageCandidates = imgEl
-      ? [
-          imgEl.getAttribute("data-src"),
-          imgEl.getAttribute("data-original"),
-          imgEl.getAttribute("data-lazy"),
-          srcsetFirst,
-          imgEl.getAttribute("src"),
-        ]
-      : [];
+    let srcsetBest = null;
+    if (srcset) {
+      const parsed = srcset.split(",").map((p) => p.trim()).filter(Boolean).map((p) => {
+        const bits = p.split(/\\s+/);
+        const url = bits[0] || "";
+        const desc = bits[1] || "";
+        const w = desc.endsWith("w") ? parseInt(desc, 10) : null;
+        return { url: url, w: w };
+      });
+      const mid = parsed
+        .filter((x) => x.w && x.w >= 400 && x.w <= 1200)
+        .sort((a, b) => b.w - a.w)[0];
+      srcsetBest = (mid && mid.url) || (parsed[0] && parsed[0].url) || null;
+    }
+    const pictureSrc = (() => {
+      const sourceEl = el.querySelector("picture source[srcset]");
+      if (!sourceEl) return null;
+      const ss = sourceEl.getAttribute("srcset") || "";
+      return (ss.split(",")[0] || "").trim().split(" ")[0] || null;
+    })();
+    const imageCandidates = [
+      imgEl && imgEl.getAttribute("data-src"),
+      imgEl && imgEl.getAttribute("data-original"),
+      imgEl && imgEl.getAttribute("data-lazy"),
+      srcsetBest,
+      pictureSrc,
+      imgEl && imgEl.getAttribute("src"),
+    ];
     const isPlaceholderImg = (u) =>
-      !u || /noimage|no-image|placeholder/i.test(String(u));
+      !u || /noimage|no-image|placeholder|favicon|arabam-logo|\\/assets2\\//i.test(String(u));
     const imageUrl =
       imageCandidates.find((u) => u && !isPlaceholderImg(u)) || null;
 

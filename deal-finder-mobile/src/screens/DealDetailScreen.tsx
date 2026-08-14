@@ -180,7 +180,12 @@ export default function DealDetailScreen({
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.hero}>
-          <DealListingImage uri={deal.imageUrl} style={styles.heroImage} />
+          <DealListingImage
+            uri={deal.imageUrl}
+            style={styles.heroImage}
+            variant="detail"
+            fallbackLabel="Fotoğraf bulunamadı"
+          />
           <Pressable style={styles.backBtn} onPress={() => navigation.goBack()}>
             <GlyphIcon name="back" size={28} color={colors.white} />
           </Pressable>

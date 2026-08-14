@@ -15,7 +15,9 @@ export type GlyphName =
   | 'info'
   | 'logout'
   | 'devices'
-  | 'chevron';
+  | 'chevron'
+  | 'car'
+  | 'image';
 
 interface GlyphIconProps {
   name: GlyphName;
@@ -41,6 +43,8 @@ const ION: Record<GlyphName, IonName> = {
   logout: 'log-out',
   devices: 'phone-portrait',
   chevron: 'chevron-forward',
+  car: 'car-sport-outline',
+  image: 'image-outline',
 };
 
 export default function GlyphIcon({

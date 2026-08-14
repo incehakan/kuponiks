@@ -45,6 +45,7 @@ export function toListingDto(
     year?: string | number | null;
     mileage?: string | number | null;
     imageUrl?: string | null;
+    imageSource?: string | null;
     sellerType?: string | null;
     fuelType?: string | null;
     transmission?: string | null;
@@ -150,6 +151,9 @@ export function toListingDto(
   if (row.trimSource?.trim()) {
     dto.trimSource = row.trimSource.trim();
   }
+  if (row.imageSource?.trim()) {
+    dto.imageSource = row.imageSource.trim();
+  }
 
   return dto;
 }
@@ -236,6 +240,9 @@ export function listingDtoToRaw(dto: ListingDto): RawScrapedListing {
   }
   if (dto.trimSource) {
     provenance.trimSource = dto.trimSource;
+  }
+  if (dto.imageSource) {
+    provenance.imageSource = dto.imageSource;
   }
   if (Object.keys(provenance).length > 0) {
     raw.rawDetails = provenance;

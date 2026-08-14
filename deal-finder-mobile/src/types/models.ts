@@ -10,18 +10,21 @@ export interface User {
 
 export interface NotificationItem {
   id: string;
-  channel: string;
-  status: string;
-  reason?: string | null;
-  listingId: string;
-  createdAt: string;
-  sentAt: string;
+  type?: 'deal';
   title: string;
+  message?: string;
+  listingId: string;
+  dealId?: string;
   imageUrl?: string | null;
   dealScore?: number | null;
   priceAdvantagePct?: number | null;
-  listingUrl?: string | null;
   platform?: string | null;
+  createdAt: string;
+  sentAt?: string;
+  channel?: string;
+  status?: string;
+  reason?: string | null;
+  listingUrl?: string | null;
 }
 
 export interface TelegramConfig {

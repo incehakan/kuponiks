@@ -374,6 +374,9 @@ export function normalizeScrapedListing(
   if (nestedRaw?.trimSource != null) {
     rawDetails.trimSource = nestedRaw.trimSource;
   }
+  if (nestedRaw?.imageSource != null) {
+    rawDetails.imageSource = nestedRaw.imageSource;
+  }
 
   return {
     externalId,

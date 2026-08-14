@@ -6,6 +6,10 @@ import {
 } from "../analyzer/deal-score.service.js";
 import { shouldEnqueueListingForUserMatching } from "../filters/match-eligibility.js";
 import { prisma } from "../lib/prisma.js";
+import {
+  mergeListingImageUrl,
+  mergeRawDetailsImageSource,
+} from "../lib/listing-image.js";
 import { redisSetNxEx } from "../lib/redis.js";
 import {
   marketFieldsForPersistence,
@@ -262,6 +266,16 @@ export class ScraperService {
     );
 
     const marketFields = marketFieldsForPersistence(marketResult);
+    const mergedImageUrl = mergeListingImageUrl(
+      existing.imageUrl,
+      input.imageUrl,
+    );
+    const mergedRawDetails = mergeRawDetailsImageSource(
+      existing.rawDetails,
+      input.rawDetails,
+      mergedImageUrl,
+      input.imageUrl,
+    );
 
     const listing = await prisma.listing.update({
       where: { id: existing.id },
@@ -285,9 +299,9 @@ export class ScraperService {
         sellerType: input.sellerType,
         description: input.description,
         currency: input.currency,
-        imageUrl: input.imageUrl,
+        imageUrl: mergedImageUrl,
         url: input.url,
-        rawDetails: input.rawDetails as Prisma.InputJsonValue,
+        rawDetails: mergedRawDetails as Prisma.InputJsonValue,
         lastSeenAt: new Date(),
         ...(input.publishedAt ? { publishedAt: input.publishedAt } : {}),
         ...marketFields,

@@ -8,6 +8,9 @@ export function normalizeListingImageUrl(
     return null;
   }
   let value = raw.trim();
+  if (/^(data:|javascript:)/i.test(value)) {
+    return null;
+  }
   if (value.startsWith('//')) {
     value = `https:${value}`;
   }
@@ -32,12 +35,8 @@ export function isPlaceholderListingImage(
   if (!value) {
     return true;
   }
-  return (
-    value.includes('/noimage/') ||
-    value.includes('noimage') ||
-    value.includes('no-image') ||
-    value.includes('placeholder') ||
-    value.includes('default-image')
+  return /noimage|no-image|placeholder|default-image|without-photo|favicon|arabam-logo|\/assets2\//i.test(
+    value,
   );
 }
 

@@ -17,7 +17,8 @@ import {
   ARABAM_WAIT_SELECTOR,
 } from "../parsers/arabam.parser.js";
 import { logDomProbe } from "../parsers/dom-probe.js";
-import { pickBestListingImageUrl } from "../../lib/listing-image.js";
+import { pickBestListingImage } from "../../lib/listing-image.js";
+import { enrichArabamRowsMissingImages } from "../utils/arabam-detail-image.js";
 import {
   ARABAM_LDJSON_EXTRACT_SCRIPT,
   mapArabamLdVehicle,
@@ -121,6 +122,10 @@ export class ArabamAdapter extends BaseScraperAdapter {
         }
 
         const enriched = this.mergeStructuredData(rows, ldVehicles);
+        await enrichArabamRowsMissingImages(browser, enriched, {
+          max: 8,
+          concurrency: 2,
+        });
         const liveDeals = this.mapRows(enriched, params).slice(0, limit);
 
         if (liveDeals.length >= 1) {
@@ -238,11 +243,14 @@ export class ArabamAdapter extends BaseScraperAdapter {
         domModel: row.model ?? null,
       });
 
-      const imageUrl = pickBestListingImageUrl([ld?.imageUrl, row.imageUrl]);
+      const pickedImage = pickBestListingImage([
+        { url: ld?.imageUrl, source: "json-ld" },
+        { url: row.imageUrl, source: "data-src" },
+      ]);
 
       return {
         ...row,
-        ...(imageUrl ? { imageUrl } : {}),
+        ...(pickedImage ? { imageUrl: pickedImage.url, imageSource: pickedImage.source } : {}),
         ...(brand ? { brand } : {}),
         ...(brandSource ? { brandSource } : {}),
         ...(mileage != null ? { mileage } : {}),
@@ -298,6 +306,7 @@ export class ArabamAdapter extends BaseScraperAdapter {
           ...(row.year != null ? { year: row.year } : {}),
           ...(row.mileage != null ? { mileage: row.mileage } : {}),
           ...(row.imageUrl != null ? { imageUrl: row.imageUrl } : {}),
+          ...(row.imageSource != null ? { imageSource: row.imageSource } : {}),
           ...(row.sellerType != null ? { sellerType: row.sellerType } : {}),
           ...(row.fuelType != null ? { fuelType: row.fuelType } : {}),
           ...(row.transmission != null

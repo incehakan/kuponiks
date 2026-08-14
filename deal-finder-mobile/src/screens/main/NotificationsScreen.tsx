@@ -16,24 +16,46 @@ import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import DealListingImage from '../../components/DealListingImage';
 import EmptyState from '../../components/EmptyState';
 import ErrorState from '../../components/ErrorState';
+import GlyphIcon from '../../components/GlyphIcon';
 import LoadingSkeleton from '../../components/LoadingSkeleton';
 import { getErrorMessage, notificationsApi } from '../../services/api';
 import { colors, radii, spacing } from '../../theme';
 import type { NotificationItem } from '../../types/models';
 import type { MainStackParamList, MainTabParamList } from '../../types/navigation';
+import { formatRelativeTimeTr } from '../../utils/formatRelativeTime';
 
-function channelLabel(channel: string): string {
-  if (channel === 'PUSH') return 'Push';
-  if (channel === 'TELEGRAM') return 'Telegram';
-  if (channel === 'WHATSAPP') return 'WhatsApp';
-  return channel;
+function formatAdvantage(pct: number | null | undefined): string | null {
+  if (pct == null || Number.isNaN(Number(pct))) {
+    return null;
+  }
+  const value = Number(pct);
+  const formatted = Math.abs(value).toLocaleString('tr-TR', {
+    maximumFractionDigits: 1,
+  });
+  if (value > 0) {
+    return `%${formatted} daha ucuz`;
+  }
+  if (value < 0) {
+    return `%${formatted} piyasa üstü`;
+  }
+  return null;
 }
 
-function statusLabel(status: string): string {
-  if (status === 'SENT') return 'Gönderildi';
-  if (status === 'SKIPPED') return 'Atlandı';
-  if (status === 'FAILED') return 'Başarısız';
-  return status;
+function metaLine(item: NotificationItem): string {
+  const parts: string[] = [];
+  if (item.dealScore != null) {
+    parts.push(`Skor ${item.dealScore}`);
+  }
+  const advantage = formatAdvantage(item.priceAdvantagePct);
+  if (advantage) {
+    parts.push(advantage);
+  }
+  return parts.join(' · ');
+}
+
+function footerLine(item: NotificationItem): string {
+  const when = formatRelativeTimeTr(item.createdAt || item.sentAt);
+  return [item.platform, when].filter(Boolean).join(' · ');
 }
 
 export default function NotificationsScreen(): React.JSX.Element {
@@ -108,29 +130,34 @@ export default function NotificationsScreen(): React.JSX.Element {
               style={styles.card}
               onPress={() =>
                 navigation.navigate('DealDetail', {
-                  id: item.listingId,
-                  dealId: item.listingId,
+                  id: item.dealId || item.listingId,
+                  dealId: item.dealId || item.listingId,
                 })
               }
             >
               <View style={styles.thumb}>
-                <DealListingImage uri={item.imageUrl} style={styles.thumbImage} />
+                <DealListingImage
+                  uri={item.imageUrl}
+                  style={styles.thumbImage}
+                  variant="thumb"
+                  icon="flash"
+                />
               </View>
               <View style={styles.cardBody}>
-                <Text style={styles.cardTitle} numberOfLines={2}>
+                <Text style={styles.cardTitle} numberOfLines={1}>
                   {item.title}
                 </Text>
-                <Text style={styles.meta}>
-                  {channelLabel(item.channel)} · {statusLabel(item.status)}
-                  {item.dealScore != null ? ` · Skor ${item.dealScore}` : ''}
-                </Text>
-                {item.status !== 'SENT' && item.reason ? (
-                  <Text style={styles.reason}>{item.reason}</Text>
+                {item.message ? (
+                  <Text style={styles.message} numberOfLines={2}>
+                    {item.message}
+                  </Text>
                 ) : null}
-                <Text style={styles.time}>
-                  {new Date(item.sentAt || item.createdAt).toLocaleString('tr-TR')}
-                </Text>
+                {metaLine(item) ? (
+                  <Text style={styles.meta}>{metaLine(item)}</Text>
+                ) : null}
+                <Text style={styles.time}>{footerLine(item)}</Text>
               </View>
+              <GlyphIcon name="chevron" size={18} color={colors.textMuted} />
             </Pressable>
           )}
         />
@@ -160,6 +187,7 @@ const styles = StyleSheet.create({
   },
   card: {
     flexDirection: 'row',
+    alignItems: 'center',
     gap: 12,
     backgroundColor: colors.surface,
     borderRadius: radii.lg,
@@ -187,16 +215,17 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     fontSize: 15,
   },
-  meta: {
+  message: {
     marginTop: 4,
     color: colors.textSecondary,
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  meta: {
+    marginTop: 4,
+    color: colors.accent,
     fontSize: 12,
     fontWeight: '700',
-  },
-  reason: {
-    marginTop: 4,
-    color: colors.textMuted,
-    fontSize: 12,
   },
   time: {
     marginTop: 6,
