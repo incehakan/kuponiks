@@ -14,6 +14,21 @@ export const FILTER_LIMITS: Record<
 /** FREE plan notification delay (10 minutes). PRO/VIP → immediate. */
 export const FREE_PLAN_DELAY_MS = 10 * 60 * 1000;
 
+/**
+ * Minimum time between scrapes of the same canonical query, by the
+ * most generous plan among grouped active filters.
+ * Notification delay (FREE_PLAN_DELAY_MS) is separate.
+ */
+export const SCRAPE_INTERVAL_MS: Record<SubscriptionPlan, number> = {
+  [SubscriptionPlan.VIP]: 5 * 60 * 1000,
+  [SubscriptionPlan.PRO]: 10 * 60 * 1000,
+  [SubscriptionPlan.FREE]: 15 * 60 * 1000,
+};
+
+export function getScrapeIntervalMs(plan: SubscriptionPlan): number {
+  return SCRAPE_INTERVAL_MS[plan] ?? SCRAPE_INTERVAL_MS[SubscriptionPlan.FREE];
+}
+
 export interface NotifyFlagInput {
   notifyTelegram?: boolean;
   notifyPush?: boolean;

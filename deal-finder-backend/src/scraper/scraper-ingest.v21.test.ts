@@ -71,6 +71,7 @@ describe("ScraperService firstSeenAt / lastSeenAt / dedup", () => {
     expect(updated.listing.firstSeenAt.getTime()).toBe(firstSeenAt);
     expect(updated.listing.lastSeenAt.getTime()).toBeGreaterThan(lastSeenAt);
     expect(updated.listing.title).toContain("UPDATED");
+    expect(updated.enqueuedForMatch).toBe(false);
 
     const rows = await prisma.listing.findMany({
       where: { externalId },

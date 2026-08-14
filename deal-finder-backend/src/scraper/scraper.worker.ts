@@ -8,6 +8,23 @@ import {
 import { resolveScraperAdapter } from "./adapters/index.js";
 import { runAdapterPipeline } from "./scraper.manager.js";
 import { scraperService } from "./scraper.service.js";
+import {
+  recordPlatformFailure,
+  recordPlatformSuccess,
+  shouldTripCircuitOnEmpty,
+} from "./scheduler/circuit-breaker.js";
+
+function workerConcurrency(): number {
+  const raw = process.env.SCRAPER_GLOBAL_CONCURRENCY?.trim();
+  const parsed = raw ? Number.parseInt(raw, 10) : 1;
+  return Number.isFinite(parsed) && parsed >= 1 && parsed <= 4 ? parsed : 1;
+}
+
+function jobTimeoutMs(): number {
+  const raw = process.env.SCRAPER_JOB_TIMEOUT_MS?.trim();
+  const parsed = raw ? Number.parseInt(raw, 10) : 180_000;
+  return Number.isFinite(parsed) && parsed >= 30_000 ? parsed : 180_000;
+}
 
 /**
  * BullMQ worker that consumes scraper-queue jobs, runs platform adapters,
@@ -24,7 +41,12 @@ export class ScraperWorker {
       async (job: Job<ScraperJobData>) => this.process(job),
       {
         connection: this.connection,
-        concurrency: 1,
+        concurrency: workerConcurrency(),
+        limiter: {
+          max: 1,
+          duration: 8_000,
+        },
+        lockDuration: jobTimeoutMs(),
       },
     );
 
@@ -44,8 +66,10 @@ export class ScraperWorker {
   }
 
   private async process(job: Job<ScraperJobData>): Promise<void> {
-    const { platform, category, city, limit, triggeredBy, query } = job.data;
+    const { platform, category, city, limit, triggeredBy, query, queryKey } =
+      job.data;
     const keyword = query?.trim();
+    const startedAt = Date.now();
 
     console.log(
       `[SCRAPER WORKER] ── Tarama başladı ── job=${job.id} platform=${platform} keyword=${keyword ?? "(yok)"} by=${triggeredBy ?? "manual"}`,
@@ -59,7 +83,6 @@ export class ScraperWorker {
       return;
     }
 
-    // Keyword → adapter.search({ query }); shared manager handles errors + normalize.
     const { rawCount, normalized, error } = await runAdapterPipeline(adapter, {
       ...(category ? { category } : {}),
       ...(city ? { city } : {}),
@@ -71,51 +94,28 @@ export class ScraperWorker {
       console.error(
         `[SCRAPER WORKER] Adaptör hatası — job=${job.id}: ${error.message}`,
       );
-    }
-
-    console.log(
-      `[SCRAPER WORKER] Ham ilan=${rawCount} → normalize edilen=${normalized.length} (platform=${platform}, keyword=${keyword ?? "-"})`,
-    );
-
-    for (const item of normalized.slice(0, 5)) {
-      const market = item.marketAveragePrice;
-      const discount =
-        market != null && market > 0
-          ? (((item.price - market) / market) * -100).toFixed(1)
-          : "?";
-      console.log(
-        `[SCRAPER WORKER] aday → "${item.title}" | fiyat=${item.price} | piyasa=${market ?? "-"} | indirim≈%${discount}`,
-      );
+      await recordPlatformFailure(platform);
+    } else if (rawCount === 0 && shouldTripCircuitOnEmpty(platform)) {
+      await recordPlatformFailure(platform);
+    } else {
+      await recordPlatformSuccess(platform);
     }
 
     const summary = await scraperService.ingestNormalizedBatch(normalized);
+    const notificationsQueued = summary.results.filter(
+      (result) => result.status === "created" && result.enqueuedForMatch,
+    ).length;
 
-    const dealHits = summary.results.filter(
-      (r) => r.status === "created" && r.isDeal,
+    console.log(
+      `[SCRAPE] platform=${platform} queryKey=${queryKey ?? "-"} raw=${rawCount} normalized=${normalized.length} created=${summary.created} updated=${summary.updated} matches=${notificationsQueued} notificationsQueued=${notificationsQueued} durationMs=${Date.now() - startedAt}`,
     );
 
-    if (dealHits.length > 0) {
-      console.log("★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★");
-      console.log(
-        `[KELEPİR EŞLEŞME] ${dealHits.length} ilan skor eşiğini geçti (platform=${platform}, keyword=${keyword ?? "-"})`,
-      );
-      for (const hit of dealHits) {
-        if (hit.status !== "created") {
-          continue;
-        }
-        console.log(
-          `[KELEPİR EŞLEŞME] skor=${hit.dealScore} | ${hit.listing.price} TL (piyasa=${hit.listing.marketAveragePrice ?? "-"}) | "${hit.listing.title}" | id=${hit.listing.id}`,
-        );
-      }
-      console.log("★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★");
-    } else {
-      console.log(
-        `[SCRAPER WORKER] Kelepir eşleşme yok — created=${summary.created}, deals=${summary.deals}, duplicates=${summary.duplicates}`,
-      );
+    if (error) {
+      return;
     }
 
     console.log(
-      `[SCRAPER WORKER] ── Tarama bitti ── job=${job.id} created=${summary.created} duplicates=${summary.duplicates} skipped=${summary.skipped} deals(kelepir)=${summary.deals}`,
+      `[SCRAPER WORKER] ── Tarama bitti ── job=${job.id} created=${summary.created} duplicates=${summary.duplicates} skipped=${summary.skipped}`,
     );
   }
 

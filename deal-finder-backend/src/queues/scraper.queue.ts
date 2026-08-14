@@ -35,6 +35,8 @@ export interface ScraperJobData {
   limit?: number;
   /** Trigger source for observability. */
   triggeredBy?: "cron" | "manual" | "bootstrap";
+  /** Canonical query key for logs (no secrets). */
+  queryKey?: string;
 }
 
 /**
@@ -115,6 +117,7 @@ function buildScraperJobId(data: ScraperJobData): string {
  */
 export async function enqueueScrapeJob(
   data: ScraperJobData,
+  options: { jobId?: string; priority?: number } = {},
 ): Promise<string | undefined> {
   const queue = getScraperQueue();
   if (!queue) {
@@ -127,7 +130,8 @@ export async function enqueueScrapeJob(
   try {
     const job = await queue.add("scrape-platform", data, {
       ...scraperJobOptions,
-      jobId: buildScraperJobId(data),
+      jobId: options.jobId ?? buildScraperJobId(data),
+      ...(options.priority != null ? { priority: options.priority } : {}),
     });
 
     console.log(

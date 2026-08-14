@@ -2,7 +2,7 @@ import { env } from "../config/env.js";
 import { isRedisAvailable, probeRedisConnection } from "../lib/redis.js";
 
 export type PresenceStatus = "configured" | "missing";
-export type AvailabilityStatus = "available" | "unavailable";
+export type AvailabilityStatus = "available" | "unavailable" | "not_checked";
 
 /**
  * Operational readiness for notification delivery (presence / availability only).
@@ -19,15 +19,27 @@ export interface NotificationOpsHealth {
  * Builds a secret-safe ops health snapshot for health routes and smoke preflight.
  */
 export async function getNotificationOpsHealth(
-  options: { probeRedis?: boolean } = {},
+  options: { probeRedis?: boolean; redisMode?: "cached" | "not_checked" } = {},
 ): Promise<NotificationOpsHealth> {
+  if (options.redisMode === "not_checked") {
+    return {
+      redis: "not_checked",
+      expoProvider: "available",
+      expoAccessToken: env.EXPO_ACCESS_TOKEN?.trim()
+        ? "configured"
+        : "missing",
+      telegramBotToken: env.TELEGRAM_BOT_TOKEN?.trim()
+        ? "configured"
+        : "missing",
+    };
+  }
+
   if (options.probeRedis) {
     await probeRedisConnection();
   }
 
   return {
     redis: isRedisAvailable() ? "available" : "unavailable",
-    // PushProvider + expo-server-sdk are always wired in this codebase.
     expoProvider: "available",
     expoAccessToken: env.EXPO_ACCESS_TOKEN?.trim()
       ? "configured"

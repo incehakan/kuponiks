@@ -145,12 +145,33 @@ export async function buildApp(): Promise<FastifyInstance> {
     const { getNotificationOpsHealth } = await import(
       "./notifications/notification-ops-health.js"
     );
-    const notifications = await getNotificationOpsHealth();
+    const { getSchedulerHealth } = await import(
+      "./scraper/scheduler/scheduler-state.js"
+    );
+    const role = process.env.PROCESS_ROLE?.trim().toLowerCase();
+    const notifications = await getNotificationOpsHealth({
+      redisMode:
+        role === "api" ||
+        (!role && env.NODE_ENV === "production")
+          ? "not_checked"
+          : "cached",
+    });
+    const scheduler = getSchedulerHealth();
     return {
       status: "ok",
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
+      role: role || (env.NODE_ENV === "production" ? "api" : "all"),
       redis: notifications.redis,
+      scheduler: {
+        role: scheduler.role,
+        enabled: scheduler.enabled,
+        lastCycleAt: scheduler.lastCycleAt,
+        lastCycleDurationMs: scheduler.lastCycleDurationMs,
+        lastQueuedJobs: scheduler.lastQueuedJobs,
+        activeFilterCount: scheduler.activeFilterCount,
+        queryGroupCount: scheduler.queryGroupCount,
+      },
       notifications: {
         expoProvider: notifications.expoProvider,
         expoAccessToken: notifications.expoAccessToken,

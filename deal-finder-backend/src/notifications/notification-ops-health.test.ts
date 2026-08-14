@@ -41,6 +41,11 @@ describe("Notification ops health", () => {
     expect(JSON.stringify(health)).not.toContain("bot-token");
   });
 
+  it("reports redis not_checked when API process did not probe", async () => {
+    const health = await getNotificationOpsHealth({ redisMode: "not_checked" });
+    expect(health.redis).toBe("not_checked");
+  });
+
   it("warns in production when Expo access token missing", () => {
     (env as { NODE_ENV: string }).NODE_ENV = "production";
     const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);

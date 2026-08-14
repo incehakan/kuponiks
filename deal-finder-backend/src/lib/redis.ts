@@ -244,9 +244,19 @@ export async function redisSetEx(
   }
 }
 
-/**
- * Safe Redis DEL wrapper — never throws.
- */
+export async function redisGet(key: string): Promise<string | null> {
+  try {
+    if (!isRedisAvailable() && redis.status !== "ready") {
+      return null;
+    }
+    return await redis.get(key);
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Unknown Redis GET error";
+    console.warn(`[Redis] GET başarısız (atlanıyor): ${message}`);
+    return null;
+  }
+}
 export async function redisDel(key: string): Promise<void> {
   try {
     if (!isRedisAvailable() && redis.status !== "ready") {

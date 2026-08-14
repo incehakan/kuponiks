@@ -55,7 +55,7 @@ async function start(): Promise<void> {
     console.log("[scraper-worker] ScraperWorker → scraper-queue");
     console.log("[scraper-worker] ListingMatchWorker → listing-match-queue");
     console.log("[scraper-worker] NotificationWorker → notification-queue");
-    console.log("[scraper-worker] ScraperScheduler aktif (UserFilter.isActive)");
+    console.log("[scraper-worker] ScraperScheduler V2 aktif (UserFilter.isActive, bootstrap tick yok)");
 
     const shutdown = async (signal: NodeJS.Signals): Promise<void> => {
       if (isShuttingDown) {
