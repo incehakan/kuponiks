@@ -3,10 +3,15 @@
  * Does not send notifications by itself; ingest create-path still applies.
  */
 import "dotenv/config";
+import { probeRedisConnection } from "../src/lib/redis.js";
 import { runSchedulerCycle } from "../src/scraper/scheduler/scheduler.service.js";
 import { prisma } from "../src/lib/prisma.js";
 
 async function main(): Promise<void> {
+  const redisOk = await probeRedisConnection();
+  if (!redisOk) {
+    throw new Error("Redis unavailable — scheduler:run-once aborted");
+  }
   const result = await runSchedulerCycle({
     enqueue: true,
     acquireLock: true,
