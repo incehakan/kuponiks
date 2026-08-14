@@ -6,6 +6,7 @@ import {
   parsePrice,
   parseYear,
 } from "./utils/parse-number.js";
+import { toStoredListingImageUrl } from "../lib/listing-image.js";
 
 /**
  * Raw listing payload as returned by heterogeneous scrapers / APIs.
@@ -287,7 +288,9 @@ export function normalizeScrapedListing(
     normalizeCurrency(pickString(raw, ["currency"])) ??
     normalizeCurrency(String(raw.price ?? raw.fiyat ?? "")) ??
     "TRY";
-  const imageUrl = pickString(raw, ["imageUrl", "image", "photoUrl"]);
+  const imageUrl = toStoredListingImageUrl(
+    pickString(raw, ["imageUrl", "image", "photoUrl"]),
+  );
   const publishedAt = pickDate(raw, ["publishedAt"]);
 
   const locationParts = splitCityDistrict(city);

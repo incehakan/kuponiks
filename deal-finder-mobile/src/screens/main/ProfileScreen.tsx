@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Image,
   Linking,
   Modal,
   Pressable,
@@ -13,8 +14,13 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import GlyphIcon from '../../components/GlyphIcon';
 
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import type { CompositeNavigationProp } from '@react-navigation/native';
+import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAuth } from '../../context/AuthContext';
 import {
   PLAN_COMPARISON_ROWS,
@@ -26,7 +32,9 @@ import {
 } from '../../constants/telegram';
 import { getErrorMessage, paymentApi, telegramApi, userApi } from '../../services/api';
 import PaymentWebViewModal from '../../components/PaymentWebViewModal';
+import { colors } from '../../theme';
 import type { SubscriptionPlan, User } from '../../types/models';
+import type { MainStackParamList, MainTabParamList } from '../../types/navigation';
 
 interface PlanBadgeStyles {
   container: ViewStyle;
@@ -113,6 +121,13 @@ function ComparisonPlanCard({
 }
 
 export default function ProfileScreen(): React.JSX.Element {
+  const navigation =
+    useNavigation<
+      CompositeNavigationProp<
+        BottomTabNavigationProp<MainTabParamList, 'Profile'>,
+        NativeStackNavigationProp<MainStackParamList>
+      >
+    >();
   const { user, setUser, signOut } = useAuth();
   const [profile, setProfile] = useState<User | null>(user);
   const [isLoading, setIsLoading] = useState<boolean>(!user);
@@ -318,16 +333,74 @@ export default function ProfileScreen(): React.JSX.Element {
 
   return (
     <>
+    <SafeAreaView style={styles.container} edges={['top']}>
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.profileCard}>
-        <Text style={styles.sectionLabel}>Hesap</Text>
+        <Image source={require('../../../assets/icon.png')} style={styles.avatar} />
         <Text style={styles.fullName}>{profile?.fullName ?? 'Kullanıcı'}</Text>
         <Text style={styles.phone}>{profile?.phone ?? '—'}</Text>
-
         <View style={[styles.planBadge, badgeStyles.container]}>
           <Text style={[styles.planBadgeText, badgeStyles.text]}>{currentPlan}</Text>
         </View>
       </View>
+
+      {currentPlan === 'FREE' ? (
+        <View style={styles.premiumCard}>
+          <Text style={styles.premiumTitle}>Kuponiks Premium</Text>
+          <Text style={styles.premiumSub}>
+            Daha fazla arama görevi ve öncelikli bildirimler için paketinizi yükseltin.
+          </Text>
+        </View>
+      ) : null}
+
+      <View style={styles.menu}>
+        <Pressable
+          style={styles.menuRow}
+          onPress={() =>
+            navigation.navigate('AccountInfo', {
+              fullName: profile?.fullName ?? '',
+              phone: profile?.phone ?? '',
+              plan: currentPlan,
+            })
+          }
+        >
+          <GlyphIcon name="person-circle" size={20} color={colors.white} />
+          <Text style={styles.menuText}>Hesap Bilgileri</Text>
+          <GlyphIcon name="chevron" size={16} color={colors.textMuted} />
+        </Pressable>
+        <Pressable
+          style={styles.menuRow}
+          onPress={() => navigation.navigate('NotificationPrefs')}
+        >
+          <GlyphIcon name="bell" size={20} color={colors.white} />
+          <Text style={styles.menuText}>Bildirim Tercihleri</Text>
+          <GlyphIcon name="chevron" size={16} color={colors.textMuted} />
+        </Pressable>
+        <View style={[styles.menuRow, styles.menuRowDisabled]}>
+          <GlyphIcon name="devices" size={20} color={colors.textMuted} />
+          <Text style={[styles.menuText, styles.menuTextDisabled]}>Bağlı Cihazlar</Text>
+          <View style={styles.soonBadge}>
+            <Text style={styles.soonBadgeText}>Yakında</Text>
+          </View>
+        </View>
+        <Pressable
+          style={styles.menuRow}
+          onPress={() => navigation.navigate('HelpSupport')}
+        >
+          <GlyphIcon name="help" size={20} color={colors.white} />
+          <Text style={styles.menuText}>Yardım & Destek</Text>
+          <GlyphIcon name="chevron" size={16} color={colors.textMuted} />
+        </Pressable>
+        <Pressable
+          style={styles.menuRow}
+          onPress={() => navigation.navigate('About')}
+        >
+          <GlyphIcon name="info" size={20} color={colors.white} />
+          <Text style={styles.menuText}>Hakkımızda</Text>
+          <GlyphIcon name="chevron" size={16} color={colors.textMuted} />
+        </Pressable>
+      </View>
+
 
       <View style={styles.telegramCard}>
         <Text style={styles.sectionTitle}>Telegram Bildirimleri</Text>
@@ -337,9 +410,7 @@ export default function ProfileScreen(): React.JSX.Element {
 
         {isTelegramLinked ? (
           <View style={styles.telegramLinkedBadge}>
-            <Text style={styles.telegramLinkedText}>
-              Telegram Bağlandı (ID: {profile?.telegramChatId})
-            </Text>
+            <Text style={styles.telegramLinkedText}>Telegram bağlı</Text>
           </View>
         ) : (
           <Pressable style={styles.telegramConnectButton} onPress={openTelegramLinkModal}>
@@ -438,6 +509,7 @@ export default function ProfileScreen(): React.JSX.Element {
         </View>
       </Modal>
     </ScrollView>
+    </SafeAreaView>
 
     <PaymentWebViewModal
       visible={paymentWebViewVisible}
@@ -453,7 +525,7 @@ export default function ProfileScreen(): React.JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#12022B',
+    backgroundColor: colors.background,
   },
   content: {
     padding: 16,
@@ -463,19 +535,88 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#12022B',
+    backgroundColor: colors.background,
   },
   loadingText: {
     marginTop: 12,
-    color: '#A0A0C0',
+    color: colors.textSecondary,
   },
   profileCard: {
-    backgroundColor: '#1A0836',
+    backgroundColor: colors.surface,
     borderRadius: 18,
     padding: 20,
     borderWidth: 1,
-    borderColor: '#2A164D',
-    marginBottom: 24,
+    borderColor: colors.border,
+    marginBottom: 16,
+    alignItems: 'center',
+  },
+  avatar: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    marginBottom: 8,
+  },
+  premiumCard: {
+    backgroundColor: colors.primaryDark,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: colors.primary,
+  },
+  premiumTitle: {
+    color: colors.white,
+    fontWeight: '800',
+    fontSize: 16,
+  },
+  premiumSub: {
+    marginTop: 6,
+    color: colors.textSecondary,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  menu: {
+    backgroundColor: colors.surface,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginBottom: 20,
+    overflow: 'hidden',
+  },
+  menuRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+    minHeight: 48,
+  },
+  menuRowDisabled: {
+    opacity: 0.7,
+  },
+  menuText: {
+    flex: 1,
+    color: colors.white,
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  menuTextDisabled: {
+    color: colors.textMuted,
+  },
+  soonBadge: {
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    backgroundColor: colors.surfaceElevated,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  soonBadgeText: {
+    color: colors.textMuted,
+    fontSize: 11,
+    fontWeight: '800',
   },
   sectionLabel: {
     fontSize: 12,

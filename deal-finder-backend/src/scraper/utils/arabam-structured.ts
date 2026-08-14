@@ -17,6 +17,7 @@ export interface ArabamLdVehicle {
   brandSource: "json-ld" | null;
   mileageSource: "json-ld" | null;
   modelSource: "json-ld" | null;
+  imageUrl: string | null;
 }
 
 export interface ArabamUrlTaxonomy {
@@ -265,6 +266,26 @@ function asMileageValue(value: unknown): number | null {
   return null;
 }
 
+function asImageUrl(value: unknown): string | null {
+  if (typeof value === "string" && value.trim()) {
+    return value.trim();
+  }
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const nested = asImageUrl(item);
+      if (nested) {
+        return nested;
+      }
+    }
+    return null;
+  }
+  if (value && typeof value === "object") {
+    const record = value as { url?: unknown; contentUrl?: unknown };
+    return asImageUrl(record.url) ?? asImageUrl(record.contentUrl);
+  }
+  return null;
+}
+
 function asYearValue(value: unknown): number | null {
   if (typeof value === "number" && Number.isFinite(value)) {
     const year = Math.round(value);
@@ -318,6 +339,7 @@ export function mapArabamLdVehicle(item: Record<string, unknown>): ArabamLdVehic
     brandSource: brand ? "json-ld" : null,
     mileageSource: mileage != null ? "json-ld" : null,
     modelSource: model ? "json-ld" : null,
+    imageUrl: asImageUrl(item.image) ?? asImageUrl(item.imageUrl),
   };
 }
 

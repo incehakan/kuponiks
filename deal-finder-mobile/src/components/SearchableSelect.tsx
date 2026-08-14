@@ -170,6 +170,7 @@ export default function SearchableSelect({
                       }}
                     >
                       <Text style={styles.rowText}>{item.label}</Text>
+                      {selected ? <Text style={styles.check}>✓</Text> : null}
                     </TouchableOpacity>
                   );
                 }}
@@ -279,12 +280,19 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.border,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   rowSelected: {
-    backgroundColor: 'rgba(255,122,0,0.12)',
+    backgroundColor: 'rgba(91, 45, 255, 0.28)',
   },
   rowText: {
     color: colors.text,
     fontSize: 15,
+    flex: 1,
+  },
+  check: {
+    color: colors.white,
+    fontWeight: '800',
   },
 });

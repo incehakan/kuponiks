@@ -2,19 +2,19 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useState } from 'react';
 import {
   Alert,
-  Image,
   KeyboardAvoidingView,
   Platform,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-import GradientButton from '../../components/GradientButton';
-import { colors, radii } from '../../constants/theme';
+import KuponiksLogo from '../../components/KuponiksLogo';
+import PrimaryButton from '../../components/PrimaryButton';
+import SecondaryButton from '../../components/SecondaryButton';
 import { useAuth } from '../../context/AuthContext';
 import {
   authApi,
@@ -24,6 +24,7 @@ import {
   saveToken,
 } from '../../services/api';
 import { syncExpoPushTokenWithBackend } from '../../services/pushNotifications';
+import { colors, radii, spacing } from '../../theme';
 import type { AuthStackParamList } from '../../types/navigation';
 
 type RegisterScreenProps = NativeStackScreenProps<AuthStackParamList, 'Register'>;
@@ -104,118 +105,102 @@ export default function RegisterScreen({
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.flex}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
+    <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <View style={styles.brandBlock}>
-          <Image
-            source={require('../../../assets/logo.png')}
-            style={styles.logo}
-            resizeMode="contain"
-          />
-        </View>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+        >
+          <KuponiksLogo size="md" showWordmark showTagline />
+          <Text style={styles.heading}>Kayıt Ol</Text>
 
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Kayıt Ol</Text>
+          <View style={styles.card}>
+            <Text style={styles.label}>Ad Soyad</Text>
+            <TextInput
+              style={styles.input}
+              value={form.fullName}
+              onChangeText={(value) => handleChange('fullName', value)}
+              placeholder="Adınız Soyadınız"
+              placeholderTextColor={colors.placeholder}
+              autoCapitalize="words"
+              editable={!isSubmitting}
+            />
 
-          <Text style={styles.label}>Ad Soyad</Text>
-          <TextInput
-            style={styles.input}
-            value={form.fullName}
-            onChangeText={(value) => handleChange('fullName', value)}
-            placeholder="Adınız Soyadınız"
-            placeholderTextColor={colors.placeholder}
-            autoCapitalize="words"
-            editable={!isSubmitting}
-          />
+            <Text style={styles.label}>Telefon Numarası</Text>
+            <TextInput
+              style={styles.input}
+              value={form.phone}
+              onChangeText={(value) => handleChange('phone', value)}
+              placeholder="05XXXXXXXXX"
+              placeholderTextColor={colors.placeholder}
+              keyboardType="phone-pad"
+              autoCapitalize="none"
+              editable={!isSubmitting}
+            />
 
-          <Text style={styles.label}>Telefon Numarası</Text>
-          <TextInput
-            style={styles.input}
-            value={form.phone}
-            onChangeText={(value) => handleChange('phone', value)}
-            placeholder="05XXXXXXXXX"
-            placeholderTextColor={colors.placeholder}
-            keyboardType="phone-pad"
-            autoCapitalize="none"
-            editable={!isSubmitting}
-          />
+            <Text style={styles.label}>Şifre</Text>
+            <TextInput
+              style={styles.input}
+              value={form.password}
+              onChangeText={(value) => handleChange('password', value)}
+              placeholder="En az 6 karakter"
+              placeholderTextColor={colors.placeholder}
+              secureTextEntry
+              editable={!isSubmitting}
+            />
+          </View>
 
-          <Text style={styles.label}>Şifre</Text>
-          <TextInput
-            style={styles.input}
-            value={form.password}
-            onChangeText={(value) => handleChange('password', value)}
-            placeholder="En az 6 karakter"
-            placeholderTextColor={colors.placeholder}
-            secureTextEntry
-            editable={!isSubmitting}
-          />
-
-          <GradientButton
-            label="FIRSATLARI KEŞFET"
+          <PrimaryButton
+            label="Kayıt Ol"
             onPress={() => void handleRegister()}
             loading={isSubmitting}
             disabled={isSubmitting}
             style={styles.cta}
           />
-
-          <Pressable
-            style={styles.linkButton}
+          <SecondaryButton
+            label="Giriş Yap"
             onPress={() => navigation.navigate('Login')}
             disabled={isSubmitting}
-          >
-            <Text style={styles.linkText}>
-              Zaten hesabın var mı?{' '}
-              <Text style={styles.linkAccent}>Giriş Yap</Text>
-            </Text>
-          </Pressable>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+            style={styles.secondary}
+          />
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: colors.background },
+  safe: { flex: 1, backgroundColor: colors.background },
+  flex: { flex: 1 },
   scrollContent: {
     flexGrow: 1,
     justifyContent: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: spacing.xl,
     paddingBottom: 36,
-    paddingTop: 48,
+    paddingTop: 24,
   },
-  brandBlock: {
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  logo: {
-    width: '100%',
-    maxWidth: 320,
-    height: 180,
+  heading: {
+    marginTop: spacing.lg,
+    textAlign: 'center',
+    color: colors.textPrimary,
+    fontSize: 22,
+    fontWeight: '800',
   },
   card: {
-    backgroundColor: 'rgba(36, 16, 70, 0.92)',
-    borderRadius: radii.lg,
-    padding: 22,
+    marginTop: spacing.xl,
+    backgroundColor: colors.surface,
+    borderRadius: radii.xl,
+    padding: spacing.xl,
     borderWidth: 1,
     borderColor: colors.border,
-  },
-  cardTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: colors.white,
-    marginBottom: 18,
   },
   label: {
     fontSize: 13,
     fontWeight: '600',
-    color: colors.textMuted,
+    color: colors.textSecondary,
     marginBottom: 8,
   },
   input: {
@@ -228,18 +213,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.white,
     marginBottom: 14,
+    minHeight: 48,
   },
-  cta: { marginTop: 8 },
-  linkButton: {
-    marginTop: 18,
-    alignItems: 'center',
-  },
-  linkText: {
-    color: colors.textMuted,
-    fontSize: 14,
-  },
-  linkAccent: {
-    color: colors.accent,
-    fontWeight: '700',
-  },
+  cta: { marginTop: spacing.xl },
+  secondary: { marginTop: spacing.md },
 });

@@ -9,6 +9,7 @@ import type { ScrapeSearchParams } from "./adapters/base.adapter.js";
 import { normalizeScrapedListings } from "./normalizer.js";
 import type { NormalizedListingInput } from "./normalizer.js";
 import { logBatchDataQuality } from "./utils/data-quality.js";
+import { toStoredListingImageUrl } from "../lib/listing-image.js";
 
 export class ScraperAdapterError extends Error {
   constructor(
@@ -117,7 +118,10 @@ export function toListingDto(
     dto.currency = currency;
   }
   if (row.imageUrl?.trim()) {
-    dto.imageUrl = row.imageUrl.trim();
+    const stored = toStoredListingImageUrl(row.imageUrl);
+    if (stored) {
+      dto.imageUrl = stored;
+    }
   }
   if (row.sellerType?.trim()) {
     dto.sellerType = row.sellerType.trim();

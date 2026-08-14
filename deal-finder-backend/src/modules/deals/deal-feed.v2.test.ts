@@ -178,4 +178,64 @@ describe("Deal Feed V2 user-specific API", () => {
     expect(page.deals).toHaveLength(1);
     expect(page.deals[0]?.matchedFilterCount).toBe(2);
   });
+
+  it("6. presentation minScore=80 hides lower-score matches without UserFilter", async () => {
+    const low = { ...listing, id: "22222222-2222-2222-2222-222222222222", dealScore: 71 };
+    mocked.userListingMatch.findMany.mockResolvedValue([
+      {
+        listingId: listing.id,
+        matchedAt: new Date("2026-08-02T10:00:00.000Z"),
+        listing,
+        filter: {
+          id: "f1",
+          name: "Honda Civic",
+          category: "Vasıta > Otomobil",
+          brand: "Honda",
+          series: "Civic",
+        },
+      },
+      {
+        listingId: low.id,
+        matchedAt: new Date("2026-08-02T09:00:00.000Z"),
+        listing: low,
+        filter: {
+          id: "f1",
+          name: "Honda Civic",
+          category: "Vasıta > Otomobil",
+          brand: "Honda",
+          series: "Civic",
+        },
+      },
+    ]);
+
+    const page = await service.getUserMatchedDeals("user-a", {
+      limit: 20,
+      minScore: 80,
+    });
+    expect(page.deals).toHaveLength(1);
+    expect(page.deals[0]?.dealScore).toBe(82);
+  });
+
+  it("7. noImage listing URLs are not exposed as real photos", async () => {
+    mocked.userListingMatch.findMany.mockResolvedValue([
+      {
+        listingId: listing.id,
+        matchedAt: new Date(),
+        listing: {
+          ...listing,
+          imageUrl:
+            "https://arbimg1.mncdn.com/ilanfotograflari/noImage/01/01/1/noimage5_160x120.jpg",
+        },
+        filter: {
+          id: "f1",
+          name: "Honda Civic",
+          category: "Vasıta > Otomobil",
+          brand: "Honda",
+          series: "Civic",
+        },
+      },
+    ]);
+    const page = await service.getUserMatchedDeals("user-a");
+    expect(page.deals[0]?.imageUrl).toBeNull();
+  });
 });

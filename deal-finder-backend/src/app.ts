@@ -14,6 +14,7 @@ import { filterRoutes } from "./modules/filters/filter.routes.js";
 import { subscriptionRoutes } from "./modules/subscriptions/subscription.routes.js";
 import { telegramRoutes } from "./modules/telegram/telegram.routes.js";
 import { paymentRoutes } from "./modules/payment/payment.routes.js";
+import { notificationHistoryRoutes } from "./modules/notifications/notification-history.routes.js";
 import { taxonomyRoutes } from "./modules/taxonomy/taxonomy.routes.js";
 import { userRoutes } from "./modules/users/user.routes.js";
 import { scraperRoutes } from "./routes/scraper.routes.js";
@@ -168,6 +169,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   await app.register(subscriptionRoutes, { prefix: "/api/subscriptions" });
   await app.register(telegramRoutes, { prefix: "/api/telegram" });
   await app.register(paymentRoutes, { prefix: "/api/payment" });
+  await app.register(notificationHistoryRoutes, { prefix: "/api/notifications" });
   await app.register(scraperRoutes, { prefix: "/api/scraper" });
 
   return app;

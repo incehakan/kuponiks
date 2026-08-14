@@ -4,16 +4,22 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as Notifications from 'expo-notifications';
 import React, { useEffect, useRef } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
+import GlyphIcon from '../components/GlyphIcon';
 
 import { AuthProvider, useAuth } from '../context/AuthContext';
 import { APP_NAME } from '../constants/brand';
-import { colors } from '../constants/theme';
+import { colors } from '../theme';
 import LoginScreen from '../screens/auth/LoginScreen';
 import RegisterScreen from '../screens/auth/RegisterScreen';
 import DealDetailScreen from '../screens/DealDetailScreen';
+import AccountInfoScreen from '../screens/main/AccountInfoScreen';
+import AboutScreen from '../screens/main/AboutScreen';
 import FiltersScreen from '../screens/main/FiltersScreen';
+import HelpSupportScreen from '../screens/main/HelpSupportScreen';
 import HomeScreen from '../screens/main/HomeScreen';
+import NotificationPrefsScreen from '../screens/main/NotificationPrefsScreen';
+import NotificationsScreen from '../screens/main/NotificationsScreen';
 import ProfileScreen from '../screens/main/ProfileScreen';
 import {
   extractDealNotificationData,
@@ -42,32 +48,27 @@ function AuthNavigator(): React.JSX.Element {
 }
 
 function TabsNavigator(): React.JSX.Element {
+  const insets = useSafeAreaInsets();
+
   return (
     <MainTabs.Navigator
       screenOptions={{
-        headerStyle: {
-          backgroundColor: '#12022B',
-        },
-        headerTitleStyle: {
-          fontWeight: '700',
-          color: '#FFFFFF',
-        },
-        headerTintColor: '#FFFFFF',
-        tabBarActiveTintColor: '#FF7A00',
-        tabBarInactiveTintColor: '#666688',
+        headerShown: false,
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.textMuted,
         tabBarStyle: {
-          backgroundColor: '#12022B',
-          borderTopColor: '#2A164D',
-          height: 62,
-          paddingBottom: 8,
+          backgroundColor: colors.surface,
+          borderTopColor: colors.border,
+          height: 58 + insets.bottom,
+          paddingBottom: Math.max(insets.bottom, 8),
           paddingTop: 6,
         },
         tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: '600',
+          fontSize: 11,
+          fontWeight: '700',
         },
         sceneStyle: {
-          backgroundColor: '#12022B',
+          backgroundColor: colors.background,
         },
       }}
     >
@@ -75,11 +76,13 @@ function TabsNavigator(): React.JSX.Element {
         name="Home"
         component={HomeScreen}
         options={{
-          title: 'Fırsatlar',
-          headerShown: false,
           tabBarLabel: 'Fırsatlar',
-          tabBarIcon: ({ color, focused }) => (
-            <TabIcon label="F" color={color} focused={focused} />
+          tabBarIcon: ({ color }) => (
+            <GlyphIcon
+              name="flash"
+              size={20}
+              color={color}
+            />
           ),
         }}
       />
@@ -87,10 +90,27 @@ function TabsNavigator(): React.JSX.Element {
         name="Filters"
         component={FiltersScreen}
         options={{
-          title: 'Alarmlarım',
-          tabBarLabel: 'Alarmlarım',
-          tabBarIcon: ({ color, focused }) => (
-            <TabIcon label="A" color={color} focused={focused} />
+          tabBarLabel: 'Aramalarım',
+          tabBarIcon: ({ color }) => (
+            <GlyphIcon
+              name="search"
+              size={20}
+              color={color}
+            />
+          ),
+        }}
+      />
+      <MainTabs.Screen
+        name="Notifications"
+        component={NotificationsScreen}
+        options={{
+          tabBarLabel: 'Bildirimler',
+          tabBarIcon: ({ color }) => (
+            <GlyphIcon
+              name="bell"
+              size={20}
+              color={color}
+            />
           ),
         }}
       />
@@ -98,10 +118,13 @@ function TabsNavigator(): React.JSX.Element {
         name="Profile"
         component={ProfileScreen}
         options={{
-          title: 'Profil / Ayarlar',
-          tabBarLabel: 'Profil',
-          tabBarIcon: ({ color, focused }) => (
-            <TabIcon label="P" color={color} focused={focused} />
+          tabBarLabel: 'Profilim',
+          tabBarIcon: ({ color }) => (
+            <GlyphIcon
+              name="person"
+              size={20}
+              color={color}
+            />
           ),
         }}
       />
@@ -121,27 +144,11 @@ function MainNavigator(): React.JSX.Element {
           animation: 'slide_from_right',
         }}
       />
+      <MainStack.Screen name="AccountInfo" component={AccountInfoScreen} />
+      <MainStack.Screen name="NotificationPrefs" component={NotificationPrefsScreen} />
+      <MainStack.Screen name="HelpSupport" component={HelpSupportScreen} />
+      <MainStack.Screen name="About" component={AboutScreen} />
     </MainStack.Navigator>
-  );
-}
-
-interface TabIconProps {
-  label: string;
-  color: string;
-  focused: boolean;
-}
-
-function TabIcon({ label, color, focused }: TabIconProps): React.JSX.Element {
-  return (
-    <View
-      style={[
-        styles.tabIcon,
-        focused && styles.tabIconFocused,
-        { borderColor: color },
-      ]}
-    >
-      <Text style={[styles.tabIconText, { color }]}>{label}</Text>
-    </View>
   );
 }
 
@@ -157,7 +164,6 @@ function processNotificationResponse(
     return;
   }
 
-  // In-app only: never Linking.openURL from notification tap.
   navigateToDealFromNotification(dealId);
 }
 
@@ -208,7 +214,7 @@ function RootNavigator(): React.JSX.Element {
   if (isLoading) {
     return (
       <View style={styles.bootstrapping}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <ActivityIndicator size="large" color={colors.accent} />
         <Text style={styles.bootstrappingText}>{APP_NAME} hazırlanıyor...</Text>
       </View>
     );
@@ -249,20 +255,5 @@ const styles = StyleSheet.create({
     marginTop: 12,
     color: colors.textMuted,
     fontSize: 15,
-  },
-  tabIcon: {
-    width: 26,
-    height: 26,
-    borderRadius: 8,
-    borderWidth: 1.5,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  tabIconFocused: {
-    backgroundColor: '#3B1D6A',
-  },
-  tabIconText: {
-    fontSize: 12,
-    fontWeight: '800',
   },
 });

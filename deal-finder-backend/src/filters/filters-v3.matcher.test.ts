@@ -294,3 +294,69 @@ describe("Global DEAL_SCORE_THRESHOLD vs UserFilter.minDealScore", () => {
     );
   });
 });
+
+describe("Production Honda Civic filter shape (measured 2026-08-14)", () => {
+  const prodFilter = (): MatchableFilter => ({
+    category: "Vasıta > Otomobil",
+    subcategory: "Otomobil",
+    brand: "Honda",
+    model: null,
+    series: "Civic",
+    trim: null,
+    city: "Tüm Türkiye",
+    district: null,
+    minPrice: null,
+    maxPrice: null,
+    minYear: null,
+    maxYear: null,
+    minMileage: null,
+    maxMileage: null,
+    minDealScore: 50,
+    keywords: [],
+    excludedKeywords: [],
+  });
+
+  it("subcategory leaf + nationwide city + listing subcategory null → PASS when score>=50", () => {
+    expect(
+      listingMatchesFilter(
+        baseListing({
+          subcategory: null,
+          city: "Konya",
+          dealScore: 90,
+          brand: "Honda",
+          series: "Civic",
+          model: "Honda Civic 1.6i VTEC LS",
+          trim: "1.6i VTEC LS",
+        }),
+        prodFilter(),
+      ),
+    ).toBe(true);
+  });
+
+  it("same shape with dealScore 49 → FAIL only on score", () => {
+    expect(
+      listingMatchesFilter(
+        baseListing({
+          subcategory: null,
+          city: "Ankara",
+          dealScore: 49,
+          brand: "Honda",
+          series: "Civic",
+        }),
+        prodFilter(),
+      ),
+    ).toBe(false);
+    expect(
+      listingMatchesFilter(
+        baseListing({
+          subcategory: null,
+          city: "Ankara",
+          dealScore: 50,
+          brand: "Honda",
+          series: "Civic",
+        }),
+        prodFilter(),
+      ),
+    ).toBe(true);
+  });
+});

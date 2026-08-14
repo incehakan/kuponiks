@@ -1,6 +1,7 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import * as SecureStore from 'expo-secure-store';
 
+import { toDisplayListingImageUrl } from '../utils/listingImage';
 import type {
   AuthResponse,
   CategoryFlatItem,
@@ -8,6 +9,7 @@ import type {
   CreateFilterPayload,
   Deal,
   Filter,
+  NotificationItem,
   TaxonomyItem,
   TaxonomyResponse,
   UpdateFilterPayload,
@@ -364,7 +366,9 @@ export const authApi = {
 
 export const dealsApi = {
   getDeals: async (): Promise<Deal[]> => {
-    const { data } = await api.get<unknown>('/deals');
+    const { data } = await api.get<unknown>('/deals', {
+      params: { limit: 50 },
+    });
 
     if (Array.isArray(data)) {
       return data.map((item) =>
@@ -462,7 +466,9 @@ function normalizeDeal(deal: Partial<Deal> & Record<string, unknown>): Deal {
     platform,
     source: typeof deal.source === 'string' ? deal.source : platform,
     sellerPhone: typeof deal.sellerPhone === 'string' ? deal.sellerPhone : undefined,
-    imageUrl: (deal as { imageUrl?: string | null }).imageUrl ?? null,
+    imageUrl: toDisplayListingImageUrl(
+      (deal as { imageUrl?: string | null }).imageUrl,
+    ),
     brand: (deal as { brand?: string | null }).brand ?? null,
     model: (deal as { model?: string | null }).model ?? null,
     series: (deal as { series?: string | null }).series ?? null,
@@ -651,6 +657,27 @@ export const userApi = {
   ): Promise<User> => {
     const { data } = await api.post<User>('/subscriptions/upgrade', payload);
     return mapUser(data) ?? (data as User);
+  },
+};
+
+export const notificationsApi = {
+  getNotifications: async (): Promise<NotificationItem[]> => {
+    const { data } = await api.get<{ notifications?: NotificationItem[] } | NotificationItem[]>(
+      '/notifications',
+    );
+    if (Array.isArray(data)) {
+      return data.map((item) => ({
+        ...item,
+        imageUrl: toDisplayListingImageUrl(item.imageUrl),
+      }));
+    }
+    if (data && typeof data === 'object' && Array.isArray(data.notifications)) {
+      return data.notifications.map((item) => ({
+        ...item,
+        imageUrl: toDisplayListingImageUrl(item.imageUrl),
+      }));
+    }
+    return [];
   },
 };
 

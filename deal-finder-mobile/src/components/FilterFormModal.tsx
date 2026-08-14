@@ -540,6 +540,23 @@ export default function FilterFormModal({
                 <Text style={styles.close}>Kapat</Text>
               </TouchableOpacity>
             </View>
+            <View style={styles.progressRow}>
+              {[
+                'Kategori',
+                'Araç Bilgileri',
+                'Bütçe & Kullanım',
+                'Konum & Diğer',
+              ].map((label, index) => (
+                <View key={label} style={styles.progressItem}>
+                  <View style={styles.progressDot}>
+                    <Text style={styles.progressNum}>{index + 1}</Text>
+                  </View>
+                  <Text style={styles.progressLabel} numberOfLines={1}>
+                    {label}
+                  </Text>
+                </View>
+              ))}
+            </View>
 
             <ScrollView
               style={styles.scroll}
@@ -950,7 +967,30 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.border,
   },
   title: { color: colors.text, fontSize: 18, fontWeight: '800' },
-  close: { color: colors.primary, fontWeight: '700' },
+  close: { color: colors.accent, fontWeight: '700' },
+  progressRow: {
+    flexDirection: 'row',
+    paddingHorizontal: spacing.md,
+    paddingBottom: spacing.md,
+    gap: 6,
+  },
+  progressItem: { flex: 1, alignItems: 'center' },
+  progressDot: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  progressNum: { color: colors.white, fontWeight: '800', fontSize: 12 },
+  progressLabel: {
+    marginTop: 4,
+    color: colors.textSecondary,
+    fontSize: 10,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
   scroll: { maxHeight: '78%' },
   scrollContent: { padding: spacing.md, paddingBottom: spacing.xl },
   section: {
@@ -997,7 +1037,7 @@ const styles = StyleSheet.create({
   },
   scoreSelected: {
     borderColor: colors.primary,
-    backgroundColor: 'rgba(255,122,0,0.12)',
+    backgroundColor: 'rgba(91,45,255,0.16)',
   },
   scoreTitle: { color: colors.text, fontWeight: '700' },
   scoreSub: { color: colors.textMuted, marginTop: 4, fontSize: 12 },
@@ -1010,7 +1050,7 @@ const styles = StyleSheet.create({
   saveBtn: {
     marginHorizontal: spacing.md,
     marginTop: spacing.sm,
-    backgroundColor: colors.primary,
+    backgroundColor: colors.accent,
     borderRadius: radii.md,
     minHeight: 52,
     alignItems: 'center',

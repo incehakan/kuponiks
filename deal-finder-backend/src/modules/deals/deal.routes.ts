@@ -34,14 +34,35 @@ export const dealRoutes: FastifyPluginAsync = async (
         limit?: string;
         cursor?: string;
         sort?: string;
+        minScore?: string;
+        platform?: string;
+        brand?: string;
+        city?: string;
+        onlyBelowMarket?: string;
       };
       const limit = query.limit ? Number(query.limit) : 20;
-      const sort = query.sort === "score" ? "score" : "newest";
+      const sort =
+        query.sort === "score" ||
+        query.sort === "advantage" ||
+        query.sort === "price"
+          ? query.sort
+          : "newest";
+      const minScore = query.minScore ? Number(query.minScore) : undefined;
+      const onlyBelowMarket =
+        query.onlyBelowMarket === "1" ||
+        query.onlyBelowMarket === "true";
 
       const page = await dealService.getUserMatchedDeals(request.user.id, {
         limit: Number.isFinite(limit) ? limit : 20,
         ...(query.cursor ? { cursor: query.cursor } : {}),
         sort,
+        ...(minScore != null && Number.isFinite(minScore)
+          ? { minScore }
+          : {}),
+        ...(query.platform?.trim() ? { platform: query.platform.trim() } : {}),
+        ...(query.brand?.trim() ? { brand: query.brand.trim() } : {}),
+        ...(query.city?.trim() ? { city: query.city.trim() } : {}),
+        ...(onlyBelowMarket ? { onlyBelowMarket: true } : {}),
       });
 
       return reply.status(200).send(page);

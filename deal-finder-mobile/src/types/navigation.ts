@@ -6,12 +6,21 @@ export type AuthStackParamList = {
 export type MainTabParamList = {
   Home: { dealId?: string; fromNotification?: boolean } | undefined;
   Filters: undefined;
+  Notifications: undefined;
   Profile: undefined;
 };
 
 export type MainStackParamList = {
-  Tabs: undefined;
+  Tabs: { screen?: keyof MainTabParamList } | undefined;
   DealDetail: { id: string; dealId?: string };
+  AccountInfo: {
+    fullName: string;
+    phone: string;
+    plan: import('./models').SubscriptionPlan;
+  };
+  NotificationPrefs: undefined;
+  HelpSupport: undefined;
+  About: undefined;
 };
 
 export type RootStackParamList = {

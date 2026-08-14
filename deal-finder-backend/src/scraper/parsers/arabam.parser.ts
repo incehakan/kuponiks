@@ -100,10 +100,24 @@ export const ARABAM_EXTRACT_SCRIPT = `(() => {
 
     const imgEl =
       el.querySelector("img.listing-image") ||
-      el.querySelector("img[src*='ilanfotograf'], img[src*='arbstorage']");
+      el.querySelector("img[src*='ilanfotograf'], img[src*='arbstorage'], img[data-src*='ilanfotograf']");
+    const srcset = imgEl && imgEl.getAttribute("srcset");
+    const srcsetFirst = srcset
+      ? (srcset.split(",")[0] || "").trim().split(" ")[0]
+      : null;
+    const imageCandidates = imgEl
+      ? [
+          imgEl.getAttribute("data-src"),
+          imgEl.getAttribute("data-original"),
+          imgEl.getAttribute("data-lazy"),
+          srcsetFirst,
+          imgEl.getAttribute("src"),
+        ]
+      : [];
+    const isPlaceholderImg = (u) =>
+      !u || /noimage|no-image|placeholder/i.test(String(u));
     const imageUrl =
-      (imgEl && (imgEl.getAttribute("src") || imgEl.getAttribute("data-src"))) ||
-      null;
+      imageCandidates.find((u) => u && !isPlaceholderImg(u)) || null;
 
     if (!title && !priceText && !modelName) {
       continue;

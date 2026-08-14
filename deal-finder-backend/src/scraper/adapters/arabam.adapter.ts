@@ -17,6 +17,7 @@ import {
   ARABAM_WAIT_SELECTOR,
 } from "../parsers/arabam.parser.js";
 import { logDomProbe } from "../parsers/dom-probe.js";
+import { pickBestListingImageUrl } from "../../lib/listing-image.js";
 import {
   ARABAM_LDJSON_EXTRACT_SCRIPT,
   mapArabamLdVehicle,
@@ -237,8 +238,11 @@ export class ArabamAdapter extends BaseScraperAdapter {
         domModel: row.model ?? null,
       });
 
+      const imageUrl = pickBestListingImageUrl([ld?.imageUrl, row.imageUrl]);
+
       return {
         ...row,
+        ...(imageUrl ? { imageUrl } : {}),
         ...(brand ? { brand } : {}),
         ...(brandSource ? { brandSource } : {}),
         ...(mileage != null ? { mileage } : {}),

@@ -1,7 +1,6 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
   Alert,
   Linking,
   Pressable,
@@ -11,14 +10,30 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import GlyphIcon from '../components/GlyphIcon';
 
+import DealListingImage from '../components/DealListingImage';
+import DealScoreBadge from '../components/DealScoreBadge';
+import EmptyState from '../components/EmptyState';
+import ErrorState from '../components/ErrorState';
+import LoadingSkeleton from '../components/LoadingSkeleton';
+import PriceAdvantageBadge from '../components/PriceAdvantageBadge';
+import PrimaryButton from '../components/PrimaryButton';
+import SecondaryButton from '../components/SecondaryButton';
 import { dealsApi, getErrorMessage } from '../services/api';
+import { colors, radii, spacing } from '../theme';
 import type { Deal } from '../types/models';
 import type { MainStackParamList } from '../types/navigation';
 import {
+  dealHeadline,
+  dealLocation,
+  marketMedian,
+  resolveListingUrl,
+  resolveSourceLabel,
+} from '../utils/dealDisplay';
+import {
   formatKm,
   formatMatchedTaskLabel,
-  formatPriceAdvantage,
   formatTry,
 } from '../utils/formatDeal';
 
@@ -27,27 +42,27 @@ type DealDetailScreenProps = NativeStackScreenProps<
   'DealDetail'
 >;
 
-function scoreColor(dealScore: number): string {
-  if (dealScore >= 90) {
-    return '#16A34A';
-  }
-  if (dealScore >= 80) {
-    return '#CA8A04';
-  }
-  return '#EA580C';
-}
-
-function resolveListingUrl(deal: Deal): string | null {
-  const url = deal.listingUrl || deal.originalUrl || deal.sourceUrl;
-  return url?.trim() ? url.trim() : null;
-}
-
-function confidenceLabel(value: string | null | undefined): string {
+function confidenceLabel(value: string | null | undefined): string | null {
   const n = (value ?? '').toUpperCase();
   if (n === 'HIGH') return 'Yüksek';
   if (n === 'MEDIUM') return 'Orta';
   if (n === 'LOW') return 'Düşük';
-  return value ?? '—';
+  return value?.trim() ? value : null;
+}
+
+function SpecCell({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}): React.JSX.Element {
+  return (
+    <View style={styles.specCell}>
+      <Text style={styles.specLabel}>{label}</Text>
+      <Text style={styles.specValue}>{value}</Text>
+    </View>
+  );
 }
 
 export default function DealDetailScreen({
@@ -57,6 +72,7 @@ export default function DealDetailScreen({
   const dealId = route.params.id || route.params.dealId;
   const [deal, setDeal] = useState<Deal | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const loadDeal = useCallback(async (): Promise<void> => {
     if (!dealId) {
@@ -69,17 +85,16 @@ export default function DealDetailScreen({
     try {
       const data = await dealsApi.getDealById(dealId);
       setDeal(data);
+      setLoadError(null);
     } catch (error) {
       setDeal(null);
-      Alert.alert(
-        'İlan yüklenemedi',
+      setLoadError(
         getErrorMessage(error, 'İlan detayı alınırken bir hata oluştu.'),
-        [{ text: 'Geri', onPress: () => navigation.goBack() }],
       );
     } finally {
       setIsLoading(false);
     }
-  }, [dealId, navigation]);
+  }, [dealId]);
 
   useEffect(() => {
     void loadDeal();
@@ -120,10 +135,7 @@ export default function DealDetailScreen({
   if (isLoading) {
     return (
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <View style={styles.centered}>
-          <ActivityIndicator size="large" color="#FF7A00" />
-          <Text style={styles.loadingText}>İlan detayı yükleniyor...</Text>
-        </View>
+        <LoadingSkeleton rows={2} />
       </SafeAreaView>
     );
   }
@@ -131,144 +143,150 @@ export default function DealDetailScreen({
   if (!deal) {
     return (
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <View style={styles.centered}>
-          <Text style={styles.emptyTitle}>İlan bulunamadı</Text>
-          <Pressable
-            style={styles.secondaryButton}
-            onPress={() => navigation.goBack()}
-          >
-            <Text style={styles.secondaryButtonText}>Geri dön</Text>
-          </Pressable>
-        </View>
+        {loadError ? (
+          <ErrorState subtitle={loadError} onRetry={() => void loadDeal()} />
+        ) : (
+          <EmptyState
+            title="İlan bulunamadı"
+            ctaLabel="Geri dön"
+            onCta={() => navigation.goBack()}
+          />
+        )}
       </SafeAreaView>
     );
   }
 
-  const badgeColor = scoreColor(deal.dealScore);
   const marketReady = deal.marketStatus === 'READY';
-  const advantage = formatPriceAdvantage(deal.priceAdvantagePct ?? deal.dealPercent);
   const listingUrl = resolveListingUrl(deal);
-  const location = [deal.city, deal.district].filter(Boolean).join(' / ');
+  const location = dealLocation(deal);
   const matched = deal.matchedFilters ?? [];
+  const median = marketMedian(deal);
+  const advantagePct = deal.priceAdvantagePct ?? deal.dealPercent;
+  const advantageAmount =
+    marketReady && median != null ? median - deal.price : null;
+  const specs: Array<{ label: string; value: string }> = [];
+  if (deal.year != null) specs.push({ label: 'Yıl', value: String(deal.year) });
+  if (deal.mileage != null) specs.push({ label: 'KM', value: formatKm(deal.mileage) });
+  if (deal.fuelType?.trim()) specs.push({ label: 'Yakıt', value: deal.fuelType.trim() });
+  if (deal.transmission?.trim()) {
+    specs.push({ label: 'Şanzıman', value: deal.transmission.trim() });
+  }
+  if (deal.bodyType?.trim()) specs.push({ label: 'Kasa', value: deal.bodyType.trim() });
+  if (deal.engine?.trim()) specs.push({ label: 'Motor', value: deal.engine.trim() });
+  if (deal.color?.trim()) specs.push({ label: 'Renk', value: deal.color.trim() });
+  if (deal.traction?.trim()) specs.push({ label: 'Çekiş', value: deal.traction.trim() });
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <View style={styles.header}>
-        <Pressable onPress={() => navigation.goBack()} hitSlop={12}>
-          <Text style={styles.backText}>← Geri</Text>
-        </Pressable>
-        <Text style={styles.headerTitle}>Fırsat Detayı</Text>
-        <View style={styles.headerSpacer} />
-      </View>
-
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.title}>{deal.title}</Text>
-        <Text style={styles.city}>{location || 'Konum belirtilmemiş'}</Text>
-
-        <View style={[styles.scoreBadge, { backgroundColor: badgeColor }]}>
-          <Text style={styles.scoreBadgeText}>
-            Fırsat Skoru {deal.dealScore}
-            {advantage ? ` · ${advantage}` : ''}
-          </Text>
-        </View>
-
-        <Text style={styles.sectionTitle}>Fiyat</Text>
-        <View style={styles.priceCard}>
-          <View style={styles.priceCol}>
-            <Text style={styles.priceLabel}>İlan Fiyatı</Text>
-            <Text style={styles.priceValue}>{formatTry(deal.price)}</Text>
-          </View>
-          <View style={styles.priceDivider} />
-          <View style={styles.priceCol}>
-            <Text style={styles.priceLabel}>Piyasa</Text>
-            <Text style={styles.marketValue}>
-              {marketReady && (deal.marketMedianPrice || deal.marketAverage)
-                ? formatTry(deal.marketMedianPrice ?? deal.marketAverage)
-                : 'Veri yetersiz'}
-            </Text>
-          </View>
-        </View>
-
-        <Text style={styles.sectionTitle}>Piyasa analizi</Text>
-        <View style={styles.infoCard}>
-          {marketReady ? (
-            <>
-              <Text style={styles.infoLine}>
-                Avantaj: {advantage ?? '—'}
-              </Text>
-              <Text style={styles.infoLine}>
-                Fırsat Skoru: {deal.dealScore}/100
-              </Text>
-              <Text style={styles.infoLine}>
-                Emsal: {deal.marketSampleSize ?? '—'} ilan
-              </Text>
-              <Text style={styles.infoLine}>
-                Güven: {confidenceLabel(deal.marketConfidence)}
-              </Text>
-            </>
-          ) : (
-            <Text style={styles.infoLine}>Piyasa verisi yetersiz</Text>
-          )}
-        </View>
-
-        <Text style={styles.sectionTitle}>Araç bilgileri</Text>
-        <View style={styles.infoCard}>
-          <Text style={styles.infoLine}>
-            Marka: {deal.brand ?? '—'}
-          </Text>
-          <Text style={styles.infoLine}>
-            Model: {deal.series ?? deal.model ?? '—'}
-          </Text>
-          <Text style={styles.infoLine}>
-            Versiyon: {deal.trim ?? '—'}
-          </Text>
-          <Text style={styles.infoLine}>
-            Yıl: {deal.year ?? '—'}
-          </Text>
-          <Text style={styles.infoLine}>
-            Kilometre: {formatKm(deal.mileage)}
-          </Text>
-          <Text style={styles.infoLine}>
-            Satıcı: {deal.sellerType ?? '—'}
-          </Text>
-        </View>
-
-        {matched.length > 0 ? (
-          <>
-            <Text style={styles.sectionTitle}>Eşleşen görev</Text>
-            <View style={styles.infoCard}>
-              {matched.length === 1 ? (
-                <Text style={styles.infoLine}>
-                  Bu ilan şu görevinizle eşleşti:{' '}
-                  {formatMatchedTaskLabel(matched[0]!)}
-                </Text>
-              ) : (
-                <Text style={styles.infoLine}>
-                  {matched.length} arama görevinizle eşleşti
-                </Text>
-              )}
-              {matched.map((filter) => (
-                <Text key={filter.id} style={styles.infoMuted}>
-                  • {formatMatchedTaskLabel(filter)}
-                </Text>
-              ))}
-            </View>
-          </>
-        ) : null}
-
-        {deal.platform ? (
-          <Text style={styles.platform}>Kaynak: {deal.platform}</Text>
-        ) : null}
-
-        {listingUrl ? (
-          <Pressable
-            style={styles.ctaButton}
-            onPress={() => void handleOpenOriginalListing()}
-          >
-            <Text style={styles.ctaButtonText}>İlana Git</Text>
+        <View style={styles.hero}>
+          <DealListingImage uri={deal.imageUrl} style={styles.heroImage} />
+          <Pressable style={styles.backBtn} onPress={() => navigation.goBack()}>
+            <GlyphIcon name="back" size={28} color={colors.white} />
           </Pressable>
-        ) : null}
+        </View>
+
+        <View style={styles.panel}>
+          <View style={styles.scoreRow}>
+            <DealScoreBadge score={deal.dealScore} size="lg" />
+            <View style={styles.scoreMeta}>
+              <PriceAdvantageBadge pct={advantagePct} />
+              <Text style={styles.headline}>{dealHeadline(deal)}</Text>
+              {deal.trim ? <Text style={styles.trim}>{deal.trim}</Text> : null}
+            </View>
+          </View>
+
+          <Text style={styles.price}>{formatTry(deal.price)}</Text>
+          {median != null ? (
+            <Text style={styles.median}>{formatTry(median)}</Text>
+          ) : null}
+          {location ? <Text style={styles.location}>{location}</Text> : null}
+
+          <Text style={styles.sectionTitle}>Fırsat Analizi</Text>
+          {marketReady ? (
+            <View style={styles.analysisRow}>
+              <View style={styles.analysisCell}>
+                <Text style={styles.analysisLabel}>Piyasa Medyanı</Text>
+                <Text style={styles.analysisValue}>
+                  {median != null ? formatTry(median) : '—'}
+                </Text>
+              </View>
+              <View style={styles.analysisCell}>
+                <Text style={styles.analysisLabel}>Avantaj</Text>
+                <Text
+                  style={[
+                    styles.analysisValue,
+                    advantageAmount != null && advantageAmount > 0
+                      ? styles.positive
+                      : null,
+                  ]}
+                >
+                  {advantageAmount != null ? formatTry(advantageAmount) : '—'}
+                </Text>
+              </View>
+              <View style={styles.analysisCell}>
+                <Text style={styles.analysisLabel}>Güven</Text>
+                <Text style={styles.analysisValue}>
+                  {confidenceLabel(deal.marketConfidence) ?? '—'}
+                </Text>
+              </View>
+              {deal.marketSampleSize != null ? (
+                <View style={styles.analysisCell}>
+                  <Text style={styles.analysisLabel}>Emsal</Text>
+                  <Text style={styles.analysisValue}>
+                    {deal.marketSampleSize} ilan
+                  </Text>
+                </View>
+              ) : null}
+            </View>
+          ) : (
+            <Text style={styles.insufficient}>Piyasa verisi yetersiz</Text>
+          )}
+
+          {specs.length > 0 ? (
+            <>
+              <Text style={styles.sectionTitle}>Araç Bilgileri</Text>
+              <View style={styles.specGrid}>
+                {specs.map((item) => (
+                  <SpecCell key={item.label} label={item.label} value={item.value} />
+                ))}
+              </View>
+            </>
+          ) : null}
+
+          {matched.length > 0 ? (
+            <>
+              <Text style={styles.sectionTitle}>Bu fırsatı yakalayan aramalar</Text>
+              {matched.map((filter) => (
+                <View key={filter.id} style={styles.matchChip}>
+                  <Text style={styles.matchText}>
+                    {formatMatchedTaskLabel(filter)}
+                  </Text>
+                </View>
+              ))}
+            </>
+          ) : null}
+
+          {resolveSourceLabel(deal) ? (
+            <Text style={styles.platform}>{resolveSourceLabel(deal)}</Text>
+          ) : null}
+        </View>
       </ScrollView>
+
+      <View style={styles.sticky}>
+        <SecondaryButton
+          label="Aramama Ekle"
+          onPress={() => navigation.navigate('Tabs', { screen: 'Filters' })}
+          style={styles.stickySecondary}
+        />
+        {listingUrl ? (
+          <PrimaryButton
+            label="İlana Git"
+            onPress={() => void handleOpenOriginalListing()}
+            style={styles.stickyPrimary}
+          />
+        ) : null}
+      </View>
     </SafeAreaView>
   );
 }
@@ -276,161 +294,167 @@ export default function DealDetailScreen({
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#12022B',
-  },
-  centered: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-  },
-  loadingText: {
-    marginTop: 12,
-    color: '#A0A0C0',
-    fontSize: 15,
-  },
-  emptyTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#FFFFFF',
-    marginBottom: 16,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#1A0836',
-    borderBottomWidth: 1,
-    borderBottomColor: '#2A164D',
-  },
-  backText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#FF7A00',
-    minWidth: 64,
-  },
-  headerTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: '#FFFFFF',
-  },
-  headerSpacer: {
-    minWidth: 64,
+    backgroundColor: colors.background,
   },
   content: {
-    padding: 20,
-    paddingBottom: 40,
+    paddingBottom: 120,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: '800',
-    color: '#FFFFFF',
-    letterSpacing: -0.3,
+  hero: {
+    height: 240,
+    backgroundColor: colors.surfaceElevated,
   },
-  city: {
-    marginTop: 8,
-    fontSize: 15,
-    color: '#A0A0C0',
+  heroImage: {
+    width: '100%',
+    height: '100%',
   },
-  sectionTitle: {
-    marginTop: 22,
-    marginBottom: 8,
-    fontSize: 16,
-    fontWeight: '800',
-    color: '#FFFFFF',
-  },
-  scoreBadge: {
-    alignSelf: 'flex-start',
-    marginTop: 16,
-    borderRadius: 999,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-  },
-  scoreBadgeText: {
-    color: '#FFFFFF',
-    fontWeight: '800',
-    fontSize: 13,
-  },
-  priceCard: {
-    backgroundColor: '#1A0836',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#2A164D',
-    padding: 18,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  priceCol: {
+  heroFallback: {
     flex: 1,
   },
-  priceDivider: {
-    width: 1,
-    alignSelf: 'stretch',
-    backgroundColor: '#2A164D',
-    marginHorizontal: 12,
+  backBtn: {
+    position: 'absolute',
+    top: 12,
+    left: 12,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(8,4,20,0.72)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  priceLabel: {
-    fontSize: 12,
-    color: '#666688',
-    fontWeight: '600',
-    marginBottom: 6,
+  panel: {
+    padding: spacing.lg,
   },
-  priceValue: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: '#FFFFFF',
-  },
-  marketValue: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#A0A0C0',
-  },
-  infoCard: {
-    backgroundColor: '#1A0836',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#2A164D',
-    padding: 16,
-    gap: 6,
-  },
-  infoLine: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  infoMuted: {
-    color: '#A0A0C0',
-    fontSize: 13,
-    marginTop: 2,
-  },
-  platform: {
-    marginTop: 14,
-    fontSize: 13,
-    color: '#A0A0C0',
-  },
-  ctaButton: {
-    marginTop: 28,
-    backgroundColor: '#FF7A00',
-    borderRadius: 14,
-    paddingVertical: 16,
+  scoreRow: {
+    flexDirection: 'row',
+    gap: spacing.lg,
     alignItems: 'center',
   },
-  ctaButtonText: {
-    color: '#FFFFFF',
+  scoreMeta: {
+    flex: 1,
+    gap: 8,
+  },
+  headline: {
+    color: colors.white,
+    fontSize: 24,
+    fontWeight: '800',
+  },
+  trim: {
+    color: colors.textSecondary,
+    fontSize: 15,
+  },
+  price: {
+    marginTop: spacing.lg,
+    color: colors.white,
+    fontSize: 28,
+    fontWeight: '800',
+  },
+  median: {
+    marginTop: 4,
+    color: colors.textMuted,
+    fontSize: 16,
+    textDecorationLine: 'line-through',
+  },
+  location: {
+    marginTop: 8,
+    color: colors.textSecondary,
+    fontSize: 14,
+  },
+  sectionTitle: {
+    marginTop: 24,
+    marginBottom: 10,
+    color: colors.white,
     fontSize: 16,
     fontWeight: '800',
   },
-  secondaryButton: {
-    marginTop: 8,
-    paddingHorizontal: 18,
-    paddingVertical: 12,
-    borderRadius: 12,
-    backgroundColor: '#3D1E6D',
+  analysisRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
   },
-  secondaryButtonText: {
-    color: '#FF7A00',
+  analysisCell: {
+    flexGrow: 1,
+    minWidth: '45%',
+    backgroundColor: colors.surface,
+    borderRadius: radii.md,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  analysisLabel: {
+    color: colors.textSecondary,
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  analysisValue: {
+    marginTop: 6,
+    color: colors.white,
+    fontSize: 15,
+    fontWeight: '800',
+  },
+  positive: {
+    color: colors.success,
+  },
+  insufficient: {
+    color: colors.textSecondary,
+    fontSize: 14,
+  },
+  specGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  specCell: {
+    width: '48%',
+    backgroundColor: colors.surface,
+    borderRadius: radii.md,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  specLabel: {
+    color: colors.textSecondary,
+    fontSize: 12,
+  },
+  specValue: {
+    marginTop: 4,
+    color: colors.white,
     fontWeight: '700',
+  },
+  matchChip: {
+    backgroundColor: 'rgba(91,45,255,0.18)',
+    borderRadius: radii.pill,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginBottom: 8,
+    alignSelf: 'flex-start',
+  },
+  matchText: {
+    color: colors.white,
+    fontWeight: '700',
+    fontSize: 13,
+  },
+  platform: {
+    marginTop: 16,
+    color: colors.textMuted,
+    fontSize: 13,
+  },
+  sticky: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    flexDirection: 'row',
+    gap: 10,
+    padding: 16,
+    paddingBottom: 28,
+    backgroundColor: colors.background,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+  stickySecondary: {
+    flex: 1,
+  },
+  stickyPrimary: {
+    flex: 1,
   },
 });

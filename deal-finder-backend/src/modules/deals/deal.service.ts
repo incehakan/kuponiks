@@ -2,6 +2,7 @@ import { Prisma } from "@prisma/client";
 import { HttpError } from "../../lib/http-error.js";
 import { prisma } from "../../lib/prisma.js";
 import { DEAL_SCORE_THRESHOLD } from "../../analyzer/deal-score.service.js";
+import { toPublicListingImageUrl } from "../../lib/listing-image.js";
 
 /**
  * Deal listing DTO shaped for mobile clients (backward-compatible + V2 fields).
@@ -55,6 +56,19 @@ export interface UserDealsPage {
   authenticated: true;
 }
 
+export type DealFeedSort = "newest" | "score" | "advantage" | "price";
+
+export interface DealFeedViewQuery {
+  limit?: number;
+  cursor?: string;
+  sort?: DealFeedSort;
+  minScore?: number;
+  platform?: string;
+  brand?: string;
+  city?: string;
+  onlyBelowMarket?: boolean;
+}
+
 const FEED_SELECT = {
   id: true,
   title: true,
@@ -85,6 +99,88 @@ const FEED_SELECT = {
   firstSeenAt: true,
   publishedAt: true,
 } satisfies Prisma.ListingSelect;
+
+type AggregatedMatch = {
+  listing: Prisma.ListingGetPayload<{ select: typeof FEED_SELECT }>;
+  matchedAt: Date;
+  filters: NonNullable<DealListItem["matchedFilters"]>;
+};
+
+function hasPresentationFilters(query: DealFeedViewQuery): boolean {
+  return (
+    (query.minScore != null && query.minScore > 0) ||
+    Boolean(query.platform?.trim()) ||
+    Boolean(query.brand?.trim()) ||
+    Boolean(query.city?.trim()) ||
+    Boolean(query.onlyBelowMarket) ||
+    (query.sort != null && query.sort !== "newest")
+  );
+}
+
+function listingMatchesPresentation(
+  listing: AggregatedMatch["listing"],
+  query: DealFeedViewQuery,
+): boolean {
+  if (query.minScore != null && listing.dealScore < query.minScore) {
+    return false;
+  }
+  if (query.platform?.trim()) {
+    if (listing.platform.toLowerCase() !== query.platform.trim().toLowerCase()) {
+      return false;
+    }
+  }
+  if (query.brand?.trim()) {
+    const brand = (listing.brand ?? "").toLocaleLowerCase("tr-TR");
+    if (brand !== query.brand.trim().toLocaleLowerCase("tr-TR")) {
+      return false;
+    }
+  }
+  if (query.city?.trim()) {
+    const city = (listing.city ?? "").toLocaleLowerCase("tr-TR");
+    if (city !== query.city.trim().toLocaleLowerCase("tr-TR")) {
+      return false;
+    }
+  }
+  if (query.onlyBelowMarket) {
+    const ready = (listing.marketStatus ?? "").toUpperCase() === "READY";
+    if (
+      !ready ||
+      listing.priceAdvantagePct == null ||
+      listing.priceAdvantagePct <= 0
+    ) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function sortAggregated(
+  items: AggregatedMatch[],
+  sort: DealFeedSort,
+): AggregatedMatch[] {
+  const copy = [...items];
+  copy.sort((a, b) => {
+    if (sort === "score") {
+      return (
+        b.listing.dealScore - a.listing.dealScore ||
+        b.matchedAt.getTime() - a.matchedAt.getTime()
+      );
+    }
+    if (sort === "advantage") {
+      const av = a.listing.priceAdvantagePct ?? Number.NEGATIVE_INFINITY;
+      const bv = b.listing.priceAdvantagePct ?? Number.NEGATIVE_INFINITY;
+      return bv - av || b.matchedAt.getTime() - a.matchedAt.getTime();
+    }
+    if (sort === "price") {
+      return (
+        a.listing.price - b.listing.price ||
+        b.matchedAt.getTime() - a.matchedAt.getTime()
+      );
+    }
+    return b.matchedAt.getTime() - a.matchedAt.getTime();
+  });
+  return copy;
+}
 
 function mapListingToDeal(
   listing: Prisma.ListingGetPayload<{ select: typeof FEED_SELECT }>,
@@ -122,7 +218,7 @@ function mapListingToDeal(
     platform: listing.platform,
     createdAt: listing.createdAt,
     matchedAt: extras.matchedAt ?? null,
-    imageUrl: listing.imageUrl,
+    imageUrl: toPublicListingImageUrl(listing.imageUrl),
     brand: listing.brand,
     model: listing.model,
     series: listing.series,
@@ -214,19 +310,23 @@ export class DealService {
    */
   async getUserMatchedDeals(
     userId: string,
-    options: {
-      limit?: number;
-      cursor?: string;
-      sort?: "newest" | "score";
-    } = {},
+    options: DealFeedViewQuery = {},
   ): Promise<UserDealsPage> {
     try {
       const limit = Math.min(Math.max(options.limit ?? 20, 1), 50);
-      const sort = options.sort === "score" ? "score" : "newest";
+      const sort: DealFeedSort =
+        options.sort === "score" ||
+        options.sort === "advantage" ||
+        options.sort === "price"
+          ? options.sort
+          : "newest";
       const cursor = decodeCursor(options.cursor);
 
-      if (sort === "score") {
-        return this.getUserMatchedDealsByScore(userId, limit, cursor);
+      if (hasPresentationFilters({ ...options, sort })) {
+        return this.getUserMatchedDealsFiltered(userId, limit, cursor, {
+          ...options,
+          sort,
+        });
       }
 
       const matches = await prisma.userListingMatch.findMany({
@@ -330,12 +430,16 @@ export class DealService {
     }
   }
 
-  private async getUserMatchedDealsByScore(
+  /**
+   * Presentation filters/sorts over the user's already-matched feed.
+   * Does not create or alter UserFilter rows.
+   */
+  private async getUserMatchedDealsFiltered(
     userId: string,
     limit: number,
     cursor: { matchedAt: Date; listingId: string } | null,
+    query: DealFeedViewQuery,
   ): Promise<UserDealsPage> {
-    // Score sort: load recent matches then sort by listing.dealScore in memory with hard cap.
     const matches = await prisma.userListingMatch.findMany({
       where: { userId },
       orderBy: [{ matchedAt: "desc" }],
@@ -354,14 +458,7 @@ export class DealService {
       },
     });
 
-    const byListing = new Map<
-      string,
-      {
-        listing: (typeof matches)[number]["listing"];
-        matchedAt: Date;
-        filters: NonNullable<DealListItem["matchedFilters"]>;
-      }
-    >();
+    const byListing = new Map<string, AggregatedMatch>();
 
     for (const row of matches) {
       const existing = byListing.get(row.listingId);
@@ -379,7 +476,12 @@ export class DealService {
             },
           ],
         });
-      } else if (!existing.filters.some((f) => f.id === row.filter.id)) {
+        continue;
+      }
+      if (row.matchedAt > existing.matchedAt) {
+        existing.matchedAt = row.matchedAt;
+      }
+      if (!existing.filters.some((f) => f.id === row.filter.id)) {
         existing.filters.push({
           id: row.filter.id,
           name: row.filter.name,
@@ -390,10 +492,11 @@ export class DealService {
       }
     }
 
-    let ranked = [...byListing.values()].sort(
-      (a, b) =>
-        b.listing.dealScore - a.listing.dealScore ||
-        b.matchedAt.getTime() - a.matchedAt.getTime(),
+    let ranked = sortAggregated(
+      [...byListing.values()].filter((item) =>
+        listingMatchesPresentation(item.listing, query),
+      ),
+      query.sort ?? "newest",
     );
 
     if (cursor) {

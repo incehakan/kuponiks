@@ -8,6 +8,22 @@ export interface User {
   telegramChatId?: string | null;
 }
 
+export interface NotificationItem {
+  id: string;
+  channel: string;
+  status: string;
+  reason?: string | null;
+  listingId: string;
+  createdAt: string;
+  sentAt: string;
+  title: string;
+  imageUrl?: string | null;
+  dealScore?: number | null;
+  priceAdvantagePct?: number | null;
+  listingUrl?: string | null;
+  platform?: string | null;
+}
+
 export interface TelegramConfig {
   botUsername: string | null;
   deepLinkBase: string | null;
@@ -62,6 +78,12 @@ export interface Deal {
   marketSampleSize?: number | null;
   marketConfidence?: string | null;
   marketSegmentLevel?: string | null;
+  fuelType?: string | null;
+  transmission?: string | null;
+  bodyType?: string | null;
+  engine?: string | null;
+  color?: string | null;
+  traction?: string | null;
   matchedAt?: string | null;
   matchedFilterCount?: number;
   matchedFilters?: Array<{
