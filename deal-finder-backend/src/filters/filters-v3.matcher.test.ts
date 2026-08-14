@@ -163,6 +163,21 @@ describe("Filters V3 matcher — brand/series/trim + ranges", () => {
     ).toBe(false);
   });
 
+  it("14b. subcategory Otomobil + listing.subcategory null (Arabam)", () => {
+    expect(
+      listingMatchesFilter(
+        baseListing({ subcategory: null }),
+        baseFilter({
+          brand: "Honda",
+          series: "Civic",
+          subcategory: "Otomobil",
+          city: "Tüm Türkiye",
+          minDealScore: 50,
+        }),
+      ),
+    ).toBe(true);
+  });
+
   it("15. city", () => {
     expect(
       listingMatchesFilter(baseListing({ city: "Ankara" }), baseFilter({ city: "İzmir" })),

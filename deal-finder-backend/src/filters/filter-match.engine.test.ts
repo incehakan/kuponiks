@@ -106,6 +106,31 @@ describe("listingMatchesFilter V2", () => {
     ).toBe(true);
   });
 
+  it("8b. subcategory leaf matches when listing.subcategory is null", () => {
+    expect(
+      listingMatchesFilter(
+        baseListing({ subcategory: null }),
+        baseFilter({ subcategory: "Otomobil" }),
+      ),
+    ).toBe(true);
+    expect(
+      listingMatchesFilter(
+        baseListing({ subcategory: null, category: "Vasıta > Otomobil" }),
+        baseFilter({
+          category: "Vasıta > Otomobil",
+          subcategory: "Otomobil",
+          brand: "BMW",
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      listingMatchesFilter(
+        baseListing({ subcategory: "Motosiklet" }),
+        baseFilter({ subcategory: "Otomobil" }),
+      ),
+    ).toBe(false);
+  });
+
   it("9. city kontrolü", () => {
     expect(
       listingMatchesFilter(baseListing({ city: "Ankara" }), baseFilter({ city: "İzmir" })),

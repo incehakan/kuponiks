@@ -235,8 +235,15 @@ export function listingMatchesFilter(
     return false;
   }
 
-  if (!matchesOptionalString(filter.subcategory, listing.subcategory)) {
-    return false;
+  // Mobile derives subcategory from the category leaf ("Otomobil"). Arabam
+  // listings often persist subcategory=null — fall back to listing category.
+  const filterSubcategory = filter.subcategory?.trim();
+  if (filterSubcategory) {
+    const listingSubOrCategory =
+      listing.subcategory?.trim() || listingCategory;
+    if (!categoriesMatchForFilter(filterSubcategory, listingSubOrCategory)) {
+      return false;
+    }
   }
   if (!matchesOptionalString(filter.brand, listing.brand)) {
     return false;
