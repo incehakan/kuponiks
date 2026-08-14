@@ -1,4 +1,5 @@
 import { Prisma, type Listing } from "@prisma/client";
+import { vehicleCatalogService } from "../catalog/vehicle-catalog.service.js";
 import {
   dealScoreService,
   type DealScoreService,
@@ -166,6 +167,12 @@ export class ScraperService {
         },
       });
 
+      await vehicleCatalogService.syncFromListing({
+        brand: listing.brand,
+        series: listing.series,
+        trim: listing.trim,
+      });
+
       console.log(
         `[SCRAPER] İlan kaydedildi → id=${listing.id}, skor=${scoreResult.dealScore}, market=${marketResult.status}, title="${listing.title}"`,
       );
@@ -286,6 +293,12 @@ export class ScraperService {
         ...marketFields,
         // firstSeenAt intentionally untouched
       },
+    });
+
+    await vehicleCatalogService.syncFromListing({
+      brand: listing.brand,
+      series: listing.series,
+      trim: listing.trim,
     });
 
     console.log(

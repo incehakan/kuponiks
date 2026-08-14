@@ -21,7 +21,9 @@
     "typecheck": "tsc --noEmit",
     "lint": "echo \"No linter configured\"",
     "smoke:preflight": "tsx scripts/smoke/preflight.ts",
-    "smoke:notification": "tsx scripts/smoke/notification.ts"
+    "smoke:notification": "tsx scripts/smoke/notification.ts",
+    "seed:vehicle-catalog": "tsx scripts/seed-vehicle-catalog.ts",
+    "sync:vehicle-catalog": "tsx scripts/sync-vehicle-catalog-from-listings.ts"
   },
   "keywords": [],
   "author": "",

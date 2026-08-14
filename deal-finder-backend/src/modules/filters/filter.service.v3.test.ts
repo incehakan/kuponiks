@@ -179,4 +179,17 @@ describe("Filter API validation + series/trim persist", () => {
     expect(data.series).toBe("Civic");
     expect(data.trim).toBe("1.6 LS");
   });
+
+  it("9. trim optional — brand+series without trim persists series", async () => {
+    await service.createFilter("u1", "PRO", {
+      category: "Vasıta > Otomobil",
+      brand: "Honda",
+      series: "Civic",
+      trim: null,
+    });
+    const data = mockedPrisma.userFilter.create.mock.calls[0]?.[0]?.data;
+    expect(data.brand).toBe("Honda");
+    expect(data.series).toBe("Civic");
+    expect(data.trim).toBeNull();
+  });
 });

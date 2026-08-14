@@ -182,6 +182,7 @@ export default function FilterFormModal({
   const [sellerTypes, setSellerTypes] = useState<SelectOption[]>([]);
   const [districts, setDistricts] = useState<SelectOption[]>([]);
   const [loadingBrands, setLoadingBrands] = useState(false);
+  const [brandsError, setBrandsError] = useState(false);
   const [loadingSeries, setLoadingSeries] = useState(false);
   const [loadingTrims, setLoadingTrims] = useState(false);
   const [loadingExtras, setLoadingExtras] = useState(false);
@@ -234,10 +235,12 @@ export default function FilterFormModal({
 
   const loadBrands = useCallback(async (): Promise<void> => {
     setLoadingBrands(true);
+    setBrandsError(false);
     try {
       setBrands(toTaxonomyOptions(await taxonomyApi.getVehicleBrands()));
     } catch {
       setBrands([]);
+      setBrandsError(true);
     } finally {
       setLoadingBrands(false);
     }
@@ -571,18 +574,22 @@ export default function FilterFormModal({
                     value={form.brand}
                     options={brands}
                     loading={loadingBrands}
-                    emptyText="Henüz marka verisi yok"
+                    emptyText={
+                      brandsError
+                        ? 'Marka verileri alınamadı'
+                        : 'Marka listesi hazırlanıyor'
+                    }
                     onSelect={setBrand}
                   />
                   <SearchableSelect
-                    label="Seri"
-                    placeholder="Seri seçin"
+                    label="Model"
+                    placeholder="Model seçin"
                     value={form.series}
                     options={series}
                     loading={loadingSeries}
                     disabled={!form.brand}
                     disabledHint="Önce marka seçin"
-                    emptyText="Bu marka için seri bulunamadı"
+                    emptyText="Bu marka için model bulunamadı"
                     onSelect={setSeriesValue}
                   />
                   <SearchableSelect
@@ -592,8 +599,8 @@ export default function FilterFormModal({
                     options={trims}
                     loading={loadingTrims}
                     disabled={!form.series}
-                    disabledHint="Önce seri seçin"
-                    emptyText="Bu seri için versiyon bulunamadı"
+                    disabledHint="Önce model seçin"
+                    emptyText="Versiyon seçmek zorunlu değil"
                     clearable
                     onSelect={(option) =>
                       setForm((prev) => ({

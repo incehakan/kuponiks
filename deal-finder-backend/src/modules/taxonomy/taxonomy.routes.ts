@@ -2,7 +2,7 @@ import type { FastifyInstance, FastifyPluginAsync } from "fastify";
 import { taxonomyService } from "./taxonomy.service.js";
 
 /**
- * Public vehicle taxonomy from real Listing structured fields.
+ * Public vehicle taxonomy (catalog primary, listing fallback).
  * Mirrors /api/categories and /api/cities (no auth).
  */
 export const taxonomyRoutes: FastifyPluginAsync = async (

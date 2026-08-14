@@ -296,7 +296,7 @@ export default function FiltersScreen(): React.JSX.Element {
           <View style={styles.header}>
             <Text style={styles.headerTitle}>Arama Görevlerim</Text>
             <Text style={styles.headerSubtitle}>
-              Marka, seri, bütçe ve fırsat skoruna göre ilan takibi oluşturun.
+              Marka, model, bütçe ve fırsat skoruna göre ilan takibi oluşturun.
             </Text>
           </View>
         }

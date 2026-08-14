@@ -217,7 +217,7 @@ export default function DealDetailScreen({
             Marka: {deal.brand ?? '—'}
           </Text>
           <Text style={styles.infoLine}>
-            Seri: {deal.series ?? deal.model ?? '—'}
+            Model: {deal.series ?? deal.model ?? '—'}
           </Text>
           <Text style={styles.infoLine}>
             Versiyon: {deal.trim ?? '—'}

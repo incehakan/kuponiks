@@ -75,26 +75,34 @@ function parseLimit(raw: unknown): number {
 }
 
 /**
- * Vehicle taxonomy from real Listing structured fields (no mocks, no empties).
+ * Vehicle taxonomy: master catalog primary, Listing structured fields as
+ * read-only fallback/union. GET handlers never mutate catalog.
  */
 export class TaxonomyService {
   async listVehicleBrands(options: {
     q?: string | null | undefined;
     limit?: unknown;
   } = {}): Promise<TaxonomyItem[]> {
-    const rows = await prisma.listing.findMany({
-      where: {
-        platform: { not: "mock" },
-        brand: { not: null },
-        NOT: { brand: "" },
-      },
-      select: { brand: true },
-      distinct: ["brand"],
-      take: MAX_LIMIT * 2,
-    });
+    const [catalogRows, listingRows] = await Promise.all([
+      prisma.vehicleBrand.findMany({
+        where: { isActive: true },
+        select: { name: true },
+        take: MAX_LIMIT * 2,
+      }),
+      prisma.listing.findMany({
+        where: {
+          platform: { not: "mock" },
+          brand: { not: null },
+          NOT: { brand: "" },
+        },
+        select: { brand: true },
+        distinct: ["brand"],
+        take: MAX_LIMIT * 2,
+      }),
+    ]);
 
     return dedupeTaxonomyValues(
-      rows.map((r) => r.brand),
+      [...catalogRows.map((r) => r.name), ...listingRows.map((r) => r.brand)],
       options.q,
       parseLimit(options.limit),
     );
@@ -111,23 +119,36 @@ export class TaxonomyService {
     }
 
     const brandNorm = normalizeMatchText(brand);
-    const rows = await prisma.listing.findMany({
-      where: {
-        platform: { not: "mock" },
-        series: { not: null },
-        NOT: { series: "" },
-        brand: { not: null },
-      },
-      select: { brand: true, series: true },
-      take: 5000,
-    });
+    const [catalogBrand, listingRows] = await Promise.all([
+      prisma.vehicleBrand.findFirst({
+        where: { normalizedName: brandNorm, isActive: true },
+        select: { id: true },
+      }),
+      prisma.listing.findMany({
+        where: {
+          platform: { not: "mock" },
+          series: { not: null },
+          NOT: { series: "" },
+          brand: { not: null },
+        },
+        select: { brand: true, series: true },
+        take: 5000,
+      }),
+    ]);
 
-    const seriesValues = rows
+    const catalogSeries = catalogBrand
+      ? await prisma.vehicleSeries.findMany({
+          where: { brandId: catalogBrand.id, isActive: true },
+          select: { name: true },
+        })
+      : [];
+
+    const listingSeries = listingRows
       .filter((r) => normalizeMatchText(r.brand) === brandNorm)
       .map((r) => r.series);
 
     return dedupeTaxonomyValues(
-      seriesValues,
+      [...catalogSeries.map((r) => r.name), ...listingSeries],
       options.q,
       parseLimit(options.limit),
     );
@@ -148,19 +169,43 @@ export class TaxonomyService {
     const brandNorm = normalizeMatchText(brand);
     const seriesNorm = normalizeMatchText(series);
 
-    const rows = await prisma.listing.findMany({
-      where: {
-        platform: { not: "mock" },
-        trim: { not: null },
-        NOT: { trim: "" },
-        brand: { not: null },
-        series: { not: null },
-      },
-      select: { brand: true, series: true, trim: true },
-      take: 5000,
-    });
+    const [catalogBrand, listingRows] = await Promise.all([
+      prisma.vehicleBrand.findFirst({
+        where: { normalizedName: brandNorm, isActive: true },
+        select: { id: true },
+      }),
+      prisma.listing.findMany({
+        where: {
+          platform: { not: "mock" },
+          trim: { not: null },
+          NOT: { trim: "" },
+          brand: { not: null },
+          series: { not: null },
+        },
+        select: { brand: true, series: true, trim: true },
+        take: 5000,
+      }),
+    ]);
 
-    const trimValues = rows
+    let catalogTrims: Array<{ name: string }> = [];
+    if (catalogBrand) {
+      const catalogSeries = await prisma.vehicleSeries.findFirst({
+        where: {
+          brandId: catalogBrand.id,
+          normalizedName: seriesNorm,
+          isActive: true,
+        },
+        select: { id: true },
+      });
+      if (catalogSeries) {
+        catalogTrims = await prisma.vehicleTrim.findMany({
+          where: { seriesId: catalogSeries.id, isActive: true },
+          select: { name: true },
+        });
+      }
+    }
+
+    const listingTrims = listingRows
       .filter(
         (r) =>
           normalizeMatchText(r.brand) === brandNorm &&
@@ -169,7 +214,7 @@ export class TaxonomyService {
       .map((r) => r.trim);
 
     return dedupeTaxonomyValues(
-      trimValues,
+      [...catalogTrims.map((r) => r.name), ...listingTrims],
       options.q,
       parseLimit(options.limit),
     );

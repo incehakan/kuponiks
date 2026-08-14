@@ -5,52 +5,97 @@ vi.mock("../../lib/prisma.js", () => ({
     listing: {
       findMany: vi.fn(),
     },
+    vehicleBrand: {
+      findMany: vi.fn(),
+      findFirst: vi.fn(),
+    },
+    vehicleSeries: {
+      findMany: vi.fn(),
+      findFirst: vi.fn(),
+    },
+    vehicleTrim: {
+      findMany: vi.fn(),
+    },
   },
 }));
 
 import { prisma } from "../../lib/prisma.js";
 import { TaxonomyService } from "./taxonomy.service.js";
 
-const mockedFindMany = (prisma as unknown as {
+const mockedPrisma = prisma as unknown as {
   listing: { findMany: ReturnType<typeof vi.fn> };
-}).listing.findMany;
+  vehicleBrand: {
+    findMany: ReturnType<typeof vi.fn>;
+    findFirst: ReturnType<typeof vi.fn>;
+  };
+  vehicleSeries: {
+    findMany: ReturnType<typeof vi.fn>;
+    findFirst: ReturnType<typeof vi.fn>;
+  };
+  vehicleTrim: { findMany: ReturnType<typeof vi.fn> };
+};
 
-describe("TaxonomyService listing queries", () => {
+describe("TaxonomyService catalog primary + listing fallback", () => {
   const service = new TaxonomyService();
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockedPrisma.vehicleBrand.findMany.mockResolvedValue([]);
+    mockedPrisma.vehicleBrand.findFirst.mockResolvedValue(null);
+    mockedPrisma.vehicleSeries.findMany.mockResolvedValue([]);
+    mockedPrisma.vehicleSeries.findFirst.mockResolvedValue(null);
+    mockedPrisma.vehicleTrim.findMany.mockResolvedValue([]);
+    mockedPrisma.listing.findMany.mockResolvedValue([]);
   });
 
-  it("brands exclude empty and rely on non-mock query", async () => {
-    mockedFindMany.mockResolvedValue([
-      { brand: "Honda" },
+  it("brands: catalog primary, listing union, no GET mutation", async () => {
+    mockedPrisma.vehicleBrand.findMany.mockResolvedValue([{ name: "Honda" }]);
+    mockedPrisma.listing.findMany.mockResolvedValue([
       { brand: "honda" },
       { brand: "BMW" },
     ]);
     const items = await service.listVehicleBrands({});
-    expect(mockedFindMany).toHaveBeenCalledWith(
+    expect(items.map((i) => i.label).sort()).toEqual(["BMW", "Honda"]);
+    expect(mockedPrisma.vehicleBrand.findMany).toHaveBeenCalled();
+    expect(mockedPrisma.listing.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
           platform: { not: "mock" },
         }),
       }),
     );
-    expect(items).toHaveLength(2);
   });
 
-  it("series brand'e göre gelir", async () => {
-    mockedFindMany.mockResolvedValue([
+  it("brands listing fallback when catalog empty", async () => {
+    mockedPrisma.listing.findMany.mockResolvedValue([{ brand: "Honda" }]);
+    const items = await service.listVehicleBrands({});
+    expect(items).toEqual([{ value: "Honda", label: "Honda" }]);
+  });
+
+  it("series: catalog + listing for brand", async () => {
+    mockedPrisma.vehicleBrand.findFirst.mockResolvedValue({ id: "b1" });
+    mockedPrisma.vehicleSeries.findMany.mockResolvedValue([
+      { name: "Civic" },
+      { name: "Jazz" },
+    ]);
+    mockedPrisma.listing.findMany.mockResolvedValue([
       { brand: "Honda", series: "Civic" },
       { brand: "Honda", series: "Accord" },
       { brand: "BMW", series: "3 Serisi" },
     ]);
     const items = await service.listVehicleSeries({ brand: "Honda" });
-    expect(items.map((i) => i.value).sort()).toEqual(["Accord", "Civic"]);
+    expect(items.map((i) => i.value).sort()).toEqual([
+      "Accord",
+      "Civic",
+      "Jazz",
+    ]);
   });
 
-  it("trims brand+series'e göre gelir", async () => {
-    mockedFindMany.mockResolvedValue([
+  it("trims: listing fallback when catalog empty", async () => {
+    mockedPrisma.vehicleBrand.findFirst.mockResolvedValue({ id: "b1" });
+    mockedPrisma.vehicleSeries.findFirst.mockResolvedValue({ id: "s1" });
+    mockedPrisma.vehicleTrim.findMany.mockResolvedValue([]);
+    mockedPrisma.listing.findMany.mockResolvedValue([
       { brand: "Honda", series: "Civic", trim: "1.6 LS" },
       { brand: "Honda", series: "Civic", trim: "Elegance" },
       { brand: "Honda", series: "Accord", trim: "Executive" },
@@ -62,10 +107,30 @@ describe("TaxonomyService listing queries", () => {
     expect(items.map((i) => i.value).sort()).toEqual(["1.6 LS", "Elegance"]);
   });
 
-  it("mock listing brand dönmez (query filters platform)", async () => {
-    mockedFindMany.mockResolvedValue([{ brand: "Honda" }]);
+  it("trims optional: empty catalog + empty listings → items []", async () => {
+    mockedPrisma.vehicleBrand.findFirst.mockResolvedValue({ id: "b1" });
+    mockedPrisma.vehicleSeries.findFirst.mockResolvedValue({ id: "s1" });
+    const items = await service.listVehicleTrims({
+      brand: "Honda",
+      series: "Civic",
+    });
+    expect(items).toEqual([]);
+  });
+
+  it("q search works on catalog brands", async () => {
+    mockedPrisma.vehicleBrand.findMany.mockResolvedValue([
+      { name: "Honda" },
+      { name: "Hyundai" },
+      { name: "BMW" },
+    ]);
+    const items = await service.listVehicleBrands({ q: "hon" });
+    expect(items.map((i) => i.value)).toEqual(["Honda"]);
+  });
+
+  it("mock listing brand excluded via platform filter", async () => {
+    mockedPrisma.vehicleBrand.findMany.mockResolvedValue([{ name: "Honda" }]);
     await service.listVehicleBrands({});
-    const where = mockedFindMany.mock.calls[0]?.[0]?.where;
+    const where = mockedPrisma.listing.findMany.mock.calls[0]?.[0]?.where;
     expect(where.platform).toEqual({ not: "mock" });
   });
 });
