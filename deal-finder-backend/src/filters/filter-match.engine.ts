@@ -85,6 +85,16 @@ export function matchesCityFilter(
   if (!raw) {
     return true;
   }
+  const nationwide = normalizeMatchText(raw);
+  if (
+    nationwide === "all" ||
+    nationwide === "tüm türkiye" ||
+    nationwide === "tum turkiye" ||
+    nationwide === "türkiye" ||
+    nationwide === "turkiye"
+  ) {
+    return true;
+  }
   const listingNorm = normalizeMatchText(listingCity);
   if (!listingNorm) {
     return false;

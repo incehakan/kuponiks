@@ -116,6 +116,12 @@ describe("listingMatchesFilter V2", () => {
         baseFilter({ city: "İzmir, Ankara" }),
       ),
     ).toBe(true);
+    expect(
+      listingMatchesFilter(
+        baseListing({ city: "İzmir" }),
+        baseFilter({ city: "Tüm Türkiye" }),
+      ),
+    ).toBe(true);
   });
 
   it("10. district kontrolü", () => {
