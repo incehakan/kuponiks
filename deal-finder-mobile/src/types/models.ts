@@ -145,8 +145,8 @@ export interface CreateFilterPayload {
   maxMileage?: number | null;
   city?: string;
   district?: string | null;
-  minPrice?: number;
-  maxPrice?: number;
+  minPrice?: number | null;
+  maxPrice?: number | null;
   fuelType?: string | null;
   transmission?: string | null;
   sellerType?: string | null;

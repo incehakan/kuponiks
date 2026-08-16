@@ -19,22 +19,34 @@ const keywordSchema = {
 
 const nullableString = (maxLength: number) =>
   ({
-    anyOf: [{ type: "string", maxLength }, { type: "null" }],
+    // null must be representable; prefer type-union over anyOf+[coerceTypes]
+    // (anyOf with integer-first coerces JSON null → 0).
+    type: ["string", "null"],
+    maxLength,
   }) as const;
 
+/**
+ * Nullable numerics MUST use type: [number|integer, "null"], NOT
+ * anyOf:[{type:integer},{type:null}].
+ *
+ * Fastify/Ajv coerceTypes + integer-first anyOf turns explicit JSON `null`
+ * into `0` (Number(null)===0). That rewrote empty mobile mileage/price/year
+ * clears (maxMileage:null) into maxMileage=0 in production.
+ */
 const nullableYear = {
-  anyOf: [
-    { type: "integer", minimum: 1900, maximum: 2100 },
-    { type: "null" },
-  ],
+  type: ["integer", "null"],
+  minimum: 1900,
+  maximum: 2100,
 } as const;
 
 const nullableNonNegInt = {
-  anyOf: [{ type: "integer", minimum: 0 }, { type: "null" }],
+  type: ["integer", "null"],
+  minimum: 0,
 } as const;
 
 const nullableNonNegNumber = {
-  anyOf: [{ type: "number", minimum: 0 }, { type: "null" }],
+  type: ["number", "null"],
+  minimum: 0,
 } as const;
 
 const filterBodyProperties = {
@@ -73,7 +85,11 @@ export const filterRoutes: FastifyPluginAsync = async (
   app: FastifyInstance,
 ) => {
   app.addHook("preValidation", async (request) => {
-    if (request.method === "POST" || request.method === "PUT") {
+    if (
+      request.method === "POST" ||
+      request.method === "PUT" ||
+      request.method === "PATCH"
+    ) {
       normalizeEmptyNumericFilterFields(request.body);
     }
   });

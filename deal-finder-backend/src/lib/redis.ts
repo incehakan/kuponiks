@@ -257,6 +257,35 @@ export async function redisGet(key: string): Promise<string | null> {
     return null;
   }
 }
+
+/**
+ * Safe Redis INCRBY + EXPIRE — never throws. Used for ops counters only.
+ */
+export async function redisIncrBy(
+  key: string,
+  by: number,
+  ttlSeconds: number,
+): Promise<number | null> {
+  try {
+    if (!isRedisAvailable() && redis.status !== "ready") {
+      return null;
+    }
+    if (!Number.isFinite(by) || by === 0) {
+      return null;
+    }
+    const value = await redis.incrby(key, by);
+    if (ttlSeconds > 0) {
+      await redis.expire(key, ttlSeconds);
+    }
+    return value;
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Unknown Redis INCRBY error";
+    console.warn(`[Redis] INCRBY başarısız (atlanıyor): ${message}`);
+    return null;
+  }
+}
+
 export async function redisDel(key: string): Promise<void> {
   try {
     if (!isRedisAvailable() && redis.status !== "ready") {

@@ -13,6 +13,8 @@ import {
   recordPlatformSuccess,
   shouldTripCircuitOnEmpty,
 } from "./scheduler/circuit-breaker.js";
+import { classifyScrapeOutcome } from "./scheduler/scrape-outcome.js";
+import { recordScrapeOpsStats } from "./scheduler/scheduler-ops-stats.js";
 
 function workerConcurrency(): number {
   const raw = process.env.SCRAPER_GLOBAL_CONCURRENCY?.trim();
@@ -50,10 +52,6 @@ export class ScraperWorker {
       },
     );
 
-    this.worker.on("completed", (job) => {
-      console.log(`ScraperWorker: job ${job.id} completed`);
-    });
-
     this.worker.on("failed", (job, error) => {
       console.error(
         `ScraperWorker: job ${job?.id ?? "unknown"} failed: ${error.message}`,
@@ -71,14 +69,10 @@ export class ScraperWorker {
     const keyword = query?.trim();
     const startedAt = Date.now();
 
-    console.log(
-      `[SCRAPER WORKER] ── Tarama başladı ── job=${job.id} platform=${platform} keyword=${keyword ?? "(yok)"} by=${triggeredBy ?? "manual"}`,
-    );
-
     const adapter = resolveScraperAdapter(platform);
     if (!adapter) {
       console.warn(
-        `[SCRAPER WORKER] Adaptör yok — platform=${platform}, job=${job.id}`,
+        `[SCRAPE] platform=${platform} queryKey=${queryKey ?? "-"} outcome=failure reason=no_adapter job=${job.id}`,
       );
       return;
     }
@@ -86,13 +80,19 @@ export class ScraperWorker {
     const { rawCount, normalized, error } = await runAdapterPipeline(adapter, {
       ...(category ? { category } : {}),
       ...(city ? { city } : {}),
-      ...(limit != null ? { limit } : {}),
       ...(keyword ? { query: keyword } : {}),
+      ...(limit != null ? { limit } : {}),
+    });
+
+    const outcome = classifyScrapeOutcome({
+      platform,
+      rawCount,
+      error: error ?? null,
     });
 
     if (error) {
       console.error(
-        `[SCRAPER WORKER] Adaptör hatası — job=${job.id}: ${error.message}`,
+        `[SCRAPE] platform=${platform} queryKey=${queryKey ?? "-"} outcome=failure error=${error.message}`,
       );
       await recordPlatformFailure(platform);
     } else if (rawCount === 0 && shouldTripCircuitOnEmpty(platform)) {
@@ -102,20 +102,21 @@ export class ScraperWorker {
     }
 
     const summary = await scraperService.ingestNormalizedBatch(normalized);
-    const notificationsQueued = summary.results.filter(
+    // Create-path only: listing-match queue enqueue count (NOT notification queue).
+    const matchesQueued = summary.results.filter(
       (result) => result.status === "created" && result.enqueuedForMatch,
     ).length;
 
-    console.log(
-      `[SCRAPE] platform=${platform} queryKey=${queryKey ?? "-"} raw=${rawCount} normalized=${normalized.length} created=${summary.created} updated=${summary.updated} matches=${notificationsQueued} notificationsQueued=${notificationsQueued} durationMs=${Date.now() - startedAt}`,
-    );
+    await recordScrapeOpsStats({
+      platform,
+      outcome,
+      created: summary.created,
+      updated: summary.updated,
+      matchesQueued,
+    });
 
-    if (error) {
-      return;
-    }
-
     console.log(
-      `[SCRAPER WORKER] ── Tarama bitti ── job=${job.id} created=${summary.created} duplicates=${summary.duplicates} skipped=${summary.skipped}`,
+      `[SCRAPE] platform=${platform} queryKey=${queryKey ?? "-"} outcome=${outcome} raw=${rawCount} normalized=${normalized.length} created=${summary.created} updated=${summary.updated} matchesQueued=${matchesQueued} durationMs=${Date.now() - startedAt} by=${triggeredBy ?? "manual"}`,
     );
   }
 

@@ -8,6 +8,7 @@ vi.mock("../../lib/redis.js", () => ({
   redisSetNxEx: vi.fn(),
   redisGet: vi.fn(),
   redisSetEx: vi.fn(),
+  redisIncrBy: vi.fn().mockResolvedValue(1),
 }));
 vi.mock("../../queues/scraper.queue.js", () => ({
   enqueueScrapeJob: vi.fn(),

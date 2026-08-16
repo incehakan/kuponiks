@@ -9,6 +9,8 @@ import {
   type SchedulerFilterInput,
 } from "./canonical-query.js";
 import { recordSchedulerCycle } from "./scheduler-state.js";
+import { recordSchedulerCycleOpsStats } from "./scheduler-ops-stats.js";
+import { redisIncrBy } from "../../lib/redis.js";
 
 const CYCLE_LOCK_KEY = "scheduler:v2:cycle-lock";
 
@@ -142,6 +144,11 @@ export async function runSchedulerCycle(options: {
     for (const group of groups) {
       if (await isPlatformCircuitOpen(group.platform, options.nowMs)) {
         circuitSkipped += 1;
+        void redisIncrBy(
+          `scheduler:v2:stats:${new Date().toISOString().slice(0, 10)}:${group.platform}:circuitSkipped`,
+          1,
+          48 * 60 * 60,
+        );
         continue;
       }
       const jobId = await enqueueScrapeJob(
@@ -185,6 +192,13 @@ export async function runSchedulerCycle(options: {
     activeFilterCount: filters.length,
     queryGroupCount: groups.length,
   });
+
+  if (enqueue) {
+    void recordSchedulerCycleOpsStats({
+      queued,
+      circuitSkipped,
+    });
+  }
 
   const platformSummary = Object.entries(platforms)
     .map(([name, count]) => `${name}:${count}`)

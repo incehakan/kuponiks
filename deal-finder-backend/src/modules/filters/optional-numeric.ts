@@ -1,7 +1,11 @@
 /**
  * Optional numeric UserFilter fields.
- * Empty string must not become 0 (Fastify/Ajv coerceTypes: Number("") === 0).
- * Explicit "0" / 0 remains 0.
+ *
+ * Defense layers:
+ * 1) Route schema must use type:["integer","null"] (NOT integer-first anyOf).
+ *    anyOf+[coerceTypes] coerces JSON null → 0 (Number(null)===0).
+ * 2) preValidation: "" / whitespace → null before schema validation.
+ * 3) Service toNullableOptionalNumber: empty → null; explicit 0 stays 0.
  */
 
 export const OPTIONAL_NUMERIC_FILTER_KEYS = [

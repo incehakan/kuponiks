@@ -99,11 +99,13 @@ export class FilterMatchingService {
       );
 
       if (matched.length === 0) {
-        console.log(
-          `FilterMatchingService: no filter matches for listing ${listingId}`,
-        );
+        // Quiet on non-match to avoid per-listing spam every scrape cycle.
         return;
       }
+
+      console.log(
+        `[MATCH] listing=${listingId} matchedFilters=${matched.length} dealScore=${listing.dealScore} marketStatus=${listing.marketStatus ?? "-"}`,
+      );
 
       const aggregates = this.aggregateByUser(matched, listing);
 

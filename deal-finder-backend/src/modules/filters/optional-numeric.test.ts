@@ -116,4 +116,84 @@ describe("Optional numeric filter semantics", () => {
     expect(body.maxPrice).toBe(5_000_000);
     expect(body.category).toBe("Emlak > Konut");
   });
+
+  it("11. minPrice/maxPrice/minYear/maxYear empty → null", () => {
+    const body = {
+      minPrice: "",
+      maxPrice: " ",
+      minYear: "",
+      maxYear: "\t",
+    };
+    normalizeEmptyNumericFilterFields(body);
+    expect(body.minPrice).toBeNull();
+    expect(body.maxPrice).toBeNull();
+    expect(body.minYear).toBeNull();
+    expect(body.maxYear).toBeNull();
+  });
+
+  it("12. edit hydrate null + save payload keeps null (mobile util)", async () => {
+    const {
+      buildVehicleNumericPayload,
+      optionalNumericToFormValue,
+    } = await import(
+      "../../../../deal-finder-mobile/src/utils/filterNumericPayload.ts"
+    );
+    const form = {
+      minYear: optionalNumericToFormValue(2016),
+      maxYear: optionalNumericToFormValue(2018),
+      minMileage: optionalNumericToFormValue(null),
+      maxMileage: optionalNumericToFormValue(null),
+      minPrice: optionalNumericToFormValue(null),
+      maxPrice: optionalNumericToFormValue(null),
+    };
+    expect(form.maxMileage).toBe("");
+    const payload = buildVehicleNumericPayload(form);
+    expect(payload.maxMileage).toBeNull();
+    expect(payload.minMileage).toBeNull();
+  });
+
+  it("13. edit other field + untouched empty mileage → null", async () => {
+    const { buildVehicleNumericPayload } = await import(
+      "../../../../deal-finder-mobile/src/utils/filterNumericPayload.ts"
+    );
+    const payload = buildVehicleNumericPayload({
+      minYear: "2016",
+      maxYear: "2018",
+      minMileage: "",
+      maxMileage: "",
+      minPrice: "",
+      maxPrice: "",
+    });
+    expect(payload.minYear).toBe(2016);
+    expect(payload.maxYear).toBe(2018);
+    expect(payload.maxMileage).toBeNull();
+  });
+
+  it("14. subcategory leaf fallback regression", () => {
+    expect(
+      listingMatchesFilter(
+        {
+          title: "Honda Civic",
+          price: 1_000_000,
+          dealScore: 80,
+          category: "Vasıta > Otomobil",
+          brand: "Honda",
+          series: "Civic",
+          year: 2017,
+          mileage: 40_000,
+          subcategory: null,
+        },
+        {
+          category: "Vasıta > Otomobil",
+          subcategory: "Otomobil",
+          brand: "Honda",
+          series: "Civic",
+          minYear: 2016,
+          maxYear: 2018,
+          maxMileage: null,
+          minDealScore: 50,
+        },
+      ),
+    ).toBe(true);
+  });
 });

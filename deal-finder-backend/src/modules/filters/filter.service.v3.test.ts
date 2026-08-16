@@ -207,4 +207,204 @@ describe("Filter API validation + series/trim persist", () => {
     expect(data.minYear).toBeNull();
     expect(data.minMileage).toBe(0);
   });
+
+  it("11. update empty string maxMileage → null", async () => {
+    mockedPrisma.userFilter.findFirst.mockResolvedValue({
+      id: "f1",
+      userId: "u1",
+      category: "Vasıta > Otomobil",
+      isActive: true,
+      minPrice: null,
+      maxPrice: null,
+      minYear: 2016,
+      maxYear: 2018,
+      minMileage: null,
+      maxMileage: 0,
+      notifyPush: true,
+      notifyTelegram: false,
+      notifyWhatsapp: false,
+    });
+    mockedPrisma.userFilter.update.mockImplementation(async ({ data }) => ({
+      id: "f1",
+      ...data,
+    }));
+    await service.updateFilter("f1", "u1", {
+      maxMileage: "" as unknown as number,
+    });
+    const data = mockedPrisma.userFilter.update.mock.calls[0]?.[0]?.data;
+    expect(data.maxMileage).toBeNull();
+  });
+
+  it("12. update explicit null → null", async () => {
+    mockedPrisma.userFilter.findFirst.mockResolvedValue({
+      id: "f1",
+      userId: "u1",
+      category: "Vasıta > Otomobil",
+      isActive: true,
+      minPrice: null,
+      maxPrice: null,
+      minYear: null,
+      maxYear: null,
+      minMileage: 0,
+      maxMileage: 0,
+      notifyPush: true,
+      notifyTelegram: false,
+      notifyWhatsapp: false,
+    });
+    mockedPrisma.userFilter.update.mockImplementation(async ({ data }) => ({
+      id: "f1",
+      ...data,
+    }));
+    await service.updateFilter("f1", "u1", {
+      minMileage: null,
+      maxMileage: null,
+    });
+    const data = mockedPrisma.userFilter.update.mock.calls[0]?.[0]?.data;
+    expect(data.minMileage).toBeNull();
+    expect(data.maxMileage).toBeNull();
+  });
+
+  it("13. update omitted maxMileage does not rewrite existing", async () => {
+    mockedPrisma.userFilter.findFirst.mockResolvedValue({
+      id: "f1",
+      userId: "u1",
+      category: "Vasıta > Otomobil",
+      isActive: true,
+      minPrice: null,
+      maxPrice: null,
+      minYear: null,
+      maxYear: null,
+      minMileage: null,
+      maxMileage: null,
+      notifyPush: true,
+      notifyTelegram: false,
+      notifyWhatsapp: false,
+    });
+    mockedPrisma.userFilter.update.mockImplementation(async ({ data }) => ({
+      id: "f1",
+      ...data,
+    }));
+    await service.updateFilter("f1", "u1", {
+      minDealScore: 50,
+    });
+    const data = mockedPrisma.userFilter.update.mock.calls[0]?.[0]?.data;
+    expect(data.maxMileage).toBeUndefined();
+    expect(data.minDealScore).toBe(50);
+  });
+
+  it("14. update explicit 0 preserved", async () => {
+    mockedPrisma.userFilter.findFirst.mockResolvedValue({
+      id: "f1",
+      userId: "u1",
+      category: "Vasıta > Otomobil",
+      isActive: true,
+      minPrice: null,
+      maxPrice: null,
+      minYear: null,
+      maxYear: null,
+      minMileage: null,
+      maxMileage: null,
+      notifyPush: true,
+      notifyTelegram: false,
+      notifyWhatsapp: false,
+    });
+    mockedPrisma.userFilter.update.mockImplementation(async ({ data }) => ({
+      id: "f1",
+      ...data,
+    }));
+    await service.updateFilter("f1", "u1", { maxMileage: 0 });
+    const data = mockedPrisma.userFilter.update.mock.calls[0]?.[0]?.data;
+    expect(data.maxMileage).toBe(0);
+  });
+
+  it("15. production-like Honda Civic: null mileage does not reject km>0", async () => {
+    const { listingMatchesFilter } = await import(
+      "../../filters/filter-match.engine.js"
+    );
+    expect(
+      listingMatchesFilter(
+        {
+          title: "Honda Civic 1.6",
+          price: 1_200_000,
+          dealScore: 70,
+          category: "Vasıta > Otomobil",
+          brand: "Honda",
+          series: "Civic",
+          year: 2017,
+          mileage: 90_000,
+          subcategory: null,
+        },
+        {
+          category: "Vasıta > Otomobil",
+          subcategory: "Otomobil",
+          brand: "Honda",
+          series: "Civic",
+          minYear: 2016,
+          maxYear: 2018,
+          minMileage: null,
+          maxMileage: null,
+          minDealScore: 50,
+          city: "Tüm Türkiye",
+        },
+      ),
+    ).toBe(true);
+  });
+
+  it("16. year outside range still fails with null mileage", async () => {
+    const { listingMatchesFilter } = await import(
+      "../../filters/filter-match.engine.js"
+    );
+    expect(
+      listingMatchesFilter(
+        {
+          title: "Honda Civic",
+          price: 1_000_000,
+          dealScore: 80,
+          category: "Vasıta > Otomobil",
+          brand: "Honda",
+          series: "Civic",
+          year: 2015,
+          mileage: 50_000,
+        },
+        {
+          category: "Vasıta > Otomobil",
+          brand: "Honda",
+          series: "Civic",
+          minYear: 2016,
+          maxYear: 2018,
+          maxMileage: null,
+          minDealScore: 50,
+        },
+      ),
+    ).toBe(false);
+  });
+
+  it("17. dealScore < 50 still fails", async () => {
+    const { listingMatchesFilter } = await import(
+      "../../filters/filter-match.engine.js"
+    );
+    expect(
+      listingMatchesFilter(
+        {
+          title: "Honda Civic",
+          price: 1_000_000,
+          dealScore: 40,
+          category: "Vasıta > Otomobil",
+          brand: "Honda",
+          series: "Civic",
+          year: 2017,
+          mileage: 50_000,
+        },
+        {
+          category: "Vasıta > Otomobil",
+          brand: "Honda",
+          series: "Civic",
+          minYear: 2016,
+          maxYear: 2018,
+          maxMileage: null,
+          minDealScore: 50,
+        },
+      ),
+    ).toBe(false);
+  });
 });

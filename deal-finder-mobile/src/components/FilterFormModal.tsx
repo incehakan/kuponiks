@@ -40,6 +40,10 @@ import {
   parseOptionalInt,
   splitKeywordInput,
 } from '../utils/filterForm';
+import {
+  buildVehicleNumericPayload,
+  optionalNumericToFormValue,
+} from '../utils/filterNumericPayload';
 
 interface DealScoreOption {
   score: number;
@@ -128,12 +132,14 @@ function filterToForm(filter: Filter): FilterFormState {
     brand: filter.brand ?? null,
     series: filter.series ?? null,
     trim: filter.trim ?? null,
-    minYear: filter.minYear != null ? String(filter.minYear) : '',
-    maxYear: filter.maxYear != null ? String(filter.maxYear) : '',
-    minMileage: filter.minMileage != null ? String(filter.minMileage) : '',
-    maxMileage: filter.maxMileage != null ? String(filter.maxMileage) : '',
-    minPrice: filter.minPrice != null ? String(Math.round(filter.minPrice)) : '',
-    maxPrice: filter.maxPrice != null ? String(Math.round(filter.maxPrice)) : '',
+    minYear: optionalNumericToFormValue(filter.minYear),
+    maxYear: optionalNumericToFormValue(filter.maxYear),
+    minMileage: optionalNumericToFormValue(filter.minMileage),
+    maxMileage: optionalNumericToFormValue(filter.maxMileage),
+    minPrice:
+      filter.minPrice != null ? String(Math.round(filter.minPrice)) : '',
+    maxPrice:
+      filter.maxPrice != null ? String(Math.round(filter.maxPrice)) : '',
     city: filter.city?.split(',')[0]?.trim() || null,
     district: filter.district ?? null,
     fuelType: filter.fuelType ?? null,
@@ -394,6 +400,7 @@ export default function FilterFormModal({
     const maxMileage = parseOptionalInt(form.maxMileage);
     const minPrice = parseOptionalInt(form.minPrice);
     const maxPrice = parseOptionalInt(form.maxPrice);
+    const vehicleNumerics = buildVehicleNumericPayload(form);
 
     for (const [label, value] of [
       ['Minimum yıl', minYear],
@@ -459,8 +466,6 @@ export default function FilterFormModal({
       keywords: splitKeywordInput(form.keywords),
       excludedKeywords: splitKeywordInput(form.excludedKeywords),
       ...(subcategory ? { subcategory } : {}),
-      ...(minPrice != null ? { minPrice } : {}),
-      ...(maxPrice != null ? { maxPrice } : {}),
       ...(form.district ? { district: form.district } : { district: null }),
       ...(vehicle
         ? {
@@ -470,10 +475,12 @@ export default function FilterFormModal({
             fuelType: form.fuelType,
             transmission: form.transmission,
             sellerType: form.sellerType,
-            ...(minYear != null ? { minYear } : { minYear: null }),
-            ...(maxYear != null ? { maxYear } : { maxYear: null }),
-            ...(minMileage != null ? { minMileage } : { minMileage: null }),
-            ...(maxMileage != null ? { maxMileage } : { maxMileage: null }),
+            minYear: vehicleNumerics.minYear,
+            maxYear: vehicleNumerics.maxYear,
+            minMileage: vehicleNumerics.minMileage,
+            maxMileage: vehicleNumerics.maxMileage,
+            minPrice: vehicleNumerics.minPrice,
+            maxPrice: vehicleNumerics.maxPrice,
           }
         : {
             brand: null,
@@ -486,6 +493,12 @@ export default function FilterFormModal({
             maxYear: null,
             minMileage: null,
             maxMileage: null,
+            ...(vehicleNumerics.minPrice != null
+              ? { minPrice: vehicleNumerics.minPrice }
+              : { minPrice: null }),
+            ...(vehicleNumerics.maxPrice != null
+              ? { maxPrice: vehicleNumerics.maxPrice }
+              : { maxPrice: null }),
           }),
     };
 

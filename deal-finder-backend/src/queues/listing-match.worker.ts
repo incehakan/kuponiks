@@ -31,10 +31,6 @@ export class ListingMatchWorker {
       },
     );
 
-    this.worker.on("completed", (job) => {
-      console.log(`ListingMatchWorker: job ${job.id} completed`);
-    });
-
     this.worker.on("failed", (job, error) => {
       console.error(
         `ListingMatchWorker: job ${job?.id ?? "unknown"} failed: ${error.message}`,
@@ -60,10 +56,6 @@ export class ListingMatchWorker {
       }
 
       await this.matchingService.matchListingWithFilters(listingId);
-
-      console.log(
-        `ListingMatchWorker: matched filters for listing ${listingId} (job ${job.id})`,
-      );
     } catch (error) {
       const message =
         error instanceof Error
