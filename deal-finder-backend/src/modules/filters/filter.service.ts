@@ -9,6 +9,8 @@ import {
   getFilterLimit,
   limitReachedMessage,
   resolveNotifyFlagsForPlan,
+  type NotifyFlagInput,
+  type ResolvedNotifyFlags,
 } from "../../lib/subscription-plan.js";
 import { toNullableOptionalNumber } from "./optional-numeric.js";
 
@@ -367,18 +369,43 @@ export class FilterService {
       }
 
       const subscriptionPlan = await this.resolveSubscriptionPlan(userId);
-      const notifyFlags =
-        updateData.notifyTelegram !== undefined ||
-        updateData.notifyPush !== undefined ||
-        updateData.notifyWhatsapp !== undefined
-          ? resolveNotifyFlagsForPlan(subscriptionPlan, {
-              notifyTelegram:
-                updateData.notifyTelegram ?? existing.notifyTelegram,
-              notifyPush: updateData.notifyPush ?? existing.notifyPush,
-              notifyWhatsapp:
-                updateData.notifyWhatsapp ?? existing.notifyWhatsapp,
-            })
-          : null;
+      const notifyPushProvided = updateData.notifyPush !== undefined;
+      const notifyTelegramProvided = updateData.notifyTelegram !== undefined;
+      const notifyWhatsappProvided = updateData.notifyWhatsapp !== undefined;
+      const hasAnyNotifyUpdate =
+        notifyPushProvided ||
+        notifyTelegramProvided ||
+        notifyWhatsappProvided;
+
+      const notifyPatch: Partial<ResolvedNotifyFlags> = {};
+      if (hasAnyNotifyUpdate) {
+        const notifyInput: NotifyFlagInput = {};
+        if (notifyPushProvided) {
+          notifyInput.notifyPush = updateData.notifyPush as boolean;
+        } else {
+          notifyInput.notifyPush = existing.notifyPush;
+        }
+        if (notifyTelegramProvided) {
+          notifyInput.notifyTelegram = updateData.notifyTelegram as boolean;
+        } else {
+          notifyInput.notifyTelegram = existing.notifyTelegram;
+        }
+        if (notifyWhatsappProvided) {
+          notifyInput.notifyWhatsapp = updateData.notifyWhatsapp as boolean;
+        } else {
+          notifyInput.notifyWhatsapp = existing.notifyWhatsapp;
+        }
+        const resolved = resolveNotifyFlagsForPlan(subscriptionPlan, notifyInput);
+        if (notifyPushProvided) {
+          notifyPatch.notifyPush = resolved.notifyPush;
+        }
+        if (notifyTelegramProvided) {
+          notifyPatch.notifyTelegram = resolved.notifyTelegram;
+        }
+        if (notifyWhatsappProvided) {
+          notifyPatch.notifyWhatsapp = resolved.notifyWhatsapp;
+        }
+      }
 
       return await prisma.userFilter.update({
         where: { id: existing.id },
@@ -441,13 +468,7 @@ export class FilterService {
           ...(updateData.minDealScore !== undefined
             ? { minDealScore: updateData.minDealScore }
             : {}),
-          ...(notifyFlags
-            ? {
-                notifyPush: notifyFlags.notifyPush,
-                notifyTelegram: notifyFlags.notifyTelegram,
-                notifyWhatsapp: notifyFlags.notifyWhatsapp,
-              }
-            : {}),
+          ...notifyPatch,
           ...(updateData.isActive !== undefined
             ? { isActive: updateData.isActive }
             : {}),

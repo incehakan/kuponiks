@@ -196,4 +196,34 @@ describe("Optional numeric filter semantics", () => {
       ),
     ).toBe(true);
   });
+
+  it("15. mobile notify hydrate true + save keeps true", async () => {
+    const {
+      hydrateNotifyPush,
+      buildNotifyChannelPayload,
+    } = await import(
+      "../../../../deal-finder-mobile/src/utils/filterNotifyPayload.ts"
+    );
+    expect(hydrateNotifyPush(true)).toBe(true);
+    expect(hydrateNotifyPush(undefined)).toBe(true);
+    const payload = buildNotifyChannelPayload({
+      notifyPush: true,
+      notifyTelegram: false,
+      notifyWhatsapp: false,
+    });
+    expect(payload.notifyPush).toBe(true);
+  });
+
+  it("16. edit unrelated field keeps notifyPush true in payload", async () => {
+    const { buildNotifyChannelPayload } = await import(
+      "../../../../deal-finder-mobile/src/utils/filterNotifyPayload.ts"
+    );
+    const payload = buildNotifyChannelPayload({
+      notifyPush: true,
+      notifyTelegram: false,
+      notifyWhatsapp: false,
+    });
+    expect(payload.notifyPush).toBe(true);
+    expect(payload.notifyTelegram).toBe(false);
+  });
 });

@@ -44,6 +44,12 @@ import {
   buildVehicleNumericPayload,
   optionalNumericToFormValue,
 } from '../utils/filterNumericPayload';
+import {
+  buildNotifyChannelPayload,
+  hydrateNotifyPush,
+  hydrateNotifyTelegram,
+  hydrateNotifyWhatsapp,
+} from '../utils/filterNotifyPayload';
 
 interface DealScoreOption {
   score: number;
@@ -151,9 +157,9 @@ function filterToForm(filter: Filter): FilterFormState {
       : '',
     minDealScore: filter.minDealScore ?? 70,
     isActive: filter.isActive !== false,
-    notifyPush: filter.notifyPush !== false,
-    notifyTelegram: filter.notifyTelegram === true,
-    notifyWhatsapp: filter.notifyWhatsapp === true,
+    notifyPush: hydrateNotifyPush(filter.notifyPush),
+    notifyTelegram: hydrateNotifyTelegram(filter.notifyTelegram),
+    notifyWhatsapp: hydrateNotifyWhatsapp(filter.notifyWhatsapp),
   };
 }
 
@@ -454,15 +460,17 @@ export default function FilterFormModal({
       ? category.split('>').pop()?.trim()
       : undefined;
 
+    const notifyChannels = buildNotifyChannelPayload(form);
+
     const payload: CreateFilterPayload = {
       category,
       name: form.name.trim() || null,
       city: form.city === 'Tüm Türkiye' ? form.city : form.city,
       minDealScore: form.minDealScore,
       isActive: form.isActive,
-      notifyPush: form.notifyPush,
-      notifyTelegram: form.notifyTelegram,
-      notifyWhatsapp: form.notifyWhatsapp,
+      notifyPush: notifyChannels.notifyPush,
+      notifyTelegram: notifyChannels.notifyTelegram,
+      notifyWhatsapp: notifyChannels.notifyWhatsapp,
       keywords: splitKeywordInput(form.keywords),
       excludedKeywords: splitKeywordInput(form.excludedKeywords),
       ...(subcategory ? { subcategory } : {}),

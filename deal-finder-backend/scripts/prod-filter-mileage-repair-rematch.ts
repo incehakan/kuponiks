@@ -121,11 +121,6 @@ async function main(): Promise<void> {
   });
   if (!afterRepair) throw new Error("filter missing after repair");
 
-  const notifyWas = afterRepair.notifyPush;
-  await filterService.updateFilter(afterRepair.id, afterRepair.userId, {
-    notifyPush: false,
-  });
-
   const listings = await prisma.listing.findMany({
     where: {
       brand: { equals: "Honda", mode: "insensitive" },
@@ -149,15 +144,13 @@ async function main(): Promise<void> {
   const failList = dry.filter((d) => !d.pass);
 
   for (const row of passList) {
-    await filterMatchingService.matchListingWithFilters(row.id);
+    await filterMatchingService.matchListingWithFilters(row.id, {
+      suppressNotifications: true,
+    });
   }
 
   const matchesAfter = await prisma.userListingMatch.count({
     where: { userId: afterRepair.userId, filterId: afterRepair.id },
-  });
-
-  await filterService.updateFilter(afterRepair.id, afterRepair.userId, {
-    notifyPush: notifyWas,
   });
 
   const finalFilter = await prisma.userFilter.findUnique({
@@ -191,7 +184,7 @@ async function main(): Promise<void> {
         userListingMatchAfter: matchesAfter,
         duplicatesExpected: 0,
         historicalPushSent: false,
-        notifyPushRestored: notifyWas,
+        notificationsSuppressed: true,
       },
       null,
       2,

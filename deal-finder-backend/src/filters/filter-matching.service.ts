@@ -57,6 +57,11 @@ interface UserMatchAggregate {
   notifyEligible: boolean;
 }
 
+export interface MatchListingOptions {
+  /** Persist matches only; skip notification enqueue (ops rematch). */
+  suppressNotifications?: boolean;
+}
+
 /**
  * Smart Filter Matching Engine V2 — matches listings to active user filters,
  * persists UserListingMatch rows, and enqueues plan-aware notification jobs.
@@ -65,7 +70,10 @@ export class FilterMatchingService {
   /**
    * Loads a listing, finds matching active filters, persists matches, and enqueues notifications.
    */
-  async matchListingWithFilters(listingId: string): Promise<void> {
+  async matchListingWithFilters(
+    listingId: string,
+    options?: MatchListingOptions,
+  ): Promise<void> {
     try {
       if (!listingId?.trim()) {
         throw new Error("FilterMatchingService: listingId is required");
@@ -118,6 +126,13 @@ export class FilterMatchingService {
           filterIds: aggregate.filterIds,
         });
         matchCreated += persisted.created;
+      }
+
+      if (options?.suppressNotifications) {
+        console.log(
+          `[NOTIFY] listing=${listingId} matchedUsers=${aggregates.size} matchRowsCreated=${matchCreated} pushQueued=0 dedupSkipped=0 failed=0 suppressed=true`,
+        );
+        return;
       }
 
       const results = await Promise.allSettled(

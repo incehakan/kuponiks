@@ -407,4 +407,146 @@ describe("Filter API validation + series/trim persist", () => {
       ),
     ).toBe(false);
   });
+
+  it("18. update omitted notifyPush keeps existing true", async () => {
+    mockedPrisma.userFilter.findFirst.mockResolvedValue({
+      id: "f1",
+      userId: "u1",
+      category: "Vasıta > Otomobil",
+      isActive: true,
+      minPrice: null,
+      maxPrice: null,
+      minYear: 2016,
+      maxYear: 2018,
+      minMileage: null,
+      maxMileage: null,
+      notifyPush: true,
+      notifyTelegram: false,
+      notifyWhatsapp: false,
+    });
+    mockedPrisma.userFilter.update.mockImplementation(async ({ data }) => ({
+      id: "f1",
+      ...data,
+    }));
+    await service.updateFilter("f1", "u1", {
+      minDealScore: 50,
+      maxMileage: null,
+    });
+    const data = mockedPrisma.userFilter.update.mock.calls[0]?.[0]?.data;
+    expect(data.notifyPush).toBeUndefined();
+    expect(data.maxMileage).toBeNull();
+    expect(data.minDealScore).toBe(50);
+  });
+
+  it("19. update explicit notifyPush=false", async () => {
+    mockedPrisma.userFilter.findFirst.mockResolvedValue({
+      id: "f1",
+      userId: "u1",
+      category: "Vasıta > Otomobil",
+      isActive: true,
+      minPrice: null,
+      maxPrice: null,
+      minYear: null,
+      maxYear: null,
+      minMileage: null,
+      maxMileage: null,
+      notifyPush: true,
+      notifyTelegram: false,
+      notifyWhatsapp: false,
+    });
+    mockedPrisma.userFilter.update.mockImplementation(async ({ data }) => ({
+      id: "f1",
+      ...data,
+    }));
+    await service.updateFilter("f1", "u1", { notifyPush: false });
+    const data = mockedPrisma.userFilter.update.mock.calls[0]?.[0]?.data;
+    expect(data.notifyPush).toBe(false);
+    expect(data.notifyTelegram).toBeUndefined();
+  });
+
+  it("20. update explicit notifyPush=true", async () => {
+    mockedPrisma.userFilter.findFirst.mockResolvedValue({
+      id: "f1",
+      userId: "u1",
+      category: "Vasıta > Otomobil",
+      isActive: true,
+      minPrice: null,
+      maxPrice: null,
+      minYear: null,
+      maxYear: null,
+      minMileage: null,
+      maxMileage: null,
+      notifyPush: false,
+      notifyTelegram: false,
+      notifyWhatsapp: false,
+    });
+    mockedPrisma.userFilter.update.mockImplementation(async ({ data }) => ({
+      id: "f1",
+      ...data,
+    }));
+    await service.updateFilter("f1", "u1", { notifyPush: true });
+    const data = mockedPrisma.userFilter.update.mock.calls[0]?.[0]?.data;
+    expect(data.notifyPush).toBe(true);
+  });
+
+  it("21. create default notifyPush=true for VIP when omitted", async () => {
+    mockedPrisma.user.findUnique.mockResolvedValue({
+      subscriptionPlan: "VIP",
+    });
+    await service.createFilter("u1", "VIP", {
+      category: "Vasıta > Otomobil",
+      brand: "Honda",
+      series: "Civic",
+      city: "Tüm Türkiye",
+    });
+    const data = mockedPrisma.userFilter.create.mock.calls[0]?.[0]?.data;
+    expect(data.notifyPush).toBe(true);
+    expect(data.notifyTelegram).toBe(false);
+  });
+
+  it("22. create explicit notifyPush=false preserved", async () => {
+    mockedPrisma.user.findUnique.mockResolvedValue({
+      subscriptionPlan: "VIP",
+    });
+    await service.createFilter("u1", "VIP", {
+      category: "Vasıta > Otomobil",
+      brand: "Honda",
+      series: "Civic",
+      city: "Tüm Türkiye",
+      notifyPush: false,
+    });
+    const data = mockedPrisma.userFilter.create.mock.calls[0]?.[0]?.data;
+    expect(data.notifyPush).toBe(false);
+  });
+
+  it("23. update numeric null + omitted notifyPush does not drop channels", async () => {
+    mockedPrisma.userFilter.findFirst.mockResolvedValue({
+      id: "f1",
+      userId: "u1",
+      category: "Vasıta > Otomobil",
+      isActive: true,
+      minPrice: null,
+      maxPrice: null,
+      minYear: 2016,
+      maxYear: 2018,
+      minMileage: 0,
+      maxMileage: 0,
+      notifyPush: true,
+      notifyTelegram: false,
+      notifyWhatsapp: false,
+    });
+    mockedPrisma.userFilter.update.mockImplementation(async ({ data }) => ({
+      id: "f1",
+      ...data,
+    }));
+    await service.updateFilter("f1", "u1", {
+      minMileage: null,
+      maxMileage: null,
+    });
+    const data = mockedPrisma.userFilter.update.mock.calls[0]?.[0]?.data;
+    expect(data.minMileage).toBeNull();
+    expect(data.maxMileage).toBeNull();
+    expect(data.notifyPush).toBeUndefined();
+    expect(data.notifyTelegram).toBeUndefined();
+  });
 });
