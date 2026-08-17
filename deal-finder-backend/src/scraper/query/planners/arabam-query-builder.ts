@@ -1,53 +1,187 @@
 import type { ScrapeQueryPlan } from "../scrape-query-plan.js";
 import { brandSeriesQueryText } from "../scrape-query-plan.js";
+import { buildArabamFilterParams } from "../arabam/arabam-filter-params.js";
+import { buildArabamTaxonomyPath } from "../arabam/arabam-taxonomy.js";
+import { fieldRole } from "../platform-capabilities.js";
+
+const ARABAM_BASE = "https://www.arabam.com";
 
 export interface BuiltPlatformQuery {
   url: string;
   displayQuery: string;
-  /** Legacy adapter `query` param (brand+series or keyword). */
   query: string;
-  /** City passed to adapter when platform supports SOURCE city. */
   city?: string;
   category: string;
   appliedCriteria: string[];
   deferredCriteria: string[];
   sourceCriteria: Record<string, string | number>;
+  sourceDebug?: {
+    taxonomyPath: string | null;
+    queryParams: Record<string, string>;
+  };
 }
 
-const DEFAULT_TAKE = 50;
-
-/**
- * Arabam search URL — verified live adapter shape only:
- * https://www.arabam.com/ikinci-el?searchText={brand series}&take=50
- *
- * No year/price/mileage/city params (not verified on search URL).
- */
-export function buildArabamQuery(plan: ScrapeQueryPlan): BuiltPlatformQuery {
-  const displayQuery = brandSeriesQueryText({
+function resolveDisplayQuery(plan: ScrapeQueryPlan): string {
+  return brandSeriesQueryText({
     brand: plan.brand ?? null,
     series: plan.series ?? null,
     keywords: plan.keywords,
     category: plan.category,
   });
+}
 
-  const url = new URL("https://www.arabam.com/ikinci-el");
-  if (displayQuery) {
-    url.searchParams.set("searchText", displayQuery);
+function isTurkeyWide(city: string | undefined): boolean {
+  if (!city?.trim()) return true;
+  const c = city.trim().toLocaleLowerCase("tr-TR");
+  return c === "tüm türkiye" || c === "tum turkiye";
+}
+
+function buildSearchTextFallback(
+  plan: ScrapeQueryPlan,
+  take: number,
+): BuiltPlatformQuery {
+  const displayQuery = resolveDisplayQuery(plan);
+
+  const params = new URLSearchParams();
+  params.set("searchText", displayQuery);
+  params.set("take", String(take));
+
+  const url = `${ARABAM_BASE}/ikinci-el?${params.toString()}`;
+
+  const sourceCriteria: Record<string, string | number> = {};
+  const appliedCriteria: string[] = [];
+  if (fieldRole("arabam", "keywords") === "SOURCE" && displayQuery) {
+    sourceCriteria.keywords = displayQuery;
+    appliedCriteria.push("keywords");
   }
-  url.searchParams.set("take", String(DEFAULT_TAKE));
+  appliedCriteria.push("take");
 
-  const appliedCriteria = [...plan.appliedCriteria];
   const deferredCriteria = plan.deferredCriteria.filter(
-    (field) => !appliedCriteria.includes(field),
+    (f) => !appliedCriteria.includes(f),
   );
 
   return {
-    url: url.toString(),
+    url,
     displayQuery,
     query: displayQuery,
+    ...(plan.city ? { city: plan.city } : {}),
     category: plan.category,
     appliedCriteria,
     deferredCriteria,
-    sourceCriteria: { ...plan.sourceCriteria },
+    sourceCriteria,
+    sourceDebug: {
+      taxonomyPath: null,
+      queryParams: Object.fromEntries(params.entries()),
+    },
   };
+}
+
+/**
+ * Arabam Query Builder V2 — taxonomy path + verified query params.
+ */
+export function buildArabamQuery(plan: ScrapeQueryPlan): BuiltPlatformQuery {
+  const take = 50;
+  const hasBrand = Boolean(plan.brand?.trim());
+
+  if (!hasBrand) {
+    return buildSearchTextFallback(plan, take);
+  }
+
+  const cityApplied =
+    fieldRole("arabam", "city") === "SOURCE" &&
+    plan.city?.trim() &&
+    !isTurkeyWide(plan.city);
+
+  const taxonomyInput: Parameters<typeof buildArabamTaxonomyPath>[0] = {
+    category: plan.category,
+    brand: plan.brand!,
+  };
+  if (plan.series?.trim()) {
+    taxonomyInput.series = plan.series;
+  }
+  if (cityApplied && plan.city) {
+    taxonomyInput.city = plan.city;
+  }
+
+  const taxonomyPath = buildArabamTaxonomyPath(taxonomyInput);
+
+  if (!taxonomyPath) {
+    return buildSearchTextFallback(plan, take);
+  }
+
+  const filterInput: Parameters<typeof buildArabamFilterParams>[0] = { take };
+  if (fieldRole("arabam", "minYear") === "SOURCE" && plan.minYear != null) {
+    filterInput.minYear = plan.minYear;
+  }
+  if (fieldRole("arabam", "maxYear") === "SOURCE" && plan.maxYear != null) {
+    filterInput.maxYear = plan.maxYear;
+  }
+  if (fieldRole("arabam", "minPrice") === "SOURCE" && plan.minPrice != null) {
+    filterInput.minPrice = plan.minPrice;
+  }
+  if (fieldRole("arabam", "maxPrice") === "SOURCE" && plan.maxPrice != null) {
+    filterInput.maxPrice = plan.maxPrice;
+  }
+
+  const { params: queryParams } = buildArabamFilterParams(filterInput);
+  const qs = new URLSearchParams(queryParams).toString();
+  const url = `${ARABAM_BASE}${taxonomyPath}${qs ? `?${qs}` : ""}`;
+
+  const displayQuery = resolveDisplayQuery(plan);
+
+  const sourceCriteria: Record<string, string | number> = {};
+  const appliedCriteria: string[] = [];
+
+  if (fieldRole("arabam", "brand") === "SOURCE" && plan.brand) {
+    sourceCriteria.brand = plan.brand;
+    appliedCriteria.push("brand");
+  }
+  if (fieldRole("arabam", "series") === "SOURCE" && plan.series) {
+    sourceCriteria.series = plan.series;
+    appliedCriteria.push("series");
+  }
+  if (cityApplied && plan.city) {
+    sourceCriteria.city = plan.city;
+    appliedCriteria.push("city");
+  }
+  if (filterInput.minYear != null) {
+    sourceCriteria.minYear = filterInput.minYear;
+    appliedCriteria.push("minYear");
+  }
+  if (filterInput.maxYear != null) {
+    sourceCriteria.maxYear = filterInput.maxYear;
+    appliedCriteria.push("maxYear");
+  }
+  if (filterInput.minPrice != null) {
+    sourceCriteria.minPrice = filterInput.minPrice;
+    appliedCriteria.push("minPrice");
+  }
+  if (filterInput.maxPrice != null) {
+    sourceCriteria.maxPrice = filterInput.maxPrice;
+    appliedCriteria.push("maxPrice");
+  }
+  appliedCriteria.push("take");
+
+  const deferredCriteria = plan.deferredCriteria.filter(
+    (f) => !appliedCriteria.includes(f),
+  );
+
+  return {
+    url,
+    displayQuery,
+    query: displayQuery,
+    ...(plan.city ? { city: plan.city } : {}),
+    category: plan.category,
+    appliedCriteria,
+    deferredCriteria,
+    sourceCriteria,
+    sourceDebug: {
+      taxonomyPath,
+      queryParams,
+    },
+  };
+}
+
+export function buildArabamUrl(plan: ScrapeQueryPlan): string {
+  return buildArabamQuery(plan).url;
 }

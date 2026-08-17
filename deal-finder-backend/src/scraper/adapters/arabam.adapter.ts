@@ -31,7 +31,8 @@ const MAX_RETRIES = 3;
 
 /**
  * Arabam.com adapter — puppeteer-extra + stealth.
- * Search: https://www.arabam.com/ikinci-el?searchText={keyword}&take=50
+ * Search: taxonomy path from scheduler scrapeUrl, or fallback
+ *   https://www.arabam.com/ikinci-el?searchText={keyword}&take=50
  * Brand/mileage: schema.org JSON-LD Vehicle (+ URL taxonomy fallback for brand).
  */
 export class ArabamAdapter extends BaseScraperAdapter {

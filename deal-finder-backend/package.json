@@ -26,7 +26,8 @@
     "sync:vehicle-catalog": "tsx scripts/sync-vehicle-catalog-from-listings.ts",
     "scheduler:dry-run": "tsx scripts/scheduler-dry-run.ts",
     "scheduler:run-once": "tsx scripts/scheduler-run-once.ts",
-    "scheduler:status": "tsx scripts/scheduler-status.ts"
+    "scheduler:status": "tsx scripts/scheduler-status.ts",
+    "arabam:query-verify": "tsx scripts/arabam-query-verify.ts"
   },
   "keywords": [],
   "author": "",

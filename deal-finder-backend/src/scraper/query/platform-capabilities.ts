@@ -23,10 +23,11 @@ export type QueryField =
 export type FieldRole = "SOURCE" | "MATCHER_ONLY";
 
 /**
- * Per-platform field roles — conservative: only mark SOURCE when the live
- * adapter already sends the field to the platform search URL.
+ * Per-platform field roles — conservative: only mark SOURCE when verified
+ * against live platform filter UI / response (see arabam live audit Aug 2026).
  *
- * Arabam (verified): ikinci-el?searchText={brand series}&take=50 only.
+ * Arabam (verified): taxonomy path /ikinci-el/{category}/{brand-series[-city]}
+ *   + query params minYear, maxYear, minPrice, maxPrice, take
  * Letgo (verified): search/q/category/city query params.
  * Sahibinden (verified): query_text + address_city on /otomobil.
  */
@@ -38,14 +39,14 @@ export const PLATFORM_FIELD_ROLES: Record<
     brand: "SOURCE",
     series: "SOURCE",
     keywords: "SOURCE",
+    city: "SOURCE",
+    minYear: "SOURCE",
+    maxYear: "SOURCE",
+    minPrice: "SOURCE",
+    maxPrice: "SOURCE",
     category: "MATCHER_ONLY",
     subcategory: "MATCHER_ONLY",
-    city: "MATCHER_ONLY",
     district: "MATCHER_ONLY",
-    minYear: "MATCHER_ONLY",
-    maxYear: "MATCHER_ONLY",
-    minPrice: "MATCHER_ONLY",
-    maxPrice: "MATCHER_ONLY",
     minMileage: "MATCHER_ONLY",
     maxMileage: "MATCHER_ONLY",
     trim: "MATCHER_ONLY",
