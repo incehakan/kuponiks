@@ -208,6 +208,9 @@ export class SahibindenAdapter extends BaseScraperAdapter {
   }
 
   private buildSearchUrl(params: ScrapeSearchParams): string {
+    if (params.scrapeUrl?.trim()) {
+      return params.scrapeUrl.trim();
+    }
     const keyword = params.query?.trim() || params.category?.trim() || "";
     const categoryLower = (params.category ?? "").toLocaleLowerCase("tr-TR");
 

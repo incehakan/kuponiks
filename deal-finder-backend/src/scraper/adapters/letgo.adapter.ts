@@ -74,6 +74,9 @@ export class LetgoAdapter extends BaseScraperAdapter {
   }
 
   private buildSearchUrl(params: ScrapeSearchParams): string {
+    if (params.scrapeUrl?.trim()) {
+      return params.scrapeUrl.trim();
+    }
     const search = new URL("https://www.letgo.com/tr-tr");
     const qParts = [params.query, params.category, params.city]
       .map((part) => part?.trim())

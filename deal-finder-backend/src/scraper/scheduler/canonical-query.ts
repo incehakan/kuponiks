@@ -2,6 +2,20 @@ import { createHash } from "node:crypto";
 import { SubscriptionPlan } from "@prisma/client";
 import { getScrapeIntervalMs } from "../../lib/subscription-plan.js";
 import type { ScrapePlatform } from "../../queues/scraper.queue.js";
+import { buildPlatformQuery } from "../query/scrape-query-planner.js";
+import {
+  brandSeriesQueryText,
+  normalizeSchedulerCity,
+  type SchedulerFilterInput,
+} from "../query/scrape-query-plan.js";
+import {
+  buildSourceSignature,
+  foldQueryToken,
+  hashSourceSignature,
+} from "../query/query-signature.js";
+
+export type { SchedulerFilterInput };
+export { normalizeSchedulerCity, brandSeriesQueryText as scrapeQueryText };
 
 const ALL_PLATFORMS: readonly ScrapePlatform[] = [
   "sahibinden",
@@ -10,25 +24,18 @@ const ALL_PLATFORMS: readonly ScrapePlatform[] = [
   "hepsiemlak",
 ];
 
-export interface SchedulerFilterInput {
-  id: string;
-  isActive: boolean;
-  category: string;
-  brand: string | null;
-  series: string | null;
-  trim: string | null;
-  city: string | null;
-  keywords: string[];
-  plan: SubscriptionPlan;
-}
-
 export interface CanonicalQueryGroup {
+  /** Deterministic source signature (platform + SOURCE criteria). */
   key: string;
+  signature: string;
   queryHash: string;
   platform: ScrapePlatform;
   query: string;
   category: string;
   city?: string;
+  scrapeUrl: string;
+  appliedCriteria: string[];
+  deferredCriteria: string[];
   filterIds: string[];
   bestPlan: SubscriptionPlan;
   intervalMs: number;
@@ -73,53 +80,7 @@ export function platformsForCategory(category: string): ScrapePlatform[] {
   return [...ALL_PLATFORMS];
 }
 
-export function normalizeSchedulerCity(
-  city: string | null | undefined,
-): string | undefined {
-  const value = city?.trim();
-  if (!value) {
-    return undefined;
-  }
-  const lower = value.toLocaleLowerCase("tr-TR");
-  if (
-    lower === "all" ||
-    lower === "tüm türkiye" ||
-    lower === "tum turkiye" ||
-    lower === "türkiye" ||
-    lower === "turkiye"
-  ) {
-    return undefined;
-  }
-  return value;
-}
-
-export function scrapeQueryText(filter: {
-  category: string;
-  brand: string | null;
-  series: string | null;
-  keywords: string[];
-}): string {
-  const brandSeries = [filter.brand, filter.series]
-    .map((part) => part?.trim())
-    .filter((part): part is string => Boolean(part && part.length > 0))
-    .join(" ")
-    .trim();
-  if (brandSeries) {
-    return brandSeries;
-  }
-  const keyword = filter.keywords
-    .map((item) => item.trim())
-    .find((item) => item.length > 0);
-  if (keyword) {
-    return keyword;
-  }
-  return filter.category.trim();
-}
-
-function fold(value: string): string {
-  return value.toLocaleLowerCase("tr-TR").replace(/\s+/g, " ").trim();
-}
-
+/** @deprecated Legacy key format — prefer buildSourceSignature for grouping. */
 export function buildCanonicalKey(input: {
   platform: ScrapePlatform;
   category: string;
@@ -128,13 +89,14 @@ export function buildCanonicalKey(input: {
 }): string {
   const parts = [
     input.platform,
-    fold(input.category),
-    fold(input.query),
-    fold(input.city ?? "all"),
+    foldQueryToken(input.category),
+    foldQueryToken(input.query),
+    foldQueryToken(input.city ?? "all"),
   ];
   return parts.join(":");
 }
 
+/** @deprecated Legacy hash — prefer hashSourceSignature. */
 export function hashCanonicalKey(key: string): string {
   return createHash("sha1").update(key).digest("hex").slice(0, 12);
 }
@@ -153,8 +115,8 @@ function betterPlan(
 }
 
 /**
- * Groups active filters into one scrape job per platform × query × city.
- * Inactive filters are ignored. Adapter-unsupported ranges are matcher-only.
+ * Groups active filters into one scrape job per platform × SOURCE signature.
+ * Matcher-only / notify fields never affect grouping.
  */
 export function groupActiveFilters(
   filters: SchedulerFilterInput[],
@@ -165,21 +127,16 @@ export function groupActiveFilters(
     if (!filter.isActive) {
       continue;
     }
-    const query = scrapeQueryText(filter);
-    if (!query) {
+    const displayQuery = brandSeriesQueryText(filter);
+    if (!displayQuery) {
       continue;
     }
-    const city = normalizeSchedulerCity(filter.city);
     const platforms = platformsForCategory(filter.category);
 
     for (const platform of platforms) {
-      const key = buildCanonicalKey({
-        platform,
-        category: filter.category,
-        query,
-        ...(city ? { city } : {}),
-      });
-      const existing = groups.get(key);
+      const { plan, built } = buildPlatformQuery(platform, filter);
+      const signature = buildSourceSignature(platform, plan.sourceCriteria);
+      const existing = groups.get(signature);
       if (existing) {
         if (!existing.filterIds.includes(filter.id)) {
           existing.filterIds.push(filter.id);
@@ -189,13 +146,17 @@ export function groupActiveFilters(
         existing.priority = planPriority(existing.bestPlan);
         continue;
       }
-      groups.set(key, {
-        key,
-        queryHash: hashCanonicalKey(key),
+      groups.set(signature, {
+        key: signature,
+        signature,
+        queryHash: hashSourceSignature(signature),
         platform,
-        query,
+        query: built.displayQuery,
         category: filter.category,
-        ...(city ? { city } : {}),
+        ...(built.city ? { city: built.city } : {}),
+        scrapeUrl: built.url,
+        appliedCriteria: built.appliedCriteria,
+        deferredCriteria: built.deferredCriteria,
         filterIds: [filter.id],
         bestPlan: filter.plan,
         intervalMs: getScrapeIntervalMs(filter.plan),
@@ -204,7 +165,9 @@ export function groupActiveFilters(
     }
   }
 
-  return [...groups.values()].sort((a, b) => a.priority - b.priority || a.key.localeCompare(b.key));
+  return [...groups.values()].sort(
+    (a, b) => a.priority - b.priority || a.key.localeCompare(b.key),
+  );
 }
 
 export function timeBucket(nowMs: number, intervalMs: number): number {

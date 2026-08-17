@@ -64,8 +64,18 @@ export class ScraperWorker {
   }
 
   private async process(job: Job<ScraperJobData>): Promise<void> {
-    const { platform, category, city, limit, triggeredBy, query, queryKey } =
-      job.data;
+    const {
+      platform,
+      category,
+      city,
+      limit,
+      triggeredBy,
+      query,
+      queryKey,
+      scrapeUrl,
+      appliedCriteria,
+      deferredCriteria,
+    } = job.data;
     const keyword = query?.trim();
     const startedAt = Date.now();
 
@@ -77,11 +87,16 @@ export class ScraperWorker {
       return;
     }
 
+    console.log(
+      `[SCRAPE_QUERY] platform=${platform} queryKey=${queryKey ?? "-"} applied=${appliedCriteria?.join(",") ?? "-"} deferred=${deferredCriteria?.join(",") ?? "-"} url=${scrapeUrl ?? "adapter-built"}`,
+    );
+
     const { rawCount, normalized, error } = await runAdapterPipeline(adapter, {
       ...(category ? { category } : {}),
       ...(city ? { city } : {}),
       ...(keyword ? { query: keyword } : {}),
       ...(limit != null ? { limit } : {}),
+      ...(scrapeUrl ? { scrapeUrl } : {}),
     });
 
     const outcome = classifyScrapeOutcome({

@@ -11,6 +11,8 @@ export interface ScrapeSearchParams {
   city?: string;
   limit?: number;
   query?: string;
+  /** When set, adapter uses this URL instead of building its own. */
+  scrapeUrl?: string;
 }
 
 const MIN_DELAY_MS = 1_000;

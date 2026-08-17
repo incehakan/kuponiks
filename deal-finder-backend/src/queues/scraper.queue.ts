@@ -37,6 +37,12 @@ export interface ScraperJobData {
   triggeredBy?: "cron" | "manual" | "bootstrap";
   /** Canonical query key for logs (no secrets). */
   queryKey?: string;
+  /** Pre-built platform search URL from Scrape Query Planner. */
+  scrapeUrl?: string;
+  /** SOURCE criteria applied in the platform query. */
+  appliedCriteria?: string[];
+  /** Criteria deferred to central matcher. */
+  deferredCriteria?: string[];
 }
 
 /**

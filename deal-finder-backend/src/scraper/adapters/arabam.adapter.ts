@@ -170,6 +170,9 @@ export class ArabamAdapter extends BaseScraperAdapter {
   }
 
   private buildSearchUrl(params: ScrapeSearchParams): string {
+    if (params.scrapeUrl?.trim()) {
+      return params.scrapeUrl.trim();
+    }
     const search = new URL("https://www.arabam.com/ikinci-el");
     const parts = [
       params.query?.trim(),
