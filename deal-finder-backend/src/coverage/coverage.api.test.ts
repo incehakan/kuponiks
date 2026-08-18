@@ -37,6 +37,14 @@ vi.mock("./platform-availability.js", () => ({
   })),
 }));
 
+vi.mock("./provider-reliability-store.js", () => ({
+  loadReliabilityMap: vi.fn(async () => ({
+    arabam: "HEALTHY",
+    letgo: "NO_DATA",
+    sahibinden: "FAILING",
+  })),
+}));
+
 import { prisma } from "../lib/prisma.js";
 import { coverageRoutes } from "./coverage.routes.js";
 import { defaultAvailabilityMap } from "./coverage-engine.js";
@@ -93,7 +101,13 @@ describe("Coverage API", () => {
     expect(res.statusCode).toBe(200);
     const body = res.json();
     expect(body.filterId).toBe(hondaFilter.id);
-    expect(body.monitoredPlatformCount).toBe(2);
+    expect(body.monitoredPlatformCount).toBe(1);
+    expect(body.activeSourceCount).toBe(1);
+    expect(body.statusLabel).toBe("1 kaynak aktif");
+    expect(body.monitoredLabel).not.toContain("2/3");
+    const letgo = body.platforms.find((p: { platform: string }) => p.platform === "letgo");
+    expect(letgo.reliability).toBe("NO_DATA");
+    expect(letgo.effectiveStatus).toBe("NO_DATA");
     expect(body.platforms.find((p: { platform: string }) => p.platform === "arabam").status).toBe(
       "FULL",
     );
@@ -147,6 +161,20 @@ describe("Coverage API", () => {
     expect(sahibinden.availability).toBe("UNAVAILABLE");
     expect(sahibinden.availabilityReason).toBe("temporarily_unavailable");
     expect(JSON.stringify(sahibinden)).not.toMatch(/cloudflare/i);
+    await app.close();
+  });
+
+  it("no_data is not counted as active", async () => {
+    const app = await buildTestApp();
+    const res = await app.inject({
+      method: "GET",
+      url: `/api/filters/${hondaFilter.id}/coverage`,
+      headers: { authorization: "Bearer owner-token" },
+    });
+    const body = res.json();
+    expect(body.activeSourceCount).toBe(1);
+    expect(body.limitedSourceCount).toBe(1);
+    expect(body.unavailableSourceCount).toBe(1);
     await app.close();
   });
 });

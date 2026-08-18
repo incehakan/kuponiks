@@ -13,6 +13,12 @@ import { recordSchedulerCycleOpsStats } from "./scheduler-ops-stats.js";
 import { redisIncrBy } from "../../lib/redis.js";
 import { isPlatformCoverageRoutingEnabled } from "../../coverage/coverage-routing.js";
 import { loadAvailabilityMap } from "../../coverage/platform-availability.js";
+import { loadReliabilityStates } from "../../coverage/provider-reliability-store.js";
+import type { ProviderReliabilityState } from "../../coverage/provider-reliability.js";
+import {
+  lastAttemptAtFromAttempts,
+  shouldEnqueueDegradedProbe,
+} from "../../coverage/provider-probe-cadence.js";
 import { defaultAvailabilityMap } from "../../coverage/coverage-engine.js";
 
 const CYCLE_LOCK_KEY = "scheduler:v2:cycle-lock";
@@ -137,9 +143,20 @@ export async function runSchedulerCycle(options: {
   const availability = routingEnabled
     ? await loadAvailabilityMap().catch(() => defaultAvailabilityMap())
     : defaultAvailabilityMap();
+  const reliabilityStates: Record<string, ProviderReliabilityState> =
+    await loadReliabilityStates().catch(
+      () => ({}) as Record<string, ProviderReliabilityState>,
+    );
+  const reliability = Object.fromEntries(
+    Object.entries(reliabilityStates).map(([platform, state]) => [
+      platform,
+      state.reliability,
+    ]),
+  );
   const groups = groupActiveFilters(filters, {
     routingEnabled,
     availability,
+    reliability,
   });
   const platforms: Record<string, number> = {};
   let queued = 0;
@@ -173,7 +190,25 @@ export async function runSchedulerCycle(options: {
   }
 
   if (enqueue) {
+    const probeLogged = new Set<string>();
+    const nowMs = options.nowMs ?? Date.now();
     for (const group of groups) {
+      const state = reliabilityStates[group.platform];
+      const lastAttemptAt = lastAttemptAtFromAttempts(state?.attempts);
+      const probe = shouldEnqueueDegradedProbe({
+        reliability: state?.reliability ?? reliability[group.platform] ?? "UNKNOWN",
+        lastAttemptAt,
+        nowMs,
+      });
+      if (!probe.due) {
+        if (!probeLogged.has(group.platform)) {
+          probeLogged.add(group.platform);
+          console.log(
+            `[PROVIDER_PROBE] platform=${group.platform} reliability=${state?.reliability ?? "UNKNOWN"} due=false nextProbeAt=${probe.nextProbeAt ?? "-"}`,
+          );
+        }
+        continue;
+      }
       if (await isPlatformCircuitOpen(group.platform, options.nowMs)) {
         circuitSkipped += 1;
         void redisIncrBy(

@@ -8,6 +8,14 @@ import type {
   RuntimeAvailability,
 } from "./coverage-types.js";
 import {
+  applyReliabilityToCoverage,
+  countEffectiveSources,
+  resolveEffectiveStatus,
+  userLabelForEffective,
+  userStatusForEffective,
+  type ReliabilityMap,
+} from "./provider-reliability.js";
+import {
   PLATFORM_MATCHER_RELIABILITY,
   criterionRole,
 } from "./platform-capability-v2.js";
@@ -122,23 +130,6 @@ function platformSupportsCategory(
   return platform !== "arabam" && platform !== "hepsiemlak";
 }
 
-function userStatusFor(
-  coverage: CoverageCapabilityStatus,
-  availability: RuntimeAvailability,
-  schedulable: boolean,
-): PlatformCoverageResult["userStatus"] {
-  if (coverage === "UNSUPPORTED") {
-    return "unsupported";
-  }
-  if (availability === "UNAVAILABLE" || !schedulable) {
-    return "unavailable";
-  }
-  if (coverage === "PARTIAL" || availability === "DEGRADED") {
-    return "limited";
-  }
-  return "active";
-}
-
 function combinedStatus(
   coverage: CoverageCapabilityStatus,
   availability: RuntimeAvailability,
@@ -185,13 +176,16 @@ export function formatCoverageLogLine(
       coverage: string;
       availability: string;
     }>;
-    monitoredPlatformCount: number;
+    monitoredPlatformCount?: number;
   },
 ): string {
   const parts = snapshot.platforms.map(
     (row) => `${row.platform}=${row.coverage}/${row.availability}`,
   );
-  return `[COVERAGE] filter=${filterId} ${parts.join(" ")} monitored=${snapshot.monitoredPlatformCount}`;
+  const schedulable = countMonitoredPlatforms(
+    snapshot.platforms as PlatformCoverageResult[],
+  );
+  return `[COVERAGE] filter=${filterId} ${parts.join(" ")} monitored=${schedulable}`;
 }
 
 export function evaluatePlatformCoverage(
@@ -208,6 +202,14 @@ export function evaluatePlatformCoverage(
 
   if (!supports) {
     const coverage: CoverageCapabilityStatus = "UNSUPPORTED";
+    const schedulable = false;
+    const reliability = "UNKNOWN" as const;
+    const effectiveStatus = resolveEffectiveStatus({
+      coverage,
+      availability: runtime,
+      schedulable,
+      reliability,
+    });
     return {
       platform,
       coverage,
@@ -217,8 +219,11 @@ export function evaluatePlatformCoverage(
       sourceCriteria: [],
       matcherCriteria: [],
       unsupportedCriteria: setDiscoveryCriteria(intent).map((row) => row.field),
-      schedulable: false,
-      userStatus: "unsupported",
+      schedulable,
+      userStatus: userStatusForEffective(effectiveStatus),
+      reliability,
+      effectiveStatus,
+      userLabel: userLabelForEffective(effectiveStatus),
     };
   }
 
@@ -267,6 +272,13 @@ export function evaluatePlatformCoverage(
     availability: runtime,
   });
   const status = combinedStatus(coverage, runtime);
+  const reliability = "UNKNOWN" as const;
+  const effectiveStatus = resolveEffectiveStatus({
+    coverage,
+    availability: runtime,
+    schedulable,
+    reliability,
+  });
 
   return {
     platform,
@@ -278,7 +290,10 @@ export function evaluatePlatformCoverage(
     matcherCriteria,
     unsupportedCriteria,
     schedulable,
-    userStatus: userStatusFor(coverage, runtime, schedulable),
+    userStatus: userStatusForEffective(effectiveStatus),
+    reliability,
+    effectiveStatus,
+    userLabel: userLabelForEffective(effectiveStatus),
   };
 }
 
@@ -299,14 +314,10 @@ export function buildFilterCoverageSnapshot(
   filterId: string,
   intent: SearchIntent,
   platforms: PlatformCoverageResult[],
-): {
-  filterId: string;
-  intent: { category: string; brand: string | null; series: string | null; city: string | null };
-  platforms: PlatformCoverageResult[];
-  monitoredPlatformCount: number;
-  monitoredLabel: string;
-} {
-  const monitoredPlatformCount = countMonitoredPlatforms(platforms);
+  reliability: ReliabilityMap = {},
+): FilterCoverageSnapshotShape {
+  const enriched = applyReliabilityToCoverage(platforms, reliability);
+  const counts = countEffectiveSources(enriched);
   return {
     filterId,
     intent: {
@@ -315,8 +326,35 @@ export function buildFilterCoverageSnapshot(
       series: intent.series,
       city: intent.city,
     },
-    platforms,
-    monitoredPlatformCount,
-    monitoredLabel: monitoredLabel(monitoredPlatformCount, platforms.length),
+    platforms: enriched,
+    monitoredPlatformCount: counts.activeSourceCount,
+    monitoredLabel: counts.statusLabel,
+    activeSourceCount: counts.activeSourceCount,
+    limitedSourceCount: counts.limitedSourceCount,
+    unavailableSourceCount: counts.unavailableSourceCount,
+    totalSourceCount: counts.totalSourceCount,
+    statusLabel: counts.statusLabel,
+    limitedLabel: counts.limitedLabel,
+    unavailableLabel: counts.unavailableLabel,
   };
 }
+
+type FilterCoverageSnapshotShape = {
+  filterId: string;
+  intent: {
+    category: string;
+    brand: string | null;
+    series: string | null;
+    city: string | null;
+  };
+  platforms: PlatformCoverageResult[];
+  monitoredPlatformCount: number;
+  monitoredLabel: string;
+  activeSourceCount: number;
+  limitedSourceCount: number;
+  unavailableSourceCount: number;
+  totalSourceCount: number;
+  statusLabel: string;
+  limitedLabel: string | null;
+  unavailableLabel: string | null;
+};

@@ -15,6 +15,7 @@ import {
 } from "./scheduler/circuit-breaker.js";
 import { classifyScrapeOutcome } from "./scheduler/scrape-outcome.js";
 import { recordScrapeOpsStats } from "./scheduler/scheduler-ops-stats.js";
+import { recordProviderResult } from "../coverage/provider-reliability-store.js";
 
 function workerConcurrency(): number {
   const raw = process.env.SCRAPER_GLOBAL_CONCURRENCY?.trim();
@@ -128,6 +129,11 @@ export class ScraperWorker {
       created: summary.created,
       updated: summary.updated,
       matchesQueued,
+      rawCount,
+    });
+    await recordProviderResult({
+      platform,
+      outcome,
       rawCount,
     });
 

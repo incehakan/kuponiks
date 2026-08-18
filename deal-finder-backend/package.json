@@ -33,7 +33,8 @@
     "catalog:import:snapshot": "tsx scripts/catalog-import-snapshot.ts",
     "catalog:validate:snapshot": "tsx scripts/catalog-validate-snapshot.ts",
     "catalog:status": "tsx scripts/catalog-status.ts",
-    "coverage:status": "tsx scripts/coverage-status.ts"
+    "coverage:status": "tsx scripts/coverage-status.ts",
+    "provider:status": "tsx scripts/provider-status.ts"
   },
   "keywords": [],
   "author": "",

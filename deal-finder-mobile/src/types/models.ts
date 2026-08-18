@@ -163,6 +163,50 @@ export type UpdateFilterPayload = Partial<CreateFilterPayload> & {
   isActive?: boolean;
 };
 
+export type CoverageCapability = 'FULL' | 'PARTIAL' | 'UNSUPPORTED';
+export type CoverageAvailability = 'AVAILABLE' | 'DEGRADED' | 'UNAVAILABLE';
+export type ProviderReliability =
+  | 'HEALTHY'
+  | 'NO_DATA'
+  | 'DEGRADED'
+  | 'FAILING'
+  | 'UNKNOWN';
+export type EffectiveMonitorStatus =
+  | 'ACTIVE'
+  | 'LIMITED'
+  | 'NO_DATA'
+  | 'UNAVAILABLE'
+  | 'UNSUPPORTED';
+
+export interface FilterCoveragePlatform {
+  platform: string;
+  status: CoverageCapability;
+  capability: CoverageCapability;
+  availability: CoverageAvailability;
+  reliability: ProviderReliability;
+  effectiveStatus: EffectiveMonitorStatus;
+  userStatus: 'active' | 'limited' | 'unavailable' | 'unsupported';
+  userLabel: string;
+  availabilityReason: string;
+  sourceCriteria: string[];
+  matcherCriteria: string[];
+  unsupportedCriteria: string[];
+}
+
+export interface FilterCoverageResponse {
+  filterId: string;
+  platforms: FilterCoveragePlatform[];
+  monitoredPlatformCount: number;
+  monitoredLabel: string;
+  activeSourceCount: number;
+  limitedSourceCount: number;
+  unavailableSourceCount: number;
+  totalSourceCount: number;
+  statusLabel: string;
+  limitedLabel: string | null;
+  unavailableLabel: string | null;
+}
+
 export interface TaxonomyItem {
   value: string;
   label: string;

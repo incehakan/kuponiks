@@ -130,6 +130,50 @@ describe("Coverage scheduler routing", () => {
     expect(arabam?.priority).toBe(1);
   });
 
+  it("23. scheduler grouping unchanged for healthy", () => {
+    const groups = groupActiveFilters([honda], {
+      routingEnabled: true,
+      reliability: { arabam: "HEALTHY", letgo: "NO_DATA" },
+    });
+    const platforms = [...new Set(groups.map((g) => g.platform))].sort();
+    expect(platforms).toEqual(["arabam", "letgo"]);
+    expect(groups.find((g) => g.platform === "arabam")?.intervalMs).toBe(
+      getScrapeIntervalMs(SubscriptionPlan.VIP),
+    );
+  });
+
+  it("21-22. Letgo NO_DATA uses reduced probe; recovery restores VIP cadence", () => {
+    const previous = process.env.PROVIDER_PROBE_CADENCE_ENABLED;
+    process.env.PROVIDER_PROBE_CADENCE_ENABLED = "true";
+    process.env.PROVIDER_DEGRADED_PROBE_MINUTES = "30";
+    try {
+      const noData = groupActiveFilters([honda], {
+        routingEnabled: true,
+        reliability: { arabam: "HEALTHY", letgo: "NO_DATA" },
+      });
+      expect(noData.find((g) => g.platform === "letgo")?.intervalMs).toBe(
+        30 * 60 * 1000,
+      );
+      expect(noData.find((g) => g.platform === "arabam")?.intervalMs).toBe(
+        getScrapeIntervalMs(SubscriptionPlan.VIP),
+      );
+
+      const recovered = groupActiveFilters([honda], {
+        routingEnabled: true,
+        reliability: { arabam: "HEALTHY", letgo: "HEALTHY" },
+      });
+      expect(recovered.find((g) => g.platform === "letgo")?.intervalMs).toBe(
+        getScrapeIntervalMs(SubscriptionPlan.VIP),
+      );
+    } finally {
+      if (previous === undefined) {
+        delete process.env.PROVIDER_PROBE_CADENCE_ENABLED;
+      } else {
+        process.env.PROVIDER_PROBE_CADENCE_ENABLED = previous;
+      }
+    }
+  });
+
   it("flag defaults off in production", () => {
     expect(
       isPlatformCoverageRoutingEnabled({ NODE_ENV: "production" }),

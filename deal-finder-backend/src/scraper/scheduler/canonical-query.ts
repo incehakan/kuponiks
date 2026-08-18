@@ -1,8 +1,9 @@
 import { createHash } from "node:crypto";
 import { SubscriptionPlan } from "@prisma/client";
-import { getScrapeIntervalMs } from "../../lib/subscription-plan.js";
 import type { ScrapePlatform } from "../../queues/scraper.queue.js";
 import { isPlatformCoverageRoutingEnabled } from "../../coverage/coverage-routing.js";
+import { resolveProviderScrapeIntervalMs } from "../../coverage/provider-probe-cadence.js";
+import type { ReliabilityMap } from "../../coverage/provider-reliability.js";
 import {
   buildFilterCoverageSnapshot,
   defaultAvailabilityMap,
@@ -126,6 +127,7 @@ function betterPlan(
 export interface GroupActiveFiltersOptions {
   routingEnabled?: boolean;
   availability?: AvailabilityMap;
+  reliability?: ReliabilityMap;
 }
 
 /**
@@ -140,6 +142,7 @@ export function groupActiveFilters(
   const routingEnabled =
     options.routingEnabled ?? isPlatformCoverageRoutingEnabled();
   const availability = options.availability ?? defaultAvailabilityMap();
+  const reliability = options.reliability ?? {};
 
   for (const filter of filters) {
     if (!filter.isActive) {
@@ -169,7 +172,10 @@ export function groupActiveFilters(
           existing.filterIds.push(filter.id);
         }
         existing.bestPlan = betterPlan(existing.bestPlan, filter.plan);
-        existing.intervalMs = getScrapeIntervalMs(existing.bestPlan);
+        existing.intervalMs = resolveProviderScrapeIntervalMs(
+          existing.bestPlan,
+          reliability[platform] ?? "UNKNOWN",
+        );
         existing.priority = planPriority(existing.bestPlan);
         continue;
       }
@@ -186,7 +192,10 @@ export function groupActiveFilters(
         deferredCriteria: built.deferredCriteria,
         filterIds: [filter.id],
         bestPlan: filter.plan,
-        intervalMs: getScrapeIntervalMs(filter.plan),
+        intervalMs: resolveProviderScrapeIntervalMs(
+          filter.plan,
+          reliability[platform] ?? "UNKNOWN",
+        ),
         priority: planPriority(filter.plan),
       });
     }

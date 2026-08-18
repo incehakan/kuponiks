@@ -9,6 +9,7 @@ import type {
   CreateFilterPayload,
   Deal,
   Filter,
+  FilterCoverageResponse,
   NotificationItem,
   TaxonomyItem,
   TaxonomyResponse,
@@ -545,6 +546,13 @@ export const filtersApi = {
 
   deleteFilter: async (id: string): Promise<void> => {
     await api.delete(`/filters/${id}`);
+  },
+
+  getFilterCoverage: async (id: string): Promise<FilterCoverageResponse> => {
+    const { data } = await api.get<FilterCoverageResponse>(
+      `/filters/${id}/coverage`,
+    );
+    return data;
   },
 };
 

@@ -7,15 +7,21 @@ import {
   type AvailabilityMap,
 } from "./coverage-engine.js";
 import { loadAvailabilityMap } from "./platform-availability.js";
+import { loadReliabilityMap } from "./provider-reliability-store.js";
 import { buildSearchIntentFromFilter } from "./search-intent-builder.js";
 import type { FilterCoverageSnapshot } from "./coverage-types.js";
+import type { ReliabilityMap } from "./provider-reliability.js";
 
 export interface CoverageApiPlatform {
   platform: string;
   status: string;
+  capability: string;
   availability: string;
   availabilityReason: string;
+  reliability: string;
+  effectiveStatus: string;
   userStatus: string;
+  userLabel: string;
   sourceCriteria: string[];
   matcherCriteria: string[];
   unsupportedCriteria: string[];
@@ -26,6 +32,13 @@ export interface CoverageApiResponse {
   platforms: CoverageApiPlatform[];
   monitoredPlatformCount: number;
   monitoredLabel: string;
+  activeSourceCount: number;
+  limitedSourceCount: number;
+  unavailableSourceCount: number;
+  totalSourceCount: number;
+  statusLabel: string;
+  limitedLabel: string | null;
+  unavailableLabel: string | null;
 }
 
 function toUserAvailabilityReason(
@@ -49,8 +62,12 @@ export function toCoverageApiResponse(
     platforms: snapshot.platforms.map((row) => ({
       platform: row.platform,
       status: row.coverage,
+      capability: row.coverage,
       availability: row.availability,
+      reliability: row.reliability,
+      effectiveStatus: row.effectiveStatus,
       userStatus: row.userStatus,
+      userLabel: row.userLabel,
       sourceCriteria: row.sourceCriteria,
       matcherCriteria: row.matcherCriteria,
       unsupportedCriteria: row.unsupportedCriteria,
@@ -59,8 +76,15 @@ export function toCoverageApiResponse(
         row.availability,
       ),
     })),
-    monitoredPlatformCount: snapshot.monitoredPlatformCount,
-    monitoredLabel: snapshot.monitoredLabel,
+    monitoredPlatformCount: snapshot.activeSourceCount,
+    monitoredLabel: snapshot.statusLabel,
+    activeSourceCount: snapshot.activeSourceCount,
+    limitedSourceCount: snapshot.limitedSourceCount,
+    unavailableSourceCount: snapshot.unavailableSourceCount,
+    totalSourceCount: snapshot.totalSourceCount,
+    statusLabel: snapshot.statusLabel,
+    limitedLabel: snapshot.limitedLabel,
+    unavailableLabel: snapshot.unavailableLabel,
   };
 }
 
@@ -68,6 +92,7 @@ export async function evaluateFilterCoverage(
   filterId: string,
   userId: string,
   availability?: AvailabilityMap,
+  reliability?: ReliabilityMap,
 ): Promise<CoverageApiResponse> {
   const filter = await prisma.userFilter.findFirst({
     where: { id: filterId, userId },
@@ -77,8 +102,17 @@ export async function evaluateFilterCoverage(
   }
 
   const intent = buildSearchIntentFromFilter(filter);
-  const runtime = availability ?? (await loadAvailabilityMap().catch(() => defaultAvailabilityMap()));
+  const runtime =
+    availability ??
+    (await loadAvailabilityMap().catch(() => defaultAvailabilityMap()));
+  const reliabilityMap =
+    reliability ?? (await loadReliabilityMap().catch(() => ({})));
   const platforms = evaluateCoverage(intent, runtime);
-  const snapshot = buildFilterCoverageSnapshot(filter.id, intent, platforms);
+  const snapshot = buildFilterCoverageSnapshot(
+    filter.id,
+    intent,
+    platforms,
+    reliabilityMap,
+  );
   return toCoverageApiResponse(snapshot);
 }

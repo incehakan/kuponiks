@@ -13,6 +13,22 @@ export type CoverageStatus =
 
 export type RuntimeAvailability = "AVAILABLE" | "DEGRADED" | "UNAVAILABLE";
 
+/** Whether the provider actually produces listings over a scrape window. */
+export type ProviderReliability =
+  | "HEALTHY"
+  | "NO_DATA"
+  | "DEGRADED"
+  | "FAILING"
+  | "UNKNOWN";
+
+/** User/ops monitoring effectiveness — not capability, not availability. */
+export type EffectiveMonitorStatus =
+  | "ACTIVE"
+  | "LIMITED"
+  | "NO_DATA"
+  | "UNAVAILABLE"
+  | "UNSUPPORTED";
+
 export type AvailabilityReason =
   | "none"
   | "empty"
@@ -35,6 +51,9 @@ export interface PlatformCoverageResult {
   unsupportedCriteria: QueryField[];
   schedulable: boolean;
   userStatus: "active" | "limited" | "unavailable" | "unsupported";
+  reliability: ProviderReliability;
+  effectiveStatus: EffectiveMonitorStatus;
+  userLabel: string;
 }
 
 export interface FilterCoverageSnapshot {
@@ -46,8 +65,16 @@ export interface FilterCoverageSnapshot {
     city: string | null;
   };
   platforms: PlatformCoverageResult[];
+  /** User-facing: HEALTHY+ACTIVE sources only. */
   monitoredPlatformCount: number;
   monitoredLabel: string;
+  activeSourceCount: number;
+  limitedSourceCount: number;
+  unavailableSourceCount: number;
+  totalSourceCount: number;
+  statusLabel: string;
+  limitedLabel: string | null;
+  unavailableLabel: string | null;
 }
 
 export interface PlatformRuntimeSnapshot {

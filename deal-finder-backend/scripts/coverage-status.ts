@@ -12,6 +12,7 @@ import {
 import { loadAvailabilityMap } from "../src/coverage/platform-availability.js";
 import { getPlatformStatusReport } from "../src/coverage/platform-status.service.js";
 import { toCoverageApiResponse } from "../src/coverage/coverage.service.js";
+import { loadReliabilityMap } from "../src/coverage/provider-reliability-store.js";
 
 const hondaCivicSample = {
   category: "Vasıta > Otomobil",
@@ -32,10 +33,16 @@ async function main(): Promise<void> {
   const availability = await loadAvailabilityMap().catch(() =>
     defaultAvailabilityMap(),
   );
+  const reliability = await loadReliabilityMap().catch(() => ({}));
 
   const sampleIntent = buildSearchIntentFromFilter(hondaCivicSample);
   const sampleRows = evaluateCoverage(sampleIntent, availability);
-  const sample = buildFilterCoverageSnapshot("honda-civic-sample", sampleIntent, sampleRows);
+  const sample = buildFilterCoverageSnapshot(
+    "honda-civic-sample",
+    sampleIntent,
+    sampleRows,
+    reliability,
+  );
 
   const filters = await prisma.userFilter.findMany({
     where: { isActive: true },
@@ -65,7 +72,12 @@ async function main(): Promise<void> {
   const perFilter = filters.map((filter) => {
     const intent = buildSearchIntentFromFilter(filter);
     const platforms = evaluateCoverage(intent, availability);
-    const snapshot = buildFilterCoverageSnapshot(filter.id, intent, platforms);
+    const snapshot = buildFilterCoverageSnapshot(
+      filter.id,
+      intent,
+      platforms,
+      reliability,
+    );
     return {
       log: formatCoverageLogLine(filter.id, snapshot),
       api: toCoverageApiResponse(snapshot),

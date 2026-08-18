@@ -132,7 +132,7 @@ describe("Platform coverage engine", () => {
     expect(letgo.schedulable).toBe(true);
   });
 
-  it("17. monitoredPlatformCount ignores UNAVAILABLE", () => {
+  it("17. schedulable count ignores UNAVAILABLE (routing)", () => {
     const rows = evaluateCoverage(hondaCivic(), defaultAvailabilityMap());
     expect(countMonitoredPlatforms(rows)).toBe(2);
     expect(rows.filter((row) => row.schedulable).map((row) => row.platform).sort()).toEqual(
@@ -170,6 +170,18 @@ describe("Platform coverage engine", () => {
     expect(formatCoverageLogLine("f1", snapshot)).toContain("letgo=PARTIAL/DEGRADED");
     expect(formatCoverageLogLine("f1", snapshot)).toContain("sahibinden=FULL/UNAVAILABLE");
     expect(formatCoverageLogLine("f1", snapshot)).toContain("monitored=2");
+  });
+
+  it("activeSourceCount excludes Letgo NO_DATA", () => {
+    const rows = evaluateCoverage(hondaCivic(), defaultAvailabilityMap());
+    const snapshot = buildFilterCoverageSnapshot("f1", hondaCivic(), rows, {
+      arabam: "HEALTHY",
+      letgo: "NO_DATA",
+      sahibinden: "FAILING",
+    });
+    expect(snapshot.activeSourceCount).toBe(1);
+    expect(snapshot.monitoredLabel).toBe("1 kaynak aktif");
+    expect(snapshot.monitoredLabel).not.toContain("2/3");
   });
 
   it("hepsiemlak is unsupported for vehicle intents", () => {

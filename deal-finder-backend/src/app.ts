@@ -158,12 +158,21 @@ export async function buildApp(): Promise<FastifyInstance> {
           : "cached",
     });
     const scheduler = getSchedulerHealth();
+    const { getProviderHealthSummary } = await import(
+      "./coverage/provider-reliability-report.js"
+    );
+    const providers = await getProviderHealthSummary().catch(() => ({
+      arabam: "unknown",
+      letgo: "unknown",
+      sahibinden: "unknown",
+    }));
     return {
       status: "ok",
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
       role: role || (env.NODE_ENV === "production" ? "api" : "all"),
       redis: notifications.redis,
+      providers,
       scheduler: {
         role: scheduler.role,
         enabled: scheduler.enabled,
