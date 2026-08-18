@@ -164,7 +164,7 @@ export async function probeRedisConnection(): Promise<boolean> {
       const ok = pong === "PONG";
       globalForRedis.redisAvailable = ok;
       if (ok) {
-        console.log("[Redis] Hazır — kuyruklar etkin");
+        console.log("[Redis] Hazır");
       }
       return ok;
     } catch (error) {
@@ -187,6 +187,17 @@ export async function probeRedisConnection(): Promise<boolean> {
 }
 
 /**
+ * Connects the lazy ioredis client on first use (CLI / coverage reads).
+ */
+async function ensureRedisReady(): Promise<boolean> {
+  if (redis.status === "ready") {
+    globalForRedis.redisAvailable = true;
+    return true;
+  }
+  return probeRedisConnection();
+}
+
+/**
  * Safe Redis SET NX EX wrapper — returns null on failure instead of hanging.
  */
 export async function redisSetNxEx(
@@ -195,7 +206,7 @@ export async function redisSetNxEx(
   ttlSeconds: number,
 ): Promise<string | null> {
   try {
-    if (!isRedisAvailable() && redis.status !== "ready") {
+    if (!(await ensureRedisReady())) {
       return null;
     }
     return await redis.set(key, value, "EX", ttlSeconds, "NX");
@@ -212,7 +223,7 @@ export async function redisSetNxEx(
  */
 export async function redisExists(key: string): Promise<number> {
   try {
-    if (!isRedisAvailable() && redis.status !== "ready") {
+    if (!(await ensureRedisReady())) {
       return 0;
     }
     return await redis.exists(key);
@@ -233,7 +244,7 @@ export async function redisSetEx(
   ttlSeconds: number,
 ): Promise<void> {
   try {
-    if (!isRedisAvailable() && redis.status !== "ready") {
+    if (!(await ensureRedisReady())) {
       return;
     }
     await redis.set(key, value, "EX", ttlSeconds);
@@ -246,7 +257,7 @@ export async function redisSetEx(
 
 export async function redisGet(key: string): Promise<string | null> {
   try {
-    if (!isRedisAvailable() && redis.status !== "ready") {
+    if (!(await ensureRedisReady())) {
       return null;
     }
     return await redis.get(key);
@@ -267,7 +278,7 @@ export async function redisIncrBy(
   ttlSeconds: number,
 ): Promise<number | null> {
   try {
-    if (!isRedisAvailable() && redis.status !== "ready") {
+    if (!(await ensureRedisReady())) {
       return null;
     }
     if (!Number.isFinite(by) || by === 0) {
@@ -288,7 +299,7 @@ export async function redisIncrBy(
 
 export async function redisDel(key: string): Promise<void> {
   try {
-    if (!isRedisAvailable() && redis.status !== "ready") {
+    if (!(await ensureRedisReady())) {
       return;
     }
     await redis.del(key);

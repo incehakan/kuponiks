@@ -62,7 +62,8 @@ async function start(): Promise<void> {
     }
 
     const shouldRunBackground = role === "all";
-    const redisOk = shouldRunBackground ? await probeRedisConnection() : false;
+    // Coverage / reliability /health providers read Redis even on PROCESS_ROLE=api.
+    const redisOk = await probeRedisConnection();
 
     if (shouldRunBackground && redisOk) {
       try {

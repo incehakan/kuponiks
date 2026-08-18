@@ -151,11 +151,7 @@ export async function buildApp(): Promise<FastifyInstance> {
     );
     const role = process.env.PROCESS_ROLE?.trim().toLowerCase();
     const notifications = await getNotificationOpsHealth({
-      redisMode:
-        role === "api" ||
-        (!role && env.NODE_ENV === "production")
-          ? "not_checked"
-          : "cached",
+      redisMode: "cached",
     });
     const scheduler = getSchedulerHealth();
     const { getProviderHealthSummary } = await import(
