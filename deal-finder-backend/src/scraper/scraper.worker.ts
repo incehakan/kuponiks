@@ -128,6 +128,7 @@ export class ScraperWorker {
       created: summary.created,
       updated: summary.updated,
       matchesQueued,
+      rawCount,
     });
 
     console.log(

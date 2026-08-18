@@ -32,7 +32,8 @@
     "catalog:snapshot:arabam": "tsx scripts/catalog-snapshot-arabam.ts",
     "catalog:import:snapshot": "tsx scripts/catalog-import-snapshot.ts",
     "catalog:validate:snapshot": "tsx scripts/catalog-validate-snapshot.ts",
-    "catalog:status": "tsx scripts/catalog-status.ts"
+    "catalog:status": "tsx scripts/catalog-status.ts",
+    "coverage:status": "tsx scripts/coverage-status.ts"
   },
   "keywords": [],
   "author": "",

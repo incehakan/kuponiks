@@ -1,5 +1,5 @@
 import { SubscriptionPlan } from "@prisma/client";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("../../lib/prisma.js", () => ({
   prisma: { userFilter: { findMany: vi.fn() } },
@@ -41,11 +41,22 @@ const honda: SchedulerFilterInput = {
 };
 
 describe("Scheduler V2 cycle", () => {
+  const previousRouting = process.env.PLATFORM_COVERAGE_ROUTING_ENABLED;
+
   beforeEach(() => {
     vi.clearAllMocks();
+    process.env.PLATFORM_COVERAGE_ROUTING_ENABLED = "false";
     vi.mocked(isPlatformCircuitOpen).mockResolvedValue(false);
     vi.mocked(redisSetNxEx).mockResolvedValue("OK");
     vi.mocked(enqueueScrapeJob).mockResolvedValue("job-1");
+  });
+
+  afterEach(() => {
+    if (previousRouting === undefined) {
+      delete process.env.PLATFORM_COVERAGE_ROUTING_ENABLED;
+    } else {
+      process.env.PLATFORM_COVERAGE_ROUTING_ENABLED = previousRouting;
+    }
   });
 
   it("queues nothing when there are no active filters", async () => {

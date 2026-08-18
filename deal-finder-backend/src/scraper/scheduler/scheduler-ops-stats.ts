@@ -1,5 +1,5 @@
 import type { ScrapePlatform } from "../../queues/scraper.queue.js";
-import { redisGet, redisIncrBy } from "../../lib/redis.js";
+import { redisGet, redisIncrBy, redisSetEx } from "../../lib/redis.js";
 import type { ScrapeOutcome } from "./scrape-outcome.js";
 
 const STATS_PREFIX = "scheduler:v2:stats:";
@@ -26,6 +26,7 @@ export async function recordScrapeOpsStats(input: {
   updated: number;
   matchesQueued: number;
   circuitSkipped?: boolean;
+  rawCount?: number;
 }): Promise<void> {
   const p = input.platform;
   await bump(`${p}:cycles`);
@@ -35,6 +36,17 @@ export async function recordScrapeOpsStats(input: {
   await bump(`${p}:outcome:${input.outcome}`);
   if (input.circuitSkipped) {
     await bump(`${p}:circuitSkipped`);
+  }
+  if (input.rawCount != null) {
+    await redisSetEx(
+      `scheduler:v2:last:${p}`,
+      JSON.stringify({
+        at: new Date().toISOString(),
+        rawCount: input.rawCount,
+        outcome: input.outcome,
+      }),
+      STATS_TTL_SECONDS,
+    );
   }
 }
 

@@ -11,6 +11,9 @@ import {
 import { recordSchedulerCycle } from "./scheduler-state.js";
 import { recordSchedulerCycleOpsStats } from "./scheduler-ops-stats.js";
 import { redisIncrBy } from "../../lib/redis.js";
+import { isPlatformCoverageRoutingEnabled } from "../../coverage/coverage-routing.js";
+import { loadAvailabilityMap } from "../../coverage/platform-availability.js";
+import { defaultAvailabilityMap } from "../../coverage/coverage-engine.js";
 
 const CYCLE_LOCK_KEY = "scheduler:v2:cycle-lock";
 
@@ -130,7 +133,14 @@ export async function runSchedulerCycle(options: {
   }
 
   const filters = options.filters ?? (await loadActiveSchedulerFilters());
-  const groups = groupActiveFilters(filters);
+  const routingEnabled = isPlatformCoverageRoutingEnabled();
+  const availability = routingEnabled
+    ? await loadAvailabilityMap().catch(() => defaultAvailabilityMap())
+    : defaultAvailabilityMap();
+  const groups = groupActiveFilters(filters, {
+    routingEnabled,
+    availability,
+  });
   const platforms: Record<string, number> = {};
   let queued = 0;
   let dedupSkipped = 0;

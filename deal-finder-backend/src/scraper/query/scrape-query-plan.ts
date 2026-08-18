@@ -1,4 +1,5 @@
 import type { ScrapePlatform } from "../../queues/scraper.queue.js";
+import type { SearchIntent } from "../../coverage/search-intent.js";
 import type { QueryField } from "./platform-capabilities.js";
 import { fieldRole, isSourceField } from "./platform-capabilities.js";
 
@@ -272,4 +273,33 @@ export function planFromFilter(
     appliedCriteria: collectApplied(platform, sourceCriteria),
     deferredCriteria: collectDeferred(platform, base),
   };
+}
+
+/** Query builders consume SearchIntent, not a Prisma UserFilter. */
+export function planFromSearchIntent(
+  platform: ScrapePlatform,
+  intent: SearchIntent,
+): ScrapeQueryPlan {
+  return planFromFilter(platform, {
+    id: "search-intent",
+    isActive: true,
+    category: intent.category,
+    subcategory: intent.subcategory,
+    brand: intent.brand,
+    series: intent.series,
+    trim: intent.trim,
+    city: intent.city,
+    district: intent.district,
+    minYear: intent.minYear,
+    maxYear: intent.maxYear,
+    minPrice: intent.minPrice,
+    maxPrice: intent.maxPrice,
+    minMileage: intent.minMileage,
+    maxMileage: intent.maxMileage,
+    fuelType: intent.fuelType,
+    transmission: intent.transmission,
+    sellerType: intent.sellerType,
+    keywords: intent.keywords,
+    plan: "FREE" as SchedulerFilterInput["plan"],
+  });
 }

@@ -11,6 +11,7 @@ import { categoryRoutes } from "./modules/categories/category.routes.js";
 import { cityRoutes } from "./modules/cities/city.routes.js";
 import { dealRoutes } from "./modules/deals/deal.routes.js";
 import { filterRoutes } from "./modules/filters/filter.routes.js";
+import { coverageRoutes } from "./coverage/coverage.routes.js";
 import { subscriptionRoutes } from "./modules/subscriptions/subscription.routes.js";
 import { telegramRoutes } from "./modules/telegram/telegram.routes.js";
 import { paymentRoutes } from "./modules/payment/payment.routes.js";
@@ -186,6 +187,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   await app.register(categoryRoutes, { prefix: "/api/categories" });
   await app.register(cityRoutes, { prefix: "/api/cities" });
   await app.register(filterRoutes, { prefix: "/api/filters" });
+  await app.register(coverageRoutes, { prefix: "/api/filters" });
   await app.register(taxonomyRoutes, { prefix: "/api/taxonomy" });
   await app.register(subscriptionRoutes, { prefix: "/api/subscriptions" });
   await app.register(telegramRoutes, { prefix: "/api/telegram" });

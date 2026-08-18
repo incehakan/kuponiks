@@ -2,6 +2,15 @@ import { createHash } from "node:crypto";
 import { SubscriptionPlan } from "@prisma/client";
 import { getScrapeIntervalMs } from "../../lib/subscription-plan.js";
 import type { ScrapePlatform } from "../../queues/scraper.queue.js";
+import { isPlatformCoverageRoutingEnabled } from "../../coverage/coverage-routing.js";
+import {
+  buildFilterCoverageSnapshot,
+  defaultAvailabilityMap,
+  evaluateCoverage,
+  formatCoverageLogLine,
+  type AvailabilityMap,
+} from "../../coverage/coverage-engine.js";
+import { buildSearchIntentFromFilter } from "../../coverage/search-intent-builder.js";
 import { buildPlatformQuery } from "../query/scrape-query-planner.js";
 import {
   brandSeriesQueryText,
@@ -114,14 +123,23 @@ function betterPlan(
   return planPriority(a) < planPriority(b) ? a : b;
 }
 
+export interface GroupActiveFiltersOptions {
+  routingEnabled?: boolean;
+  availability?: AvailabilityMap;
+}
+
 /**
  * Groups active filters into one scrape job per platform × SOURCE signature.
  * Matcher-only / notify fields never affect grouping.
  */
 export function groupActiveFilters(
   filters: SchedulerFilterInput[],
+  options: GroupActiveFiltersOptions = {},
 ): CanonicalQueryGroup[] {
   const groups = new Map<string, CanonicalQueryGroup>();
+  const routingEnabled =
+    options.routingEnabled ?? isPlatformCoverageRoutingEnabled();
+  const availability = options.availability ?? defaultAvailabilityMap();
 
   for (const filter of filters) {
     if (!filter.isActive) {
@@ -131,7 +149,16 @@ export function groupActiveFilters(
     if (!displayQuery) {
       continue;
     }
-    const platforms = platformsForCategory(filter.category);
+    const intent = buildSearchIntentFromFilter(filter);
+    const coverageRows = evaluateCoverage(intent, availability);
+    const snapshot = buildFilterCoverageSnapshot(filter.id, intent, coverageRows);
+    if (routingEnabled && process.env.VITEST !== "true") {
+      console.log(formatCoverageLogLine(filter.id, snapshot));
+    }
+
+    const platforms = routingEnabled
+      ? coverageRows.filter((row) => row.schedulable).map((row) => row.platform)
+      : platformsForCategory(filter.category);
 
     for (const platform of platforms) {
       const { plan, built } = buildPlatformQuery(platform, filter);

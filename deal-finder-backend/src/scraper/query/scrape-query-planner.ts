@@ -1,10 +1,12 @@
 import type { ScrapePlatform } from "../../queues/scraper.queue.js";
+import type { SearchIntent } from "../../coverage/search-intent.js";
 import type { BuiltPlatformQuery } from "./planners/arabam-query-builder.js";
 import { buildArabamQuery } from "./planners/arabam-query-builder.js";
 import { buildLetgoQuery } from "./planners/letgo-query-builder.js";
 import { buildSahibindenQuery } from "./planners/sahibinden-query-builder.js";
 import {
   planFromFilter,
+  planFromSearchIntent,
   type SchedulerFilterInput,
   type ScrapeQueryPlan,
 } from "./scrape-query-plan.js";
@@ -14,6 +16,15 @@ export function buildPlatformQuery(
   filter: SchedulerFilterInput,
 ): { plan: ScrapeQueryPlan; built: BuiltPlatformQuery } {
   const plan = planFromFilter(platform, filter);
+  const built = buildPlatformQueryFromPlan(plan);
+  return { plan, built };
+}
+
+export function buildPlatformQueryFromIntent(
+  platform: ScrapePlatform,
+  intent: SearchIntent,
+): { plan: ScrapeQueryPlan; built: BuiltPlatformQuery } {
+  const plan = planFromSearchIntent(platform, intent);
   const built = buildPlatformQueryFromPlan(plan);
   return { plan, built };
 }
