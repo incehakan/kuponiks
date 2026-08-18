@@ -2,6 +2,7 @@ import type { ScrapeQueryPlan } from "../scrape-query-plan.js";
 import { brandSeriesQueryText } from "../scrape-query-plan.js";
 import { buildArabamFilterParams } from "../arabam/arabam-filter-params.js";
 import { buildArabamTaxonomyPath } from "../arabam/arabam-taxonomy.js";
+import { resolveArabamTaxonomySlugs } from "../../../catalog/platform-taxonomy.service.js";
 import { fieldRole } from "../platform-capabilities.js";
 
 const ARABAM_BASE = "https://www.arabam.com";
@@ -101,6 +102,17 @@ export function buildArabamQuery(plan: ScrapeQueryPlan): BuiltPlatformQuery {
   }
   if (cityApplied && plan.city) {
     taxonomyInput.city = plan.city;
+  }
+
+  const resolvedSlugs = resolveArabamTaxonomySlugs(plan.brand!, plan.series);
+  if (resolvedSlugs) {
+    taxonomyInput.slugOverride = {
+      brandSlug: resolvedSlugs.brandSlug,
+      ...(resolvedSlugs.seriesSlugPart
+        ? { seriesSlugPart: resolvedSlugs.seriesSlugPart }
+        : {}),
+      modelSlug: resolvedSlugs.modelSlug,
+    };
   }
 
   const taxonomyPath = buildArabamTaxonomyPath(taxonomyInput);

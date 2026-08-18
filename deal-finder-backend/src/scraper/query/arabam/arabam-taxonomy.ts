@@ -38,6 +38,12 @@ export interface ArabamTaxonomyInput {
   brand?: string;
   series?: string;
   city?: string;
+  /** Verified slug override from platform taxonomy resolver. */
+  slugOverride?: {
+    brandSlug: string;
+    seriesSlugPart?: string;
+    modelSlug: string;
+  };
 }
 
 /**
@@ -48,17 +54,29 @@ export interface ArabamTaxonomyInput {
  */
 export function buildArabamTaxonomyPath(input: ArabamTaxonomyInput): string | null {
   const categorySlug = resolveArabamCategorySlug(input.category);
-  const brandSlug = input.brand ? slugifyArabamBrand(input.brand) : "";
-  if (!brandSlug) {
-    return null;
+
+  let brandSlug: string;
+  let modelSlug: string;
+
+  if (input.slugOverride?.brandSlug) {
+    brandSlug = input.slugOverride.brandSlug;
+    modelSlug = input.slugOverride.modelSlug;
+  } else {
+    brandSlug = input.brand ? slugifyArabamBrand(input.brand) : "";
+    if (!brandSlug) {
+      return null;
+    }
+    modelSlug = brandSlug;
+    if (input.series?.trim()) {
+      const seriesSlug = slugifyArabamSeries(input.series);
+      if (seriesSlug) {
+        modelSlug = `${brandSlug}-${seriesSlug}`;
+      }
+    }
   }
 
-  let modelSlug = brandSlug;
-  if (input.series?.trim()) {
-    const seriesSlug = slugifyArabamSeries(input.series);
-    if (seriesSlug) {
-      modelSlug = `${brandSlug}-${seriesSlug}`;
-    }
+  if (!brandSlug) {
+    return null;
   }
 
   if (input.city?.trim()) {

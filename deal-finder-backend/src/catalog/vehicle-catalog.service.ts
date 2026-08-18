@@ -5,6 +5,7 @@ import {
   VEHICLE_CATALOG_BRANDS,
   VEHICLE_CATALOG_SERIES,
 } from "./vehicle-catalog.seed.js";
+import { isInvalidCatalogValue } from "./catalog-source-rules.js";
 
 export interface CatalogListingInput {
   brand?: string | null;
@@ -33,6 +34,9 @@ export function preferCatalogDisplayName(
 
 export class VehicleCatalogService {
   async upsertBrand(rawName: string): Promise<{ id: string; name: string; created: boolean } | null> {
+    if (isInvalidCatalogValue(rawName)) {
+      return null;
+    }
     const name = rawName.trim();
     const normalizedName = normalizeMatchText(name);
     if (!normalizedName) {

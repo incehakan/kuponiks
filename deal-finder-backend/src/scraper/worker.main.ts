@@ -23,6 +23,7 @@ import {
   startScraperWorker,
   type ScraperWorker,
 } from "./scraper.worker.js";
+import { warmArabamAliasCache } from "../catalog/platform-taxonomy.service.js";
 
 let isShuttingDown = false;
 
@@ -46,6 +47,12 @@ async function start(): Promise<void> {
       );
       process.exit(1);
     }
+
+    warmArabamAliasCache().catch((error) => {
+      const message =
+        error instanceof Error ? error.message : "Arabam alias cache warm failed";
+      console.warn(`[scraper-worker] ${message}`);
+    });
 
     scraperWorker = startScraperWorker();
     listingMatchWorker = startListingMatchWorker();

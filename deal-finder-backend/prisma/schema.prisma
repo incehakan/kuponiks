@@ -197,6 +197,9 @@ model VehicleBrand {
 
   series VehicleSeries[]
 
+  brandAliases        VehicleBrandAlias[]
+  seriesSourceAliases VehicleSeriesAlias[]
+
   @@index([isActive, name])
 }
 
@@ -211,6 +214,8 @@ model VehicleSeries {
 
   brand VehicleBrand  @relation(fields: [brandId], references: [id], onDelete: Cascade)
   trims VehicleTrim[]
+
+  seriesAliases VehicleSeriesAlias[]
 
   @@unique([brandId, normalizedName])
   @@index([brandId, isActive])
@@ -229,4 +234,43 @@ model VehicleTrim {
 
   @@unique([seriesId, normalizedName])
   @@index([seriesId, isActive])
+}
+
+/// Platform source label/slug → canonical VehicleBrand (Vehicle Catalog V2).
+model VehicleBrandAlias {
+  id               String   @id @default(uuid()) @db.Uuid
+  platform         String
+  sourceLabel      String
+  normalizedSource String
+  sourceSlug       String
+  brandId          String   @db.Uuid
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  brand VehicleBrand @relation(fields: [brandId], references: [id], onDelete: Cascade)
+
+  @@unique([platform, normalizedSource])
+  @@unique([platform, sourceSlug])
+  @@index([brandId])
+}
+
+/// Platform source label/slug → canonical VehicleSeries (Vehicle Catalog V2).
+model VehicleSeriesAlias {
+  id               String   @id @default(uuid()) @db.Uuid
+  platform         String
+  sourceLabel      String
+  normalizedSource String
+  /// Full Arabam model path segment, e.g. honda-civic, mercedes-benz-c
+  sourceSlug       String
+  brandId          String   @db.Uuid
+  seriesId         String   @db.Uuid
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  brand  VehicleBrand  @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  series VehicleSeries @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+
+  @@unique([platform, sourceSlug])
+  @@unique([platform, brandId, normalizedSource])
+  @@index([seriesId])
 }
