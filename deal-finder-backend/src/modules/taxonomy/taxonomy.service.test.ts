@@ -91,6 +91,20 @@ describe("TaxonomyService catalog primary + listing fallback", () => {
     ]);
   });
 
+  it("series: MINI uses catalog identity so Cooper is found", async () => {
+    mockedPrisma.vehicleBrand.findFirst.mockImplementation(async (args) => {
+      const names = args?.where?.normalizedName?.in ?? [];
+      return names.includes("mini") ? { id: "mini1" } : null;
+    });
+    mockedPrisma.vehicleSeries.findMany.mockResolvedValue([{ name: "Cooper" }]);
+    const items = await service.listVehicleSeries({ brand: "MINI" });
+    expect(items.map((i) => i.value)).toEqual(["Cooper"]);
+    const names =
+      mockedPrisma.vehicleBrand.findFirst.mock.calls[0]?.[0]?.where
+        ?.normalizedName?.in ?? [];
+    expect(names).toContain("mini");
+  });
+
   it("trims: listing fallback when catalog empty", async () => {
     mockedPrisma.vehicleBrand.findFirst.mockResolvedValue({ id: "b1" });
     mockedPrisma.vehicleSeries.findFirst.mockResolvedValue({ id: "s1" });

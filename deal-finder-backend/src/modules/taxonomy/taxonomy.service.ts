@@ -1,3 +1,4 @@
+import { catalogNormalizedCandidates } from "../../catalog/catalog-source-rules.js";
 import { prisma } from "../../lib/prisma.js";
 import { normalizeMatchText } from "../../lib/text-normalize.js";
 
@@ -124,9 +125,13 @@ export class TaxonomyService {
     }
 
     const brandNorm = normalizeMatchText(brand);
+    const brandNormCandidates = catalogNormalizedCandidates(brand);
     const [catalogBrand, listingRows] = await Promise.all([
       prisma.vehicleBrand.findFirst({
-        where: { normalizedName: brandNorm, isActive: true },
+        where: {
+          isActive: true,
+          normalizedName: { in: brandNormCandidates },
+        },
         select: { id: true },
       }),
       prisma.listing.findMany({
@@ -173,10 +178,15 @@ export class TaxonomyService {
 
     const brandNorm = normalizeMatchText(brand);
     const seriesNorm = normalizeMatchText(series);
+    const brandNormCandidates = catalogNormalizedCandidates(brand);
+    const seriesNormCandidates = catalogNormalizedCandidates(series);
 
     const [catalogBrand, listingRows] = await Promise.all([
       prisma.vehicleBrand.findFirst({
-        where: { normalizedName: brandNorm, isActive: true },
+        where: {
+          isActive: true,
+          normalizedName: { in: brandNormCandidates },
+        },
         select: { id: true },
       }),
       prisma.listing.findMany({
@@ -197,7 +207,7 @@ export class TaxonomyService {
       const catalogSeries = await prisma.vehicleSeries.findFirst({
         where: {
           brandId: catalogBrand.id,
-          normalizedName: seriesNorm,
+          normalizedName: { in: seriesNormCandidates },
           isActive: true,
         },
         select: { id: true },
