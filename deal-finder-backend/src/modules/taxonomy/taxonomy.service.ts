@@ -14,6 +14,11 @@ function isPresent(value: string | null | undefined): value is string {
   return typeof value === "string" && value.trim().length > 0;
 }
 
+/** Fold Turkish dotless ı so "mini" matches display label MINI. */
+function foldTurkishSearch(value: string): string {
+  return value.replace(/ı/g, "i");
+}
+
 /**
  * Collapse case/spacing duplicates while keeping a stable display label
  * (prefer Title Case-ish / first-seen non-all-caps when possible).
@@ -23,7 +28,7 @@ export function dedupeTaxonomyValues(
   q?: string | null,
   limit = DEFAULT_LIMIT,
 ): TaxonomyItem[] {
-  const query = normalizeMatchText(q);
+  const query = foldTurkishSearch(normalizeMatchText(q));
   const byKey = new Map<string, string>();
 
   for (const raw of values) {
@@ -35,7 +40,7 @@ export function dedupeTaxonomyValues(
     if (!key) {
       continue;
     }
-    if (query && !key.includes(query)) {
+    if (query && !foldTurkishSearch(key).includes(query)) {
       continue;
     }
 
@@ -129,10 +134,10 @@ export class TaxonomyService {
           platform: { not: "mock" },
           series: { not: null },
           NOT: { series: "" },
-          brand: { not: null },
+          brand: { equals: brand, mode: "insensitive" },
         },
         select: { brand: true, series: true },
-        take: 5000,
+        take: MAX_LIMIT * 2,
       }),
     ]);
 
@@ -179,11 +184,11 @@ export class TaxonomyService {
           platform: { not: "mock" },
           trim: { not: null },
           NOT: { trim: "" },
-          brand: { not: null },
-          series: { not: null },
+          brand: { equals: brand, mode: "insensitive" },
+          series: { equals: series, mode: "insensitive" },
         },
         select: { brand: true, series: true, trim: true },
-        take: 5000,
+        take: MAX_LIMIT * 2,
       }),
     ]);
 

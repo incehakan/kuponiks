@@ -5,9 +5,11 @@
  * Usage:
  *   npm run catalog:sync:arabam -- --dry-run
  *   npm run catalog:sync:arabam -- --brand=Honda
- *   npm run catalog:sync:arabam -- --limitBrands=15
+ *   npm run catalog:sync:arabam -- --dry-run --all-brands
+ *   npx tsx scripts/catalog-sync-arabam.ts --dry-run --all-brands
  */
 import "dotenv/config";
+import { prisma } from "../src/lib/prisma.js";
 import { vehicleCatalogSyncService } from "../src/catalog/vehicle-catalog-sync.service.js";
 
 function parseArgs(argv: string[]) {
@@ -43,6 +45,7 @@ async function main(): Promise<void> {
   });
 
   console.log(JSON.stringify(report, null, 2));
+  await prisma.$disconnect();
 }
 
 main().catch((err) => {

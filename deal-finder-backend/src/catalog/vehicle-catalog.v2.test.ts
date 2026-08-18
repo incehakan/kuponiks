@@ -164,7 +164,7 @@ describe("Vehicle Catalog V2", () => {
   });
 
   it("12. Land Rover slug label", () => {
-    expect(seriesSlugToDisplayLabel("range-rover")).toBe("RANGE-ROVER");
+    expect(seriesSlugToDisplayLabel("range-rover")).toBe("Range Rover");
   });
 
   it("13. Citroen canonical brand", () => {

@@ -4,6 +4,7 @@ import {
   deriveArabamSlugsFromCanonical,
 } from "./arabam-taxonomy-discovery.js";
 import {
+  ARABAM_BMW_NUMBER_SERIES,
   ARABAM_MERCEDES_LETTER_SERIES,
   seriesSlugToDisplayLabel,
 } from "./catalog-source-rules.js";
@@ -220,6 +221,19 @@ export function resolveCanonicalSeriesLabel(input: {
   if (input.brandNormalizedName === "mercedes-benz") {
     const letter = input.seriesSlugPart.toLocaleLowerCase("tr-TR");
     const explicit = ARABAM_MERCEDES_LETTER_SERIES[letter];
+    if (explicit) {
+      for (const name of input.existingSeriesNames) {
+        if (normalizeMatchText(name) === normalizeMatchText(explicit)) {
+          return name;
+        }
+      }
+      return explicit;
+    }
+  }
+
+  if (input.brandNormalizedName === "bmw") {
+    const key = input.seriesSlugPart.toLocaleLowerCase("tr-TR");
+    const explicit = ARABAM_BMW_NUMBER_SERIES[key];
     if (explicit) {
       for (const name of input.existingSeriesNames) {
         if (normalizeMatchText(name) === normalizeMatchText(explicit)) {

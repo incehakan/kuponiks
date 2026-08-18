@@ -5,7 +5,12 @@ import {
   VEHICLE_CATALOG_BRANDS,
   VEHICLE_CATALOG_SERIES,
 } from "./vehicle-catalog.seed.js";
-import { isInvalidCatalogValue } from "./catalog-source-rules.js";
+import {
+  catalogNormalizedCandidates,
+  normalizeCatalogIdentity,
+  isInvalidCatalogValue,
+  ARABAM_BRAND_CANONICAL,
+} from "./catalog-source-rules.js";
 
 export interface CatalogListingInput {
   brand?: string | null;
@@ -38,16 +43,31 @@ export class VehicleCatalogService {
       return null;
     }
     const name = rawName.trim();
-    const normalizedName = normalizeMatchText(name);
+    const normalizedName = normalizeCatalogIdentity(name);
     if (!normalizedName) {
       return null;
     }
 
-    const existing = await prisma.vehicleBrand.findUnique({
+    let existing = await prisma.vehicleBrand.findUnique({
       where: { normalizedName },
     });
+    if (!existing) {
+      for (const candidate of catalogNormalizedCandidates(name)) {
+        if (candidate === normalizedName) {
+          continue;
+        }
+        existing = await prisma.vehicleBrand.findUnique({
+          where: { normalizedName: candidate },
+        });
+        if (existing) {
+          break;
+        }
+      }
+    }
     if (existing) {
-      const nextName = preferCatalogDisplayName(existing.name, name);
+      const nextName = Object.values(ARABAM_BRAND_CANONICAL).includes(name)
+        ? name
+        : preferCatalogDisplayName(existing.name, name);
       if (nextName !== existing.name) {
         await prisma.vehicleBrand.update({
           where: { id: existing.id },

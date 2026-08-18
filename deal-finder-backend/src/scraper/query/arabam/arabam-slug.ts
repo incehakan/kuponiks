@@ -43,6 +43,9 @@ export function slugifyArabamToken(value: string): string {
  */
 export function slugifyArabamSeries(value: string): string {
   let slug = slugifyArabamToken(value);
+  if (/^\d+-serisi$/.test(slug)) {
+    return slug;
+  }
   slug = slug.replace(/-serisi$/u, "");
   return slug.replace(/^-+|-+$/g, "");
 }

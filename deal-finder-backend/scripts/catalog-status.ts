@@ -4,19 +4,14 @@ import "dotenv/config";
 import { prisma } from "../src/lib/prisma.js";
 
 async function main(): Promise<void> {
-  const [
-    brands,
-    series,
-    trims,
-    arabamBrandAliases,
-    arabamSeriesAliases,
-  ] = await Promise.all([
-    prisma.vehicleBrand.count({ where: { isActive: true } }),
-    prisma.vehicleSeries.count({ where: { isActive: true } }),
-    prisma.vehicleTrim.count({ where: { isActive: true } }),
-    prisma.vehicleBrandAlias.count({ where: { platform: "arabam" } }),
-    prisma.vehicleSeriesAlias.count({ where: { platform: "arabam" } }),
-  ]);
+  const [brands, series, trims, arabamBrandAliases, arabamSeriesAliases] =
+    await Promise.all([
+      prisma.vehicleBrand.count({ where: { isActive: true } }),
+      prisma.vehicleSeries.count({ where: { isActive: true } }),
+      prisma.vehicleTrim.count({ where: { isActive: true } }),
+      prisma.vehicleBrandAlias.count({ where: { platform: "arabam" } }),
+      prisma.vehicleSeriesAlias.count({ where: { platform: "arabam" } }),
+    ]);
 
   const latestBrandAlias = await prisma.vehicleBrandAlias.findFirst({
     where: { platform: "arabam" },
@@ -33,6 +28,10 @@ async function main(): Promise<void> {
         arabamMappedBrands: arabamBrandAliases,
         arabamMappedSeries: arabamSeriesAliases,
         unresolvedAliases: 0,
+        brandMappingPct:
+          brands > 0 ? Math.round((arabamBrandAliases / brands) * 1000) / 10 : 0,
+        seriesMappingPct:
+          series > 0 ? Math.round((arabamSeriesAliases / series) * 1000) / 10 : 0,
         lastArabamAliasUpdate: latestBrandAlias?.updatedAt?.toISOString() ?? null,
       },
       null,
