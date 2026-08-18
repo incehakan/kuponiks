@@ -1,7 +1,10 @@
 #!/usr/bin/env tsx
-/** Read-only Vehicle Catalog V2 status — no external requests. */
+/** Read-only Vehicle Catalog status — no external requests. */
 import "dotenv/config";
 import { prisma } from "../src/lib/prisma.js";
+import { defaultCatalogSnapshotPath } from "../src/catalog/catalog-snapshot.js";
+import { readCatalogSnapshotFile } from "../src/catalog/catalog-snapshot-write.js";
+import { validateCatalogSnapshot } from "../src/catalog/catalog-snapshot-validator.js";
 
 async function main(): Promise<void> {
   const [brands, series, trims, arabamBrandAliases, arabamSeriesAliases] =
@@ -19,9 +22,48 @@ async function main(): Promise<void> {
     select: { updatedAt: true },
   });
 
+  let snapshot: {
+    snapshotVersion: number | null;
+    snapshotHash: string | null;
+    snapshotBrands: number | null;
+    snapshotSeries: number | null;
+    snapshotValid: boolean | null;
+  } = {
+    snapshotVersion: null,
+    snapshotHash: null,
+    snapshotBrands: null,
+    snapshotSeries: null,
+    snapshotValid: null,
+  };
+
+  try {
+    const file = await readCatalogSnapshotFile(defaultCatalogSnapshotPath());
+    const validation = validateCatalogSnapshot(file);
+    snapshot = {
+      snapshotVersion: file.version,
+      snapshotHash: file.catalogHash,
+      snapshotBrands: file.brands.length,
+      snapshotSeries: file.brands.reduce((n, b) => n + b.series.length, 0),
+      snapshotValid: validation.ok,
+    };
+  } catch {
+    snapshot = {
+      snapshotVersion: null,
+      snapshotHash: null,
+      snapshotBrands: null,
+      snapshotSeries: null,
+      snapshotValid: false,
+    };
+  }
+
   console.log(
     JSON.stringify(
       {
+        snapshotVersion: snapshot.snapshotVersion,
+        snapshotHash: snapshot.snapshotHash,
+        snapshotBrands: snapshot.snapshotBrands,
+        snapshotSeries: snapshot.snapshotSeries,
+        snapshotValid: snapshot.snapshotValid,
         brands,
         series,
         trims,

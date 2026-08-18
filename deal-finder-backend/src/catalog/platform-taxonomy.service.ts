@@ -6,6 +6,7 @@ import {
 import {
   ARABAM_BMW_NUMBER_SERIES,
   ARABAM_MERCEDES_LETTER_SERIES,
+  normalizeCatalogIdentity,
   seriesSlugToDisplayLabel,
 } from "./catalog-source-rules.js";
 
@@ -65,10 +66,13 @@ export async function warmArabamAliasCache(): Promise<void> {
   cache.seriesByCanonical.clear();
 
   for (const row of brandAliases) {
-    cache.brandByCanonical.set(row.brand.normalizedName, {
+    const payload = {
       brandSlug: row.sourceSlug,
       sourceLabel: row.sourceLabel,
-    });
+    };
+    cache.brandByCanonical.set(row.brand.normalizedName, payload);
+    cache.brandByCanonical.set(normalizeMatchText(row.brand.name), payload);
+    cache.brandByCanonical.set(normalizeCatalogIdentity(row.brand.name), payload);
   }
 
   for (const row of seriesAliases) {
@@ -80,12 +84,19 @@ export async function warmArabamAliasCache(): Promise<void> {
       brandSlug && row.sourceSlug.startsWith(`${brandSlug}-`)
         ? row.sourceSlug.slice(brandSlug.length + 1)
         : row.sourceSlug;
-    const key = seriesCacheKey(row.brand.normalizedName, row.series.normalizedName);
-    cache.seriesByCanonical.set(key, {
+    const payload = {
       modelSlug: row.sourceSlug,
       seriesSlugPart: part,
       sourceLabel: row.sourceLabel,
-    });
+    };
+    const keys = [
+      seriesCacheKey(row.brand.normalizedName, row.series.normalizedName),
+      seriesCacheKey(normalizeMatchText(row.brand.name), normalizeMatchText(row.series.name)),
+      seriesCacheKey(normalizeCatalogIdentity(row.brand.name), normalizeMatchText(row.series.name)),
+    ];
+    for (const key of keys) {
+      cache.seriesByCanonical.set(key, payload);
+    }
   }
 
   cache.loadedAt = Date.now();
@@ -105,14 +116,18 @@ export function resolveArabamTaxonomySlugs(
   mappingSource: "alias" | "derived";
 } | null {
   const brandNorm = normalizeMatchText(brand);
-  if (!brandNorm) {
+  const brandIdentity = normalizeCatalogIdentity(brand);
+  if (!brandNorm && !brandIdentity) {
     return null;
   }
 
-  const brandAlias = cache.brandByCanonical.get(brandNorm);
+  const brandAlias =
+    cache.brandByCanonical.get(brandNorm) ??
+    cache.brandByCanonical.get(brandIdentity);
   const seriesNorm = series?.trim() ? normalizeMatchText(series) : "";
   const seriesAlias = seriesNorm
-    ? cache.seriesByCanonical.get(seriesCacheKey(brandNorm, seriesNorm))
+    ? cache.seriesByCanonical.get(seriesCacheKey(brandNorm, seriesNorm)) ??
+      cache.seriesByCanonical.get(seriesCacheKey(brandIdentity, seriesNorm))
     : undefined;
 
   if (brandAlias && (!seriesNorm || seriesAlias)) {

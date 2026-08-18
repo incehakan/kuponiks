@@ -1,0 +1,3305 @@
+{
+  "version": 1,
+  "source": "arabam",
+  "category": "automobile",
+  "generatedAt": "2026-08-18T12:18:12.772Z",
+  "catalogHash": "983c3f79e5b5b2cf235ba661ba61ff81b5614b1ace98b6e4844bb1ca9f3187b5",
+  "brands": [
+    {
+      "canonicalName": "Acura",
+      "normalizedName": "acura",
+      "sourceLabel": "Acura",
+      "sourceSlug": "acura",
+      "series": [
+        {
+          "canonicalName": "ILX",
+          "normalizedName": "ılx",
+          "sourceLabel": "ILX",
+          "sourceSlug": "acura-ilx"
+        }
+      ]
+    },
+    {
+      "canonicalName": "Alfa Romeo",
+      "normalizedName": "alfa romeo",
+      "sourceLabel": "Alfa Romeo",
+      "sourceSlug": "alfa-romeo",
+      "series": [
+        {
+          "canonicalName": "Giulia",
+          "normalizedName": "giulia",
+          "sourceLabel": "Giulia",
+          "sourceSlug": "alfa-romeo-giulia"
+        },
+        {
+          "canonicalName": "Giulietta",
+          "normalizedName": "giulietta",
+          "sourceLabel": "Giulietta",
+          "sourceSlug": "alfa-romeo-giulietta"
+        },
+        {
+          "canonicalName": "GT",
+          "normalizedName": "gt",
+          "sourceLabel": "GT",
+          "sourceSlug": "alfa-romeo-gt"
+        },
+        {
+          "canonicalName": "GTV",
+          "normalizedName": "gtv",
+          "sourceLabel": "GTV",
+          "sourceSlug": "alfa-romeo-gtv"
+        },
+        {
+          "canonicalName": "Mito",
+          "normalizedName": "mito",
+          "sourceLabel": "Mito",
+          "sourceSlug": "alfa-romeo-mito"
+        },
+        {
+          "canonicalName": "Spider",
+          "normalizedName": "spider",
+          "sourceLabel": "Spider",
+          "sourceSlug": "alfa-romeo-spider"
+        }
+      ]
+    },
+    {
+      "canonicalName": "Alpine",
+      "normalizedName": "alpine",
+      "sourceLabel": "Alpine",
+      "sourceSlug": "alpine",
+      "series": []
+    },
+    {
+      "canonicalName": "Arora",
+      "normalizedName": "arora",
+      "sourceLabel": "Arora",
+      "sourceSlug": "arora",
+      "series": []
+    },
+    {
+      "canonicalName": "Aston Martin",
+      "normalizedName": "aston martin",
+      "sourceLabel": "Aston Martin",
+      "sourceSlug": "aston-martin",
+      "series": [
+        {
+          "canonicalName": "Rapide",
+          "normalizedName": "rapide",
+          "sourceLabel": "Rapide",
+          "sourceSlug": "aston-martin-rapide"
+        },
+        {
+          "canonicalName": "Vantage",
+          "normalizedName": "vantage",
+          "sourceLabel": "Vantage",
+          "sourceSlug": "aston-martin-vantage"
+        }
+      ]
+    },
+    {
+      "canonicalName": "Audi",
+      "normalizedName": "audi",
+      "sourceLabel": "Audi",
+      "sourceSlug": "audi",
+      "series": [
+        {
+          "canonicalName": "100 Serisi",
+          "normalizedName": "100 serisi",
+          "sourceLabel": "100 Serisi",
+          "sourceSlug": "audi-100-serisi"
+        },
+        {
+          "canonicalName": "200 Serisi",
+          "normalizedName": "200 serisi",
+          "sourceLabel": "200 Serisi",
+          "sourceSlug": "audi-200-serisi"
+        },
+        {
+          "canonicalName": "80 Serisi",
+          "normalizedName": "80 serisi",
+          "sourceLabel": "80 Serisi",
+          "sourceSlug": "audi-80-serisi"
+        },
+        {
+          "canonicalName": "90 Serisi",
+          "normalizedName": "90 serisi",
+          "sourceLabel": "90 Serisi",
+          "sourceSlug": "audi-90-serisi"
+        },
+        {
+          "canonicalName": "A1",
+          "normalizedName": "a1",
+          "sourceLabel": "A1",
+          "sourceSlug": "audi-a1"
+        },
+        {
+          "canonicalName": "A2",
+          "normalizedName": "a2",
+          "sourceLabel": "A2",
+          "sourceSlug": "audi-a2"
+        },
+        {
+          "canonicalName": "A3",
+          "normalizedName": "a3",
+          "sourceLabel": "A3",
+          "sourceSlug": "audi-a3"
+        },
+        {
+          "canonicalName": "A4",
+          "normalizedName": "a4",
+          "sourceLabel": "A4",
+          "sourceSlug": "audi-a4"
+        },
+        {
+          "canonicalName": "A5",
+          "normalizedName": "a5",
+          "sourceLabel": "A5",
+          "sourceSlug": "audi-a5"
+        },
+        {
+          "canonicalName": "A6",
+          "normalizedName": "a6",
+          "sourceLabel": "A6",
+          "sourceSlug": "audi-a6"
+        },
+        {
+          "canonicalName": "A7",
+          "normalizedName": "a7",
+          "sourceLabel": "A7",
+          "sourceSlug": "audi-a7"
+        },
+        {
+          "canonicalName": "A8",
+          "normalizedName": "a8",
+          "sourceLabel": "A8",
+          "sourceSlug": "audi-a8"
+        },
+        {
+          "canonicalName": "RS",
+          "normalizedName": "rs",
+          "sourceLabel": "RS",
+          "sourceSlug": "audi-rs"
+        },
+        {
+          "canonicalName": "S",
+          "normalizedName": "s",
+          "sourceLabel": "S",
+          "sourceSlug": "audi-s"
+        },
+        {
+          "canonicalName": "TT",
+          "normalizedName": "tt",
+          "sourceLabel": "TT",
+          "sourceSlug": "audi-tt"
+        },
+        {
+          "canonicalName": "TTS",
+          "normalizedName": "tts",
+          "sourceLabel": "TTS",
+          "sourceSlug": "audi-tts"
+        }
+      ]
+    },
+    {
+      "canonicalName": "Bentley",
+      "normalizedName": "bentley",
+      "sourceLabel": "Bentley",
+      "sourceSlug": "bentley",
+      "series": [
+        {
+          "canonicalName": "Continental",
+          "normalizedName": "continental",
+          "sourceLabel": "Continental",
+          "sourceSlug": "bentley-continental"
+        },
+        {
+          "canonicalName": "Flying Spur",
+          "normalizedName": "flying spur",
+          "sourceLabel": "Flying Spur",
+          "sourceSlug": "bentley-flying-spur"
+        },
+        {
+          "canonicalName": "Mulsanne",
+          "normalizedName": "mulsanne",
+          "sourceLabel": "Mulsanne",
+          "sourceSlug": "bentley-mulsanne"
+        }
+      ]
+    },
+    {
+      "canonicalName": "BMW",
+      "normalizedName": "bmw",
+      "sourceLabel": "BMW",
+      "sourceSlug": "bmw",
+      "series": [
+        {
+          "canonicalName": "1 Serisi",
+          "normalizedName": "1 serisi",
+          "sourceLabel": "1 Serisi",
+          "sourceSlug": "bmw-1-serisi"
+        },
+        {
+          "canonicalName": "2 Serisi",
+          "normalizedName": "2 serisi",
+          "sourceLabel": "2 Serisi",
+          "sourceSlug": "bmw-2-serisi"
+        },
+        {
+          "canonicalName": "3 Serisi",
+          "normalizedName": "3 serisi",
+          "sourceLabel": "3 Serisi",
+          "sourceSlug": "bmw-3-serisi"
+        },
+        {
+          "canonicalName": "4 Serisi",
+          "normalizedName": "4 serisi",
+          "sourceLabel": "4 Serisi",
+          "sourceSlug": "bmw-4-serisi"
+        },
+        {
+          "canonicalName": "5 Serisi",
+          "normalizedName": "5 serisi",
+          "sourceLabel": "5 Serisi",
+          "sourceSlug": "bmw-5-serisi"
+        },
+        {
+          "canonicalName": "6 Serisi",
+          "normalizedName": "6 serisi",
+          "sourceLabel": "6 Serisi",
+          "sourceSlug": "bmw-6-serisi"
+        },
+        {
+          "canonicalName": "7 Serisi",
+          "normalizedName": "7 serisi",
+          "sourceLabel": "7 Serisi",
+          "sourceSlug": "bmw-7-serisi"
+        },
+        {
+          "canonicalName": "8 Serisi",
+          "normalizedName": "8 serisi",
+          "sourceLabel": "8 Serisi",
+          "sourceSlug": "bmw-8-serisi"
+        },
+        {
+          "canonicalName": "I Serisi",
+          "normalizedName": "ı serisi",
+          "sourceLabel": "I Serisi",
+          "sourceSlug": "bmw-i-serisi"
+        },
+        {
+          "canonicalName": "M Serisi",
+          "normalizedName": "m serisi",
+          "sourceLabel": "M Serisi",
+          "sourceSlug": "bmw-m-serisi"
+        },
+        {
+          "canonicalName": "Z Serisi",
+          "normalizedName": "z serisi",
+          "sourceLabel": "Z Serisi",
+          "sourceSlug": "bmw-z-serisi"
+        }
+      ]
+    },
+    {
+      "canonicalName": "Buick",
+      "normalizedName": "buick",
+      "sourceLabel": "Buick",
+      "sourceSlug": "buick",
+      "series": [
+        {
+          "canonicalName": "Le Sabre",
+          "normalizedName": "le sabre",
+          "sourceLabel": "Le Sabre",
+          "sourceSlug": "buick-le-sabre"
+        },
+        {
+          "canonicalName": "Regal",
+          "normalizedName": "regal",
+          "sourceLabel": "Regal",
+          "sourceSlug": "buick-regal"
+        }
+      ]
+    },
+    {
+      "canonicalName": "BYD",
+      "normalizedName": "byd",
+      "sourceLabel": "BYD",
+      "sourceSlug": "byd",
+      "series": [
+        {
+          "canonicalName": "Dolphin",
+          "normalizedName": "dolphin",
+          "sourceLabel": "Dolphin",
+          "sourceSlug": "byd-dolphin"
+        },
+        {
+          "canonicalName": "HAN",
+          "normalizedName": "han",
+          "sourceLabel": "HAN",
+          "sourceSlug": "byd-han"
+        },
+        {
+          "canonicalName": "Seal",
+          "normalizedName": "seal",
+          "sourceLabel": "Seal",
+          "sourceSlug": "byd-seal"
+        }
+      ]
+    },
+    {
+      "canonicalName": "Cadillac",
+      "normalizedName": "cadillac",
+      "sourceLabel": "Cadillac",
+      "sourceSlug": "cadillac",
+      "series": [
+        {
+          "canonicalName": "BLS",
+          "normalizedName": "bls",
+          "sourceLabel": "BLS",
+          "sourceSlug": "cadillac-bls"
+        },
+        {
+          "canonicalName": "CTS",
+          "normalizedName": "cts",
+          "sourceLabel": "CTS",
+          "sourceSlug": "cadillac-cts"
+        },
+        {
+          "canonicalName": "Deville",
+          "normalizedName": "deville",
+          "sourceLabel": "Deville",
+          "sourceSlug": "cadillac-deville"
+        },
+        {
+          "canonicalName": "Seville",
+          "normalizedName": "seville",
+          "sourceLabel": "Seville",
+          "sourceSlug": "cadillac-seville"
+        }
+      ]
+    },
+    {
+      "canonicalName": "Chery",
+      "normalizedName": "chery",
+      "sourceLabel": "Chery",
+      "sourceSlug": "chery",
+      "series": [
+        {
+          "canonicalName": "Alia",
+          "normalizedName": "alia",
+          "sourceLabel": "Alia",
+          "sourceSlug": "chery-alia"
+        },
+        {
+          "canonicalName": "Chance",
+          "normalizedName": "chance",
+          "sourceLabel": "Chance",
+          "sourceSlug": "chery-chance"
+        },
+        {
+          "canonicalName": "Kimo",
+          "normalizedName": "kimo",
+          "sourceLabel": "Kimo",
+          "sourceSlug": "chery-kimo"
+        }
+      ]
+    },
+    {
+      "canonicalName": "Chevrolet",
+      "normalizedName": "chevrolet",
+      "sourceLabel": "Chevrolet",
+      "sourceSlug": "chevrolet",
+      "series": [
+        {
+          "canonicalName": "Aveo",
+          "normalizedName": "aveo",
+          "sourceLabel": "Aveo",
+          "sourceSlug": "chevrolet-aveo"
+        },
+        {
+          "canonicalName": "Camaro",
+          "normalizedName": "camaro",
+          "sourceLabel": "Camaro",
+          "sourceSlug": "chevrolet-camaro"
+        },
+        {
+          "canonicalName": "Caprice",
+          "normalizedName": "caprice",
+          "sourceLabel": "Caprice",
+          "sourceSlug": "chevrolet-caprice"
+        },
+        {
+          "canonicalName": "Corvette",
+          "normalizedName": "corvette",
+          "sourceLabel": "Corvette",
+          "sourceSlug": "chevrolet-corvette"
+        },
+        {
+          "canonicalName": "Cruze",
+          "normalizedName": "cruze",
+          "sourceLabel": "Cruze",
+          "sourceSlug": "chevrolet-cruze"
+        },
+        {
+          "canonicalName": "Epica",
+          "normalizedName": "epica",
+          "sourceLabel": "Epica",
+          "sourceSlug": "chevrolet-epica"
+        },
+        {
+          "canonicalName": "Evanda",
+          "normalizedName": "evanda",
+          "sourceLabel": "Evanda",
+          "sourceSlug": "chevrolet-evanda"
+        },
+        {
+          "canonicalName": "Impala",
+          "normalizedName": "ımpala",
+          "sourceLabel": "Impala",
+          "sourceSlug": "chevrolet-impala"
+        },
+        {
+          "canonicalName": "Kalos",
+          "normalizedName": "kalos",
+          "sourceLabel": "Kalos",
+          "sourceSlug": "chevrolet-kalos"
+        },
+        {
+          "canonicalName": "Lacetti",
+          "normalizedName": "lacetti",
+          "sourceLabel": "Lacetti",
+          "sourceSlug": "chevrolet-lacetti"
+        },
+        {
+          "canonicalName": "Monte Carlo",
+          "normalizedName": "monte carlo",
+          "sourceLabel": "Monte Carlo",
+          "sourceSlug": "chevrolet-monte-carlo"
+        },
+        {
+          "canonicalName": "Orlando",
+          "normalizedName": "orlando",
+          "sourceLabel": "Orlando",
+          "sourceSlug": "chevrolet-orlando"
+        },
+        {
+          "canonicalName": "Rezzo",
+          "normalizedName": "rezzo",
+          "sourceLabel": "Rezzo",
+          "sourceSlug": "chevrolet-rezzo"
+        },
+        {
+          "canonicalName": "Spark",
+          "normalizedName": "spark",
+          "sourceLabel": "Spark",
+          "sourceSlug": "chevrolet-spark"
+        }
+      ]
+    },
+    {
+      "canonicalName": "Chrysler",
+      "normalizedName": "chrysler",
+      "sourceLabel": "Chrysler",
+      "sourceSlug": "chrysler",
+      "series": [
+        {
+          "canonicalName": "Concorde",
+          "normalizedName": "concorde",
+          "sourceLabel": "Concorde",
+          "sourceSlug": "chrysler-concorde"
+        },
+        {
+          "canonicalName": "Crossfire",
+          "normalizedName": "crossfire",
+          "sourceLabel": "Crossfire",
+          "sourceSlug": "chrysler-crossfire"
+        },
+        {
+          "canonicalName": "LHS",
+          "normalizedName": "lhs",
+          "sourceLabel": "LHS",
+          "sourceSlug": "chrysler-lhs"
+        },
+        {
+          "canonicalName": "Neon",
+          "normalizedName": "neon",
+          "sourceLabel": "Neon",
+          "sourceSlug": "chrysler-neon"
+        },
+        {
+          "canonicalName": "Pt Cruiser",
+          "normalizedName": "pt cruiser",
+          "sourceLabel": "Pt Cruiser",
+          "sourceSlug": "chrysler-pt-cruiser"
+        },
+        {
+          "canonicalName": "Sebring",
+          "normalizedName": "sebring",
+          "sourceLabel": "Sebring",
+          "sourceSlug": "chrysler-sebring"
+        },
+        {
+          "canonicalName": "Stratus",
+          "normalizedName": "stratus",
+          "sourceLabel": "Stratus",
+          "sourceSlug": "chrysler-stratus"
+        }
+      ]
+    },
+    {
+      "canonicalName": "Citroën",
+      "normalizedName": "citroen",
+      "sourceLabel": "Citroën",
+      "sourceSlug": "citroen",
+      "series": [
+        {
+          "canonicalName": "AMI",
+          "normalizedName": "amı",
+          "sourceLabel": "AMI",
+          "sourceSlug": "citroen-ami"
+        },
+        {
+          "canonicalName": "BX",
+          "normalizedName": "bx",
+          "sourceLabel": "BX",
+          "sourceSlug": "citroen-bx"
+        },
+        {
+          "canonicalName": "C Elysee",
+          "normalizedName": "c elysee",
+          "sourceLabel": "C Elysee",
+          "sourceSlug": "citroen-c-elysee"
+        },
+        {
+          "canonicalName": "C1",
+          "normalizedName": "c1",
+          "sourceLabel": "C1",
+          "sourceSlug": "citroen-c1"
+        },
+        {
+          "canonicalName": "C2",
+          "normalizedName": "c2",
+          "sourceLabel": "C2",
+          "sourceSlug": "citroen-c2"
+        },
+        {
+          "canonicalName": "C3",
+          "normalizedName": "c3",
+          "sourceLabel": "C3",
+          "sourceSlug": "citroen-c3"
+        },
+        {
+          "canonicalName": "C4",
+          "normalizedName": "c4",
+          "sourceLabel": "C4",
+          "sourceSlug": "citroen-c4"
+        },
+        {
+          "canonicalName": "C5",
+          "normalizedName": "c5",
+          "sourceLabel": "C5",
+          "sourceSlug": "citroen-c5"
+        },
+        {
+          "canonicalName": "C8",
+          "normalizedName": "c8",
+          "sourceLabel": "C8",
+          "sourceSlug": "citroen-c8"
+        },
+        {
+          "canonicalName": "Evasion",
+          "normalizedName": "evasion",
+          "sourceLabel": "Evasion",
+          "sourceSlug": "citroen-evasion"
+        },
+        {
+          "canonicalName": "Saxo",
+          "normalizedName": "saxo",
+          "sourceLabel": "Saxo",
+          "sourceSlug": "citroen-saxo"
+        },
+        {
+          "canonicalName": "Xantia",
+          "normalizedName": "xantia",
+          "sourceLabel": "Xantia",
+          "sourceSlug": "citroen-xantia"
+        },
+        {
+          "canonicalName": "XM",
+          "normalizedName": "xm",
+          "sourceLabel": "XM",
+          "sourceSlug": "citroen-xm"
+        },
+        {
+          "canonicalName": "Xsara",
+          "normalizedName": "xsara",
+          "sourceLabel": "Xsara",
+          "sourceSlug": "citroen-xsara"
+        },
+        {
+          "canonicalName": "ZX",
+          "normalizedName": "zx",
+          "sourceLabel": "ZX",
+          "sourceSlug": "citroen-zx"
+        }
+      ]
+    },
+    {
+      "canonicalName": "Cupra",
+      "normalizedName": "cupra",
+      "sourceLabel": "Cupra",
+      "sourceSlug": "cupra",
+      "series": [
+        {
+          "canonicalName": "Born",
+          "normalizedName": "born",
+          "sourceLabel": "Born",
+          "sourceSlug": "cupra-born"
+        },
+        {
+          "canonicalName": "Leon",
+          "normalizedName": "leon",
+          "sourceLabel": "Leon",
+          "sourceSlug": "cupra-leon"
+        }
+      ]
+    },
+    {
+      "canonicalName": "Dacia",
+      "normalizedName": "dacia",
+      "sourceLabel": "Dacia",
+      "sourceSlug": "dacia",
+      "series": [
+        {
+          "canonicalName": "Jogger",
+          "normalizedName": "jogger",
+          "sourceLabel": "Jogger",
+          "sourceSlug": "dacia-jogger"
+        },
+        {
+          "canonicalName": "Lodgy",
+          "normalizedName": "lodgy",
+          "sourceLabel": "Lodgy",
+          "sourceSlug": "dacia-lodgy"
+        },
+        {
+          "canonicalName": "Logan",
+          "normalizedName": "logan",
+          "sourceLabel": "Logan",
+          "sourceSlug": "dacia-logan"
+        },
+        {
+          "canonicalName": "Sandero",
+          "normalizedName": "sandero",
+          "sourceLabel": "Sandero",
+          "sourceSlug": "dacia-sandero"
+        },
+        {
+          "canonicalName": "Solenza",
+          "normalizedName": "solenza",
+          "sourceLabel": "Solenza",
+          "sourceSlug": "dacia-solenza"
+        }
+      ]
+    },
+    {
+      "canonicalName": "Daewoo",
+      "normalizedName": "daewoo",
+      "sourceLabel": "Daewoo",
+      "sourceSlug": "daewoo",
+      "series": [
+        {
+          "canonicalName": "Espero",
+          "normalizedName": "espero",
+          "sourceLabel": "Espero",
+          "sourceSlug": "daewoo-espero"
+        },
+        {
+          "canonicalName": "Lanos",
+          "normalizedName": "lanos",
+          "sourceLabel": "Lanos",
+          "sourceSlug": "daewoo-lanos"
+        },
+        {
+          "canonicalName": "Leganza",
+          "normalizedName": "leganza",
+          "sourceLabel": "Leganza",
+          "sourceSlug": "daewoo-leganza"
+        },
+        {
+          "canonicalName": "Matiz",
+          "normalizedName": "matiz",
+          "sourceLabel": "Matiz",
+          "sourceSlug": "daewoo-matiz"
+        },
+        {
+          "canonicalName": "Nexia",
+          "normalizedName": "nexia",
+          "sourceLabel": "Nexia",
+          "sourceSlug": "daewoo-nexia"
+        },
+        {
+          "canonicalName": "Nubira",
+          "normalizedName": "nubira",
+          "sourceLabel": "Nubira",
+          "sourceSlug": "daewoo-nubira"
+        },
+        {
+          "canonicalName": "Racer",
+          "normalizedName": "racer",
+          "sourceLabel": "Racer",
+          "sourceSlug": "daewoo-racer"
+        },
+        {
+          "canonicalName": "Super Saloon",
+          "normalizedName": "super saloon",
+          "sourceLabel": "Super Saloon",
+          "sourceSlug": "daewoo-super-saloon"
+        },
+        {
+          "canonicalName": "Tico",
+          "normalizedName": "tico",
+          "sourceLabel": "Tico",
+          "sourceSlug": "daewoo-tico"
+        }
+      ]
+    },
+    {
+      "canonicalName": "Daihatsu",
+      "normalizedName": "daihatsu",
+      "sourceLabel": "Daihatsu",
+      "sourceSlug": "daihatsu",
+      "series": [
+        {
+          "canonicalName": "Applause",
+          "normalizedName": "applause",
+          "sourceLabel": "Applause",
+          "sourceSlug": "daihatsu-applause"
+        },
+        {
+          "canonicalName": "Charade",
+          "normalizedName": "charade",
+          "sourceLabel": "Charade",
+          "sourceSlug": "daihatsu-charade"
+        },
+        {
+          "canonicalName": "Copen",
+          "normalizedName": "copen",
+          "sourceLabel": "Copen",
+          "sourceSlug": "daihatsu-copen"
+        },
+        {
+          "canonicalName": "Cuore",
+          "normalizedName": "cuore",
+          "sourceLabel": "Cuore",
+          "sourceSlug": "daihatsu-cuore"
+        },
+        {
+          "canonicalName": "Materia",
+          "normalizedName": "materia",
+          "sourceLabel": "Materia",
+          "sourceSlug": "daihatsu-materia"
+        },
+        {
+          "canonicalName": "Move",
+          "normalizedName": "move",
+          "sourceLabel": "Move",
+          "sourceSlug": "daihatsu-move"
+        },
+        {
+          "canonicalName": "Sirion",
+          "normalizedName": "sirion",
+          "sourceLabel": "Sirion",
+          "sourceSlug": "daihatsu-sirion"
+        },
+        {
+          "canonicalName": "YRV",
+          "normalizedName": "yrv",
+          "sourceLabel": "YRV",
+          "sourceSlug": "daihatsu-yrv"
+        }
+      ]
+    },
+    {
+      "canonicalName": "Dodge",
+      "normalizedName": "dodge",
+      "sourceLabel": "Dodge",
+      "sourceSlug": "dodge",
+      "series": [
+        {
+          "canonicalName": "Avenger",
+          "normalizedName": "avenger",
+          "sourceLabel": "Avenger",
+          "sourceSlug": "dodge-avenger"
+        },
+        {
+          "canonicalName": "Challenger",
+          "normalizedName": "challenger",
+          "sourceLabel": "Challenger",
+          "sourceSlug": "dodge-challenger"
+        }
+      ]
+    },
+    {
+      "canonicalName": "DS Automobiles",
+      "normalizedName": "ds automobiles",
+      "sourceLabel": "DS Automobiles",
+      "sourceSlug": "ds-automobiles",
+      "series": [
+        {
+          "canonicalName": "DS9",
+          "normalizedName": "ds9",
+          "sourceLabel": "DS9",
+          "sourceSlug": "ds-automobiles-ds9"
+        }
+      ]
+    },
+    {
+      "canonicalName": "Ferrari",
+      "normalizedName": "ferrari",
+      "sourceLabel": "Ferrari",
+      "sourceSlug": "ferrari",
+      "series": [
+        {
+          "canonicalName": "California",
+          "normalizedName": "california",
+          "sourceLabel": "California",
+          "sourceSlug": "ferrari-california"
+        },
+        {
+          "canonicalName": "F12",
+          "normalizedName": "f12",
+          "sourceLabel": "F12",
+          "sourceSlug": "ferrari-f12"
+        },
+        {
+          "canonicalName": "F8",
+          "normalizedName": "f8",
+          "sourceLabel": "F8",
+          "sourceSlug": "ferrari-f8"
+        },
+        {
+          "canonicalName": "Roma",
+          "normalizedName": "roma",
+          "sourceLabel": "Roma",
+          "sourceSlug": "ferrari-roma"
+        }
+      ]
+    },
+    {
+      "canonicalName": "Fiat",
+      "normalizedName": "fiat",
+      "sourceLabel": "Fiat",
+      "sourceSlug": "fiat",
+      "series": [
+        {
+          "canonicalName": "Albea",
+          "normalizedName": "albea",
+          "sourceLabel": "Albea",
+          "sourceSlug": "fiat-albea"
+        },
+        {
+          "canonicalName": "Brava",
+          "normalizedName": "brava",
+          "sourceLabel": "Brava",
+          "sourceSlug": "fiat-brava"
+        },
+        {
+          "canonicalName": "Bravo",
+          "normalizedName": "bravo",
+          "sourceLabel": "Bravo",
+          "sourceSlug": "fiat-bravo"
+        },
+        {
+          "canonicalName": "Coupe",
+          "normalizedName": "coupe",
+          "sourceLabel": "Coupe",
+          "sourceSlug": "fiat-coupe"
+        },
+        {
+          "canonicalName": "Egea",
+          "normalizedName": "egea",
+          "sourceLabel": "Egea",
+          "sourceSlug": "fiat-egea"
+        },
+        {
+          "canonicalName": "Idea",
+          "normalizedName": "ıdea",
+          "sourceLabel": "Idea",
+          "sourceSlug": "fiat-idea"
+        },
+        {
+          "canonicalName": "Linea",
+          "normalizedName": "linea",
+          "sourceLabel": "Linea",
+          "sourceSlug": "fiat-linea"
+        },
+        {
+          "canonicalName": "Marea",
+          "normalizedName": "marea",
+          "sourceLabel": "Marea",
+          "sourceSlug": "fiat-marea"
+        },
+        {
+          "canonicalName": "Palio",
+          "normalizedName": "palio",
+          "sourceLabel": "Palio",
+          "sourceSlug": "fiat-palio"
+        },
+        {
+          "canonicalName": "Panda",
+          "normalizedName": "panda",
+          "sourceLabel": "Panda",
+          "sourceSlug": "fiat-panda"
+        },
+        {
+          "canonicalName": "Punto",
+          "normalizedName": "punto",
+          "sourceLabel": "Punto",
+          "sourceSlug": "fiat-punto"
+        },
+        {
+          "canonicalName": "Sedici",
+          "normalizedName": "sedici",
+          "sourceLabel": "Sedici",
+          "sourceSlug": "fiat-sedici"
+        },
+        {
+          "canonicalName": "Siena",
+          "normalizedName": "siena",
+          "sourceLabel": "Siena",
+          "sourceSlug": "fiat-siena"
+        },
+        {
+          "canonicalName": "Stilo",
+          "normalizedName": "stilo",
+          "sourceLabel": "Stilo",
+          "sourceSlug": "fiat-stilo"
+        },
+        {
+          "canonicalName": "Tempra",
+          "normalizedName": "tempra",
+          "sourceLabel": "Tempra",
+          "sourceSlug": "fiat-tempra"
+        },
+        {
+          "canonicalName": "Tipo",
+          "normalizedName": "tipo",
+          "sourceLabel": "Tipo",
+          "sourceSlug": "fiat-tipo"
+        },
+        {
+          "canonicalName": "Topolino",
+          "normalizedName": "topolino",
+          "sourceLabel": "Topolino",
+          "sourceSlug": "fiat-topolino"
+        },
+        {
+          "canonicalName": "UNO",
+          "normalizedName": "uno",
+          "sourceLabel": "UNO",
+          "sourceSlug": "fiat-uno"
+        }
+      ]
+    },
+    {
+      "canonicalName": "Ford",
+      "normalizedName": "ford",
+      "sourceLabel": "Ford",
+      "sourceSlug": "ford",
+      "series": [
+        {
+          "canonicalName": "B-MAX",
+          "normalizedName": "b-max",
+          "sourceLabel": "B-MAX",
+          "sourceSlug": "ford-b-max"
+        },
+        {
+          "canonicalName": "C-MAX",
+          "normalizedName": "c-max",
+          "sourceLabel": "C-MAX",
+          "sourceSlug": "ford-c-max"
+        },
+        {
+          "canonicalName": "Escort",
+          "normalizedName": "escort",
+          "sourceLabel": "Escort",
+          "sourceSlug": "ford-escort"
+        },
+        {
+          "canonicalName": "Festiva",
+          "normalizedName": "festiva",
+          "sourceLabel": "Festiva",
+          "sourceSlug": "ford-festiva"
+        },
+        {
+          "canonicalName": "Fiesta",
+          "normalizedName": "fiesta",
+          "sourceLabel": "Fiesta",
+          "sourceSlug": "ford-fiesta"
+        },
+        {
+          "canonicalName": "Focus",
+          "normalizedName": "focus",
+          "sourceLabel": "Focus",
+          "sourceSlug": "ford-focus"
+        },
+        {
+          "canonicalName": "Fusion",
+          "normalizedName": "fusion",
+          "sourceLabel": "Fusion",
+          "sourceSlug": "ford-fusion"
+        },
+        {
+          "canonicalName": "Galaxy",
+          "normalizedName": "galaxy",
+          "sourceLabel": "Galaxy",
+          "sourceSlug": "ford-galaxy"
+        },
+        {
+          "canonicalName": "Granada",
+          "normalizedName": "granada",
+          "sourceLabel": "Granada",
+          "sourceSlug": "ford-granada"
+        },
+        {
+          "canonicalName": "KA",
+          "normalizedName": "ka",
+          "sourceLabel": "KA",
+          "sourceSlug": "ford-ka"
+        },
+        {
+          "canonicalName": "Mondeo",
+          "normalizedName": "mondeo",
+          "sourceLabel": "Mondeo",
+          "sourceSlug": "ford-mondeo"
+        },
+        {
+          "canonicalName": "Mustang",
+          "normalizedName": "mustang",
+          "sourceLabel": "Mustang",
+          "sourceSlug": "ford-mustang"
+        },
+        {
+          "canonicalName": "S-MAX",
+          "normalizedName": "s-max",
+          "sourceLabel": "S-MAX",
+          "sourceSlug": "ford-s-max"
+        },
+        {
+          "canonicalName": "Scorpio",
+          "normalizedName": "scorpio",
+          "sourceLabel": "Scorpio",
+          "sourceSlug": "ford-scorpio"
+        },
+        {
+          "canonicalName": "Sierra",
+          "normalizedName": "sierra",
+          "sourceLabel": "Sierra",
+          "sourceSlug": "ford-sierra"
+        },
+        {
+          "canonicalName": "Taunus",
+          "normalizedName": "taunus",
+          "sourceLabel": "Taunus",
+          "sourceSlug": "ford-taunus"
+        },
+        {
+          "canonicalName": "Taurus",
+          "normalizedName": "taurus",
+          "sourceLabel": "Taurus",
+          "sourceSlug": "ford-taurus"
+        },
+        {
+          "canonicalName": "Thunderbird",
+          "normalizedName": "thunderbird",
+          "sourceLabel": "Thunderbird",
+          "sourceSlug": "ford-thunderbird"
+        }
+      ]
+    },
+    {
+      "canonicalName": "Geely",
+      "normalizedName": "geely",
+      "sourceLabel": "Geely",
+      "sourceSlug": "geely",
+      "series": [
+        {
+          "canonicalName": "Echo",
+          "normalizedName": "echo",
+          "sourceLabel": "Echo",
+          "sourceSlug": "geely-echo"
+        },
+        {
+          "canonicalName": "Emgrand",
+          "normalizedName": "emgrand",
+          "sourceLabel": "Emgrand",
+          "sourceSlug": "geely-emgrand"
+        },
+        {
+          "canonicalName": "Familia",
+          "normalizedName": "familia",
+          "sourceLabel": "Familia",
+          "sourceSlug": "geely-familia"
+        },
+        {
+          "canonicalName": "FC",
+          "normalizedName": "fc",
+          "sourceLabel": "FC",
+          "sourceSlug": "geely-fc"
+        }
+      ]
+    },
+    {
+      "canonicalName": "Honda",
+      "normalizedName": "honda",
+      "sourceLabel": "Honda",
+      "sourceSlug": "honda",
+      "series": [
+        {
+          "canonicalName": "Accord",
+          "normalizedName": "accord",
+          "sourceLabel": "Accord",
+          "sourceSlug": "honda-accord"
+        },
+        {
+          "canonicalName": "City",
+          "normalizedName": "city",
+          "sourceLabel": "City",
+          "sourceSlug": "honda-city"
+        },
+        {
+          "canonicalName": "Civic",
+          "normalizedName": "civic",
+          "sourceLabel": "Civic",
+          "sourceSlug": "honda-civic"
+        },
+        {
+          "canonicalName": "CR-Z",
+          "normalizedName": "cr-z",
+          "sourceLabel": "CR-Z",
+          "sourceSlug": "honda-cr-z"
+        },
+        {
+          "canonicalName": "CRX",
+          "normalizedName": "crx",
+          "sourceLabel": "CRX",
+          "sourceSlug": "honda-crx"
+        },
+        {
+          "canonicalName": "E",
+          "normalizedName": "e",
+          "sourceLabel": "E",
+          "sourceSlug": "honda-e"
+        },
+        {
+          "canonicalName": "FR-V",
+          "normalizedName": "fr-v",
+          "sourceLabel": "FR-V",
+          "sourceSlug": "honda-fr-v"
+        },
+        {
+          "canonicalName": "Integra",
+          "normalizedName": "ıntegra",
+          "sourceLabel": "Integra",
+          "sourceSlug": "honda-integra"
+        },
+        {
+          "canonicalName": "Jazz",
+          "normalizedName": "jazz",
+          "sourceLabel": "Jazz",
+          "sourceSlug": "honda-jazz"
+        },
+        {
+          "canonicalName": "Legend",
+          "normalizedName": "legend",
+          "sourceLabel": "Legend",
+          "sourceSlug": "honda-legend"
+        },
+        {
+          "canonicalName": "Prelude",
+          "normalizedName": "prelude",
+          "sourceLabel": "Prelude",
+          "sourceSlug": "honda-prelude"
+        },
+        {
+          "canonicalName": "Shuttle",
+          "normalizedName": "shuttle",
+          "sourceLabel": "Shuttle",
+          "sourceSlug": "honda-shuttle"
+        },
+        {
+          "canonicalName": "Stream",
+          "normalizedName": "stream",
+          "sourceLabel": "Stream",
+          "sourceSlug": "honda-stream"
+        }
+      ]
+    },
+    {
+      "canonicalName": "Hyundai",
+      "normalizedName": "hyundai",
+      "sourceLabel": "Hyundai",
+      "sourceSlug": "hyundai",
+      "series": [
+        {
+          "canonicalName": "Accent",
+          "normalizedName": "accent",
+          "sourceLabel": "Accent",
+          "sourceSlug": "hyundai-accent"
+        },
+        {
+          "canonicalName": "Accent Blue",
+          "normalizedName": "accent blue",
+          "sourceLabel": "Accent Blue",
+          "sourceSlug": "hyundai-accent-blue"
+        },
+        {
+          "canonicalName": "Accent Era",
+          "normalizedName": "accent era",
+          "sourceLabel": "Accent Era",
+          "sourceSlug": "hyundai-accent-era"
+        },
+        {
+          "canonicalName": "Atos",
+          "normalizedName": "atos",
+          "sourceLabel": "Atos",
+          "sourceSlug": "hyundai-atos"
+        },
+        {
+          "canonicalName": "Coupe",
+          "normalizedName": "coupe",
+          "sourceLabel": "Coupe",
+          "sourceSlug": "hyundai-coupe"
+        },
+        {
+          "canonicalName": "Elantra",
+          "normalizedName": "elantra",
+          "sourceLabel": "Elantra",
+          "sourceSlug": "hyundai-elantra"
+        },
+        {
+          "canonicalName": "Excel",
+          "normalizedName": "excel",
+          "sourceLabel": "Excel",
+          "sourceSlug": "hyundai-excel"
+        },
+        {
+          "canonicalName": "Genesis",
+          "normalizedName": "genesis",
+          "sourceLabel": "Genesis",
+          "sourceSlug": "hyundai-genesis"
+        },
+        {
+          "canonicalName": "Getz",
+          "normalizedName": "getz",
+          "sourceLabel": "Getz",
+          "sourceSlug": "hyundai-getz"
+        },
+        {
+          "canonicalName": "Grandeur",
+          "normalizedName": "grandeur",
+          "sourceLabel": "Grandeur",
+          "sourceSlug": "hyundai-grandeur"
+        },
+        {
+          "canonicalName": "I10",
+          "normalizedName": "ı10",
+          "sourceLabel": "I10",
+          "sourceSlug": "hyundai-i10"
+        },
+        {
+          "canonicalName": "I20",
+          "normalizedName": "ı20",
+          "sourceLabel": "I20",
+          "sourceSlug": "hyundai-i20"
+        },
+        {
+          "canonicalName": "I30",
+          "normalizedName": "ı30",
+          "sourceLabel": "I30",
+          "sourceSlug": "hyundai-i30"
+        },
+        {
+          "canonicalName": "I40",
+          "normalizedName": "ı40",
+          "sourceLabel": "I40",
+          "sourceSlug": "hyundai-i40"
+        },
+        {
+          "canonicalName": "Ioniq",
+          "normalizedName": "ıoniq",
+          "sourceLabel": "Ioniq",
+          "sourceSlug": "hyundai-ioniq"
+        },
+        {
+          "canonicalName": "IX20",
+          "normalizedName": "ıx20",
+          "sourceLabel": "IX20",
+          "sourceSlug": "hyundai-ix20"
+        },
+        {
+          "canonicalName": "Matrix",
+          "normalizedName": "matrix",
+          "sourceLabel": "Matrix",
+          "sourceSlug": "hyundai-matrix"
+        },
+        {
+          "canonicalName": "Sonata",
+          "normalizedName": "sonata",
+          "sourceLabel": "Sonata",
+          "sourceSlug": "hyundai-sonata"
+        },
+        {
+          "canonicalName": "Trajet",
+          "normalizedName": "trajet",
+          "sourceLabel": "Trajet",
+          "sourceSlug": "hyundai-trajet"
+        }
+      ]
+    },
+    {
+      "canonicalName": "Ikco",
+      "normalizedName": "ikco",
+      "sourceLabel": "Ikco",
+      "sourceSlug": "ikco",
+      "series": [
+        {
+          "canonicalName": "Samand",
+          "normalizedName": "samand",
+          "sourceLabel": "Samand",
+          "sourceSlug": "ikco-samand"
+        }
+      ]
+    },
+    {
+      "canonicalName": "Infiniti",
+      "normalizedName": "infiniti",
+      "sourceLabel": "Infiniti",
+      "sourceSlug": "infiniti",
+      "series": [
+        {
+          "canonicalName": "G",
+          "normalizedName": "g",
+          "sourceLabel": "G",
+          "sourceSlug": "infiniti-g"
+        },
+        {
+          "canonicalName": "Q30",
+          "normalizedName": "q30",
+          "sourceLabel": "Q30",
+          "sourceSlug": "infiniti-q30"
+        },
+        {
+          "canonicalName": "Q50",
+          "normalizedName": "q50",
+          "sourceLabel": "Q50",
+          "sourceSlug": "infiniti-q50"
+        },
+        {
+          "canonicalName": "Q60",
+          "normalizedName": "q60",
+          "sourceLabel": "Q60",
+          "sourceSlug": "infiniti-q60"
+        }
+      ]
+    },
+    {
+      "canonicalName": "Jaguar",
+      "normalizedName": "jaguar",
+      "sourceLabel": "Jaguar",
+      "sourceSlug": "jaguar",
+      "series": [
+        {
+          "canonicalName": "S Type",
+          "normalizedName": "s type",
+          "sourceLabel": "S Type",
+          "sourceSlug": "jaguar-s-type"
+        },
+        {
+          "canonicalName": "X Type",
+          "normalizedName": "x type",
+          "sourceLabel": "X Type",
+          "sourceSlug": "jaguar-x-type"
+        },
+        {
+          "canonicalName": "XE",
+          "normalizedName": "xe",
+          "sourceLabel": "XE",
+          "sourceSlug": "jaguar-xe"
+        },
+        {
+          "canonicalName": "XF",
+          "normalizedName": "xf",
+          "sourceLabel": "XF",
+          "sourceSlug": "jaguar-xf"
+        },
+        {
+          "canonicalName": "XJ",
+          "normalizedName": "xj",
+          "sourceLabel": "XJ",
+          "sourceSlug": "jaguar-xj"
+        },
+        {
+          "canonicalName": "XJR",
+          "normalizedName": "xjr",
+          "sourceLabel": "XJR",
+          "sourceSlug": "jaguar-xjr"
+        },
+        {
+          "canonicalName": "XKR",
+          "normalizedName": "xkr",
+          "sourceLabel": "XKR",
+          "sourceSlug": "jaguar-xkr"
+        }
+      ]
+    },
+    {
+      "canonicalName": "KIA",
+      "normalizedName": "kia",
+      "sourceLabel": "KIA",
+      "sourceSlug": "kia",
+      "series": [
+        {
+          "canonicalName": "Capital",
+          "normalizedName": "capital",
+          "sourceLabel": "Capital",
+          "sourceSlug": "kia-capital"
+        },
+        {
+          "canonicalName": "Carens",
+          "normalizedName": "carens",
+          "sourceLabel": "Carens",
+          "sourceSlug": "kia-carens"
+        },
+        {
+          "canonicalName": "Carnival",
+          "normalizedName": "carnival",
+          "sourceLabel": "Carnival",
+          "sourceSlug": "kia-carnival"
+        },
+        {
+          "canonicalName": "Ceed",
+          "normalizedName": "ceed",
+          "sourceLabel": "Ceed",
+          "sourceSlug": "kia-ceed"
+        },
+        {
+          "canonicalName": "Cerato",
+          "normalizedName": "cerato",
+          "sourceLabel": "Cerato",
+          "sourceSlug": "kia-cerato"
+        },
+        {
+          "canonicalName": "Magentis",
+          "normalizedName": "magentis",
+          "sourceLabel": "Magentis",
+          "sourceSlug": "kia-magentis"
+        },
+        {
+          "canonicalName": "Optima",
+          "normalizedName": "optima",
+          "sourceLabel": "Optima",
+          "sourceSlug": "kia-optima"
+        },
+        {
+          "canonicalName": "Picanto",
+          "normalizedName": "picanto",
+          "sourceLabel": "Picanto",
+          "sourceSlug": "kia-picanto"
+        },
+        {
+          "canonicalName": "Pride",
+          "normalizedName": "pride",
+          "sourceLabel": "Pride",
+          "sourceSlug": "kia-pride"
+        },
+        {
+          "canonicalName": "Pro Ceed",
+          "normalizedName": "pro ceed",
+          "sourceLabel": "Pro Ceed",
+          "sourceSlug": "kia-pro-ceed"
+        },
+        {
+          "canonicalName": "RIO",
+          "normalizedName": "rıo",
+          "sourceLabel": "RIO",
+          "sourceSlug": "kia-rio"
+        },
+        {
+          "canonicalName": "Sephia",
+          "normalizedName": "sephia",
+          "sourceLabel": "Sephia",
+          "sourceSlug": "kia-sephia"
+        },
+        {
+          "canonicalName": "Shuma",
+          "normalizedName": "shuma",
+          "sourceLabel": "Shuma",
+          "sourceSlug": "kia-shuma"
+        },
+        {
+          "canonicalName": "Venga",
+          "normalizedName": "venga",
+          "sourceLabel": "Venga",
+          "sourceSlug": "kia-venga"
+        }
+      ]
+    },
+    {
+      "canonicalName": "Lada",
+      "normalizedName": "lada",
+      "sourceLabel": "Lada",
+      "sourceSlug": "lada",
+      "series": [
+        {
+          "canonicalName": "Kalina",
+          "normalizedName": "kalina",
+          "sourceLabel": "Kalina",
+          "sourceSlug": "lada-kalina"
+        },
+        {
+          "canonicalName": "Samara",
+          "normalizedName": "samara",
+          "sourceLabel": "Samara",
+          "sourceSlug": "lada-samara"
+        },
+        {
+          "canonicalName": "VAZ",
+          "normalizedName": "vaz",
+          "sourceLabel": "VAZ",
+          "sourceSlug": "lada-vaz"
+        },
+        {
+          "canonicalName": "Vega",
+          "normalizedName": "vega",
+          "sourceLabel": "Vega",
+          "sourceSlug": "lada-vega"
+        }
+      ]
+    },
+    {
+      "canonicalName": "Lamborghini",
+      "normalizedName": "lamborghini",
+      "sourceLabel": "Lamborghini",
+      "sourceSlug": "lamborghini",
+      "series": [
+        {
+          "canonicalName": "Aventador",
+          "normalizedName": "aventador",
+          "sourceLabel": "Aventador",
+          "sourceSlug": "lamborghini-aventador"
+        },
+        {
+          "canonicalName": "Gallardo",
+          "normalizedName": "gallardo",
+          "sourceLabel": "Gallardo",
+          "sourceSlug": "lamborghini-gallardo"
+        },
+        {
+          "canonicalName": "Huracan",
+          "normalizedName": "huracan",
+          "sourceLabel": "Huracan",
+          "sourceSlug": "lamborghini-huracan"
+        }
+      ]
+    },
+    {
+      "canonicalName": "Lancia",
+      "normalizedName": "lancia",
+      "sourceLabel": "Lancia",
+      "sourceSlug": "lancia",
+      "series": [
+        {
+          "canonicalName": "Delta",
+          "normalizedName": "delta",
+          "sourceLabel": "Delta",
+          "sourceSlug": "lancia-delta"
+        },
+        {
+          "canonicalName": "Phedra",
+          "normalizedName": "phedra",
+          "sourceLabel": "Phedra",
+          "sourceSlug": "lancia-phedra"
+        },
+        {
+          "canonicalName": "Thema",
+          "normalizedName": "thema",
+          "sourceLabel": "Thema",
+          "sourceSlug": "lancia-thema"
+        },
+        {
+          "canonicalName": "Ypsilon",
+          "normalizedName": "ypsilon",
+          "sourceLabel": "Ypsilon",
+          "sourceSlug": "lancia-ypsilon"
+        }
+      ]
+    },
+    {
+      "canonicalName": "Leapmotor",
+      "normalizedName": "leapmotor",
+      "sourceLabel": "Leapmotor",
+      "sourceSlug": "leapmotor",
+      "series": [
+        {
+          "canonicalName": "T03",
+          "normalizedName": "t03",
+          "sourceLabel": "T03",
+          "sourceSlug": "leapmotor-t03"
+        }
+      ]
+    },
+    {
+      "canonicalName": "Lexus",
+      "normalizedName": "lexus",
+      "sourceLabel": "Lexus",
+      "sourceSlug": "lexus",
+      "series": [
+        {
+          "canonicalName": "CT",
+          "normalizedName": "ct",
+          "sourceLabel": "CT",
+          "sourceSlug": "lexus-ct"
+        },
+        {
+          "canonicalName": "ES",
+          "normalizedName": "es",
+          "sourceLabel": "ES",
+          "sourceSlug": "lexus-es"
+        },
+        {
+          "canonicalName": "IS",
+          "normalizedName": "ıs",
+          "sourceLabel": "IS",
+          "sourceSlug": "lexus-is"
+        },
+        {
+          "canonicalName": "LC",
+          "normalizedName": "lc",
+          "sourceLabel": "LC",
+          "sourceSlug": "lexus-lc"
+        },
+        {
+          "canonicalName": "LM",
+          "normalizedName": "lm",
+          "sourceLabel": "LM",
+          "sourceSlug": "lexus-lm"
+        },
+        {
+          "canonicalName": "LS",
+          "normalizedName": "ls",
+          "sourceLabel": "LS",
+          "sourceSlug": "lexus-ls"
+        }
+      ]
+    },
+    {
+      "canonicalName": "Lincoln",
+      "normalizedName": "lincoln",
+      "sourceLabel": "Lincoln",
+      "sourceSlug": "lincoln",
+      "series": [
+        {
+          "canonicalName": "Town Car",
+          "normalizedName": "town car",
+          "sourceLabel": "Town Car",
+          "sourceSlug": "lincoln-town-car"
+        }
+      ]
+    },
+    {
+      "canonicalName": "Maserati",
+      "normalizedName": "maserati",
+      "sourceLabel": "Maserati",
+      "sourceSlug": "maserati",
+      "series": [
+        {
+          "canonicalName": "Ghibli",
+          "normalizedName": "ghibli",
+          "sourceLabel": "Ghibli",
+          "sourceSlug": "maserati-ghibli"
+        },
+        {
+          "canonicalName": "Granturismo",
+          "normalizedName": "granturismo",
+          "sourceLabel": "Granturismo",
+          "sourceSlug": "maserati-granturismo"
+        },
+        {
+          "canonicalName": "Quattroporte",
+          "normalizedName": "quattroporte",
+          "sourceLabel": "Quattroporte",
+          "sourceSlug": "maserati-quattroporte"
+        }
+      ]
+    },
+    {
+      "canonicalName": "Mazda",
+      "normalizedName": "mazda",
+      "sourceLabel": "Mazda",
+      "sourceSlug": "mazda",
+      "series": [
+        {
+          "canonicalName": "Lantis",
+          "normalizedName": "lantis",
+          "sourceLabel": "Lantis",
+          "sourceSlug": "mazda-lantis"
+        },
+        {
+          "canonicalName": "MPV",
+          "normalizedName": "mpv",
+          "sourceLabel": "MPV",
+          "sourceSlug": "mazda-mpv"
+        },
+        {
+          "canonicalName": "MX",
+          "normalizedName": "mx",
+          "sourceLabel": "MX",
+          "sourceSlug": "mazda-mx"
+        },
+        {
+          "canonicalName": "Premacy",
+          "normalizedName": "premacy",
+          "sourceLabel": "Premacy",
+          "sourceSlug": "mazda-premacy"
+        },
+        {
+          "canonicalName": "RX",
+          "normalizedName": "rx",
+          "sourceLabel": "RX",
+          "sourceSlug": "mazda-rx"
+        },
+        {
+          "canonicalName": "Xedos",
+          "normalizedName": "xedos",
+          "sourceLabel": "Xedos",
+          "sourceSlug": "mazda-xedos"
+        }
+      ]
+    },
+    {
+      "canonicalName": "Mclaren",
+      "normalizedName": "mclaren",
+      "sourceLabel": "Mclaren",
+      "sourceSlug": "mclaren",
+      "series": [
+        {
+          "canonicalName": "GT",
+          "normalizedName": "gt",
+          "sourceLabel": "GT",
+          "sourceSlug": "mclaren-gt"
+        }
+      ]
+    },
+    {
+      "canonicalName": "Mercedes-Benz",
+      "normalizedName": "mercedes-benz",
+      "sourceLabel": "Mercedes-Benz",
+      "sourceSlug": "mercedes-benz",
+      "series": [
+        {
+          "canonicalName": "A Serisi",
+          "normalizedName": "a serisi",
+          "sourceLabel": "A Serisi",
+          "sourceSlug": "mercedes-benz-a"
+        },
+        {
+          "canonicalName": "AMG-GT",
+          "normalizedName": "amg-gt",
+          "sourceLabel": "AMG-GT",
+          "sourceSlug": "mercedes-benz-amg-gt"
+        },
+        {
+          "canonicalName": "B Serisi",
+          "normalizedName": "b serisi",
+          "sourceLabel": "B Serisi",
+          "sourceSlug": "mercedes-benz-b"
+        },
+        {
+          "canonicalName": "C Serisi",
+          "normalizedName": "c serisi",
+          "sourceLabel": "C Serisi",
+          "sourceSlug": "mercedes-benz-c"
+        },
+        {
+          "canonicalName": "CL",
+          "normalizedName": "cl",
+          "sourceLabel": "CL",
+          "sourceSlug": "mercedes-benz-cl"
+        },
+        {
+          "canonicalName": "CLA",
+          "normalizedName": "cla",
+          "sourceLabel": "CLA",
+          "sourceSlug": "mercedes-benz-cla"
+        },
+        {
+          "canonicalName": "CLC",
+          "normalizedName": "clc",
+          "sourceLabel": "CLC",
+          "sourceSlug": "mercedes-benz-clc"
+        },
+        {
+          "canonicalName": "CLE",
+          "normalizedName": "cle",
+          "sourceLabel": "CLE",
+          "sourceSlug": "mercedes-benz-cle"
+        },
+        {
+          "canonicalName": "CLK",
+          "normalizedName": "clk",
+          "sourceLabel": "CLK",
+          "sourceSlug": "mercedes-benz-clk"
+        },
+        {
+          "canonicalName": "CLS",
+          "normalizedName": "cls",
+          "sourceLabel": "CLS",
+          "sourceSlug": "mercedes-benz-cls"
+        },
+        {
+          "canonicalName": "E Serisi",
+          "normalizedName": "e serisi",
+          "sourceLabel": "E Serisi",
+          "sourceSlug": "mercedes-benz-e"
+        },
+        {
+          "canonicalName": "EQE",
+          "normalizedName": "eqe",
+          "sourceLabel": "EQE",
+          "sourceSlug": "mercedes-benz-eqe"
+        },
+        {
+          "canonicalName": "EQS",
+          "normalizedName": "eqs",
+          "sourceLabel": "EQS",
+          "sourceSlug": "mercedes-benz-eqs"
+        },
+        {
+          "canonicalName": "Maybach S",
+          "normalizedName": "maybach s",
+          "sourceLabel": "Maybach S",
+          "sourceSlug": "mercedes-benz-maybach-s"
+        },
+        {
+          "canonicalName": "R Serisi",
+          "normalizedName": "r serisi",
+          "sourceLabel": "R Serisi",
+          "sourceSlug": "mercedes-benz-r"
+        },
+        {
+          "canonicalName": "S Serisi",
+          "normalizedName": "s serisi",
+          "sourceLabel": "S Serisi",
+          "sourceSlug": "mercedes-benz-s"
+        },
+        {
+          "canonicalName": "SL",
+          "normalizedName": "sl",
+          "sourceLabel": "SL",
+          "sourceSlug": "mercedes-benz-sl"
+        },
+        {
+          "canonicalName": "SLC",
+          "normalizedName": "slc",
+          "sourceLabel": "SLC",
+          "sourceSlug": "mercedes-benz-slc"
+        },
+        {
+          "canonicalName": "SLK",
+          "normalizedName": "slk",
+          "sourceLabel": "SLK",
+          "sourceSlug": "mercedes-benz-slk"
+        }
+      ]
+    },
+    {
+      "canonicalName": "Mercury",
+      "normalizedName": "mercury",
+      "sourceLabel": "Mercury",
+      "sourceSlug": "mercury",
+      "series": [
+        {
+          "canonicalName": "Grand Marquis",
+          "normalizedName": "grand marquis",
+          "sourceLabel": "Grand Marquis",
+          "sourceSlug": "mercury-grand-marquis"
+        }
+      ]
+    },
+    {
+      "canonicalName": "MG",
+      "normalizedName": "mg",
+      "sourceLabel": "MG",
+      "sourceSlug": "mg",
+      "series": []
+    },
+    {
+      "canonicalName": "MINI",
+      "normalizedName": "mini",
+      "sourceLabel": "MINI",
+      "sourceSlug": "mini",
+      "series": [
+        {
+          "canonicalName": "Cooper",
+          "normalizedName": "cooper",
+          "sourceLabel": "Cooper",
+          "sourceSlug": "mini-cooper"
+        },
+        {
+          "canonicalName": "Cooper Clubman",
+          "normalizedName": "cooper clubman",
+          "sourceLabel": "Cooper Clubman",
+          "sourceSlug": "mini-cooper-clubman"
+        },
+        {
+          "canonicalName": "Cooper Electric",
+          "normalizedName": "cooper electric",
+          "sourceLabel": "Cooper Electric",
+          "sourceSlug": "mini-cooper-electric"
+        },
+        {
+          "canonicalName": "Cooper S",
+          "normalizedName": "cooper s",
+          "sourceLabel": "Cooper S",
+          "sourceSlug": "mini-cooper-s"
+        },
+        {
+          "canonicalName": "John Cooper",
+          "normalizedName": "john cooper",
+          "sourceLabel": "John Cooper",
+          "sourceSlug": "mini-john-cooper"
+        },
+        {
+          "canonicalName": "ONE",
+          "normalizedName": "one",
+          "sourceLabel": "ONE",
+          "sourceSlug": "mini-one"
+        }
+      ]
+    },
+    {
+      "canonicalName": "Mitsubishi",
+      "normalizedName": "mitsubishi",
+      "sourceLabel": "Mitsubishi",
+      "sourceSlug": "mitsubishi",
+      "series": [
+        {
+          "canonicalName": "Attrage",
+          "normalizedName": "attrage",
+          "sourceLabel": "Attrage",
+          "sourceSlug": "mitsubishi-attrage"
+        },
+        {
+          "canonicalName": "Carisma",
+          "normalizedName": "carisma",
+          "sourceLabel": "Carisma",
+          "sourceSlug": "mitsubishi-carisma"
+        },
+        {
+          "canonicalName": "Colt",
+          "normalizedName": "colt",
+          "sourceLabel": "Colt",
+          "sourceSlug": "mitsubishi-colt"
+        },
+        {
+          "canonicalName": "Diamante",
+          "normalizedName": "diamante",
+          "sourceLabel": "Diamante",
+          "sourceSlug": "mitsubishi-diamante"
+        },
+        {
+          "canonicalName": "Eclipse",
+          "normalizedName": "eclipse",
+          "sourceLabel": "Eclipse",
+          "sourceSlug": "mitsubishi-eclipse"
+        },
+        {
+          "canonicalName": "Galant",
+          "normalizedName": "galant",
+          "sourceLabel": "Galant",
+          "sourceSlug": "mitsubishi-galant"
+        },
+        {
+          "canonicalName": "Grandis",
+          "normalizedName": "grandis",
+          "sourceLabel": "Grandis",
+          "sourceSlug": "mitsubishi-grandis"
+        },
+        {
+          "canonicalName": "Lancer",
+          "normalizedName": "lancer",
+          "sourceLabel": "Lancer",
+          "sourceSlug": "mitsubishi-lancer"
+        },
+        {
+          "canonicalName": "Lancer Evolution",
+          "normalizedName": "lancer evolution",
+          "sourceLabel": "Lancer Evolution",
+          "sourceSlug": "mitsubishi-lancer-evolution"
+        },
+        {
+          "canonicalName": "Space Star",
+          "normalizedName": "space star",
+          "sourceLabel": "Space Star",
+          "sourceSlug": "mitsubishi-space-star"
+        }
+      ]
+    },
+    {
+      "canonicalName": "Moskvitch",
+      "normalizedName": "moskvitch",
+      "sourceLabel": "Moskvitch",
+      "sourceSlug": "moskvitch",
+      "series": [
+        {
+          "canonicalName": "Aleko",
+          "normalizedName": "aleko",
+          "sourceLabel": "Aleko",
+          "sourceSlug": "moskvitch-aleko"
+        }
+      ]
+    },
+    {
+      "canonicalName": "Nieve",
+      "normalizedName": "nieve",
+      "sourceLabel": "Nieve",
+      "sourceSlug": "nieve",
+      "series": [
+        {
+          "canonicalName": "Evzoom",
+          "normalizedName": "evzoom",
+          "sourceLabel": "Evzoom",
+          "sourceSlug": "nieve-evzoom"
+        },
+        {
+          "canonicalName": "Q-EN",
+          "normalizedName": "q-en",
+          "sourceLabel": "Q-EN",
+          "sourceSlug": "nieve-q-en"
+        }
+      ]
+    },
+    {
+      "canonicalName": "Nissan",
+      "normalizedName": "nissan",
+      "sourceLabel": "Nissan",
+      "sourceSlug": "nissan",
+      "series": [
+        {
+          "canonicalName": "Almera",
+          "normalizedName": "almera",
+          "sourceLabel": "Almera",
+          "sourceSlug": "nissan-almera"
+        },
+        {
+          "canonicalName": "GT-R",
+          "normalizedName": "gt-r",
+          "sourceLabel": "GT-R",
+          "sourceSlug": "nissan-gt-r"
+        },
+        {
+          "canonicalName": "Laurel Altima",
+          "normalizedName": "laurel altima",
+          "sourceLabel": "Laurel Altima",
+          "sourceSlug": "nissan-laurel-altima"
+        },
+        {
+          "canonicalName": "Maxima",
+          "normalizedName": "maxima",
+          "sourceLabel": "Maxima",
+          "sourceSlug": "nissan-maxima"
+        },
+        {
+          "canonicalName": "Micra",
+          "normalizedName": "micra",
+          "sourceLabel": "Micra",
+          "sourceSlug": "nissan-micra"
+        },
+        {
+          "canonicalName": "Note",
+          "normalizedName": "note",
+          "sourceLabel": "Note",
+          "sourceSlug": "nissan-note"
+        },
+        {
+          "canonicalName": "Nx Coupe",
+          "normalizedName": "nx coupe",
+          "sourceLabel": "Nx Coupe",
+          "sourceSlug": "nissan-nx-coupe"
+        },
+        {
+          "canonicalName": "Primera",
+          "normalizedName": "primera",
+          "sourceLabel": "Primera",
+          "sourceSlug": "nissan-primera"
+        },
+        {
+          "canonicalName": "Pulsar",
+          "normalizedName": "pulsar",
+          "sourceLabel": "Pulsar",
+          "sourceSlug": "nissan-pulsar"
+        },
+        {
+          "canonicalName": "Sunny",
+          "normalizedName": "sunny",
+          "sourceLabel": "Sunny",
+          "sourceSlug": "nissan-sunny"
+        },
+        {
+          "canonicalName": "Teana",
+          "normalizedName": "teana",
+          "sourceLabel": "Teana",
+          "sourceSlug": "nissan-teana"
+        }
+      ]
+    },
+    {
+      "canonicalName": "Opel",
+      "normalizedName": "opel",
+      "sourceLabel": "Opel",
+      "sourceSlug": "opel",
+      "series": [
+        {
+          "canonicalName": "Adam",
+          "normalizedName": "adam",
+          "sourceLabel": "Adam",
+          "sourceSlug": "opel-adam"
+        },
+        {
+          "canonicalName": "Agila",
+          "normalizedName": "agila",
+          "sourceLabel": "Agila",
+          "sourceSlug": "opel-agila"
+        },
+        {
+          "canonicalName": "Ascona",
+          "normalizedName": "ascona",
+          "sourceLabel": "Ascona",
+          "sourceSlug": "opel-ascona"
+        },
+        {
+          "canonicalName": "Astra",
+          "normalizedName": "astra",
+          "sourceLabel": "Astra",
+          "sourceSlug": "opel-astra"
+        },
+        {
+          "canonicalName": "Astra E",
+          "normalizedName": "astra e",
+          "sourceLabel": "Astra E",
+          "sourceSlug": "opel-astra-e"
+        },
+        {
+          "canonicalName": "Calibra",
+          "normalizedName": "calibra",
+          "sourceLabel": "Calibra",
+          "sourceSlug": "opel-calibra"
+        },
+        {
+          "canonicalName": "Cascada",
+          "normalizedName": "cascada",
+          "sourceLabel": "Cascada",
+          "sourceSlug": "opel-cascada"
+        },
+        {
+          "canonicalName": "Corsa",
+          "normalizedName": "corsa",
+          "sourceLabel": "Corsa",
+          "sourceSlug": "opel-corsa"
+        },
+        {
+          "canonicalName": "Corsa E",
+          "normalizedName": "corsa e",
+          "sourceLabel": "Corsa E",
+          "sourceSlug": "opel-corsa-e"
+        },
+        {
+          "canonicalName": "GT",
+          "normalizedName": "gt",
+          "sourceLabel": "GT",
+          "sourceSlug": "opel-gt"
+        },
+        {
+          "canonicalName": "Insignia",
+          "normalizedName": "ınsignia",
+          "sourceLabel": "Insignia",
+          "sourceSlug": "opel-insignia"
+        },
+        {
+          "canonicalName": "Kadett",
+          "normalizedName": "kadett",
+          "sourceLabel": "Kadett",
+          "sourceSlug": "opel-kadett"
+        },
+        {
+          "canonicalName": "Meriva",
+          "normalizedName": "meriva",
+          "sourceLabel": "Meriva",
+          "sourceSlug": "opel-meriva"
+        },
+        {
+          "canonicalName": "Omega",
+          "normalizedName": "omega",
+          "sourceLabel": "Omega",
+          "sourceSlug": "opel-omega"
+        },
+        {
+          "canonicalName": "Rekord",
+          "normalizedName": "rekord",
+          "sourceLabel": "Rekord",
+          "sourceSlug": "opel-rekord"
+        },
+        {
+          "canonicalName": "Signum",
+          "normalizedName": "signum",
+          "sourceLabel": "Signum",
+          "sourceSlug": "opel-signum"
+        },
+        {
+          "canonicalName": "Tigra",
+          "normalizedName": "tigra",
+          "sourceLabel": "Tigra",
+          "sourceSlug": "opel-tigra"
+        },
+        {
+          "canonicalName": "Vectra",
+          "normalizedName": "vectra",
+          "sourceLabel": "Vectra",
+          "sourceSlug": "opel-vectra"
+        },
+        {
+          "canonicalName": "Zafira",
+          "normalizedName": "zafira",
+          "sourceLabel": "Zafira",
+          "sourceSlug": "opel-zafira"
+        }
+      ]
+    },
+    {
+      "canonicalName": "Ortimobil",
+      "normalizedName": "ortimobil",
+      "sourceLabel": "Ortimobil",
+      "sourceSlug": "ortimobil",
+      "series": [
+        {
+          "canonicalName": "Alexa",
+          "normalizedName": "alexa",
+          "sourceLabel": "Alexa",
+          "sourceSlug": "ortimobil-alexa"
+        },
+        {
+          "canonicalName": "Omobil",
+          "normalizedName": "omobil",
+          "sourceLabel": "Omobil",
+          "sourceSlug": "ortimobil-omobil"
+        }
+      ]
+    },
+    {
+      "canonicalName": "Peugeot",
+      "normalizedName": "peugeot",
+      "sourceLabel": "Peugeot",
+      "sourceSlug": "peugeot",
+      "series": [
+        {
+          "canonicalName": "RCZ",
+          "normalizedName": "rcz",
+          "sourceLabel": "RCZ",
+          "sourceSlug": "peugeot-rcz"
+        }
+      ]
+    },
+    {
+      "canonicalName": "Plymouth",
+      "normalizedName": "plymouth",
+      "sourceLabel": "Plymouth",
+      "sourceSlug": "plymouth",
+      "series": [
+        {
+          "canonicalName": "Belvedere",
+          "normalizedName": "belvedere",
+          "sourceLabel": "Belvedere",
+          "sourceSlug": "plymouth-belvedere"
+        },
+        {
+          "canonicalName": "Savoy",
+          "normalizedName": "savoy",
+          "sourceLabel": "Savoy",
+          "sourceSlug": "plymouth-savoy"
+        }
+      ]
+    },
+    {
+      "canonicalName": "Pontiac",
+      "normalizedName": "pontiac",
+      "sourceLabel": "Pontiac",
+      "sourceSlug": "pontiac",
+      "series": [
+        {
+          "canonicalName": "Firebird",
+          "normalizedName": "firebird",
+          "sourceLabel": "Firebird",
+          "sourceSlug": "pontiac-firebird"
+        }
+      ]
+    },
+    {
+      "canonicalName": "Porsche",
+      "normalizedName": "porsche",
+      "sourceLabel": "Porsche",
+      "sourceSlug": "porsche",
+      "series": [
+        {
+          "canonicalName": "Boxster",
+          "normalizedName": "boxster",
+          "sourceLabel": "Boxster",
+          "sourceSlug": "porsche-boxster"
+        },
+        {
+          "canonicalName": "Cayman",
+          "normalizedName": "cayman",
+          "sourceLabel": "Cayman",
+          "sourceSlug": "porsche-cayman"
+        },
+        {
+          "canonicalName": "Panamera",
+          "normalizedName": "panamera",
+          "sourceLabel": "Panamera",
+          "sourceSlug": "porsche-panamera"
+        },
+        {
+          "canonicalName": "Taycan Elektrik",
+          "normalizedName": "taycan elektrik",
+          "sourceLabel": "Taycan Elektrik",
+          "sourceSlug": "porsche-taycan-elektrik"
+        }
+      ]
+    },
+    {
+      "canonicalName": "Proton",
+      "normalizedName": "proton",
+      "sourceLabel": "Proton",
+      "sourceSlug": "proton",
+      "series": [
+        {
+          "canonicalName": "Savvy",
+          "normalizedName": "savvy",
+          "sourceLabel": "Savvy",
+          "sourceSlug": "proton-savvy"
+        },
+        {
+          "canonicalName": "Waja",
+          "normalizedName": "waja",
+          "sourceLabel": "Waja",
+          "sourceSlug": "proton-waja"
+        }
+      ]
+    },
+    {
+      "canonicalName": "Rainwoll",
+      "normalizedName": "rainwoll",
+      "sourceLabel": "Rainwoll",
+      "sourceSlug": "rainwoll",
+      "series": [
+        {
+          "canonicalName": "RW10",
+          "normalizedName": "rw10",
+          "sourceLabel": "RW10",
+          "sourceSlug": "rainwoll-rw10"
+        }
+      ]
+    },
+    {
+      "canonicalName": "Reeder",
+      "normalizedName": "reeder",
+      "sourceLabel": "Reeder",
+      "sourceSlug": "reeder",
+      "series": [
+        {
+          "canonicalName": "Reev Fancy",
+          "normalizedName": "reev fancy",
+          "sourceLabel": "Reev Fancy",
+          "sourceSlug": "reeder-reev-fancy"
+        }
+      ]
+    },
+    {
+      "canonicalName": "Regal Raptor",
+      "normalizedName": "regal raptor",
+      "sourceLabel": "Regal Raptor",
+      "sourceSlug": "regal-raptor",
+      "series": [
+        {
+          "canonicalName": "K4",
+          "normalizedName": "k4",
+          "sourceLabel": "K4",
+          "sourceSlug": "regal-raptor-k4"
+        }
+      ]
+    },
+    {
+      "canonicalName": "Relive",
+      "normalizedName": "relive",
+      "sourceLabel": "Relive",
+      "sourceSlug": "relive",
+      "series": []
+    },
+    {
+      "canonicalName": "Renault",
+      "normalizedName": "renault",
+      "sourceLabel": "Renault",
+      "sourceSlug": "renault",
+      "series": [
+        {
+          "canonicalName": "Clio",
+          "normalizedName": "clio",
+          "sourceLabel": "Clio",
+          "sourceSlug": "renault-clio"
+        },
+        {
+          "canonicalName": "Espace",
+          "normalizedName": "espace",
+          "sourceLabel": "Espace",
+          "sourceSlug": "renault-espace"
+        },
+        {
+          "canonicalName": "Fluence",
+          "normalizedName": "fluence",
+          "sourceLabel": "Fluence",
+          "sourceSlug": "renault-fluence"
+        },
+        {
+          "canonicalName": "Grand Scenic",
+          "normalizedName": "grand scenic",
+          "sourceLabel": "Grand Scenic",
+          "sourceSlug": "renault-grand-scenic"
+        },
+        {
+          "canonicalName": "Laguna",
+          "normalizedName": "laguna",
+          "sourceLabel": "Laguna",
+          "sourceSlug": "renault-laguna"
+        },
+        {
+          "canonicalName": "Latitude",
+          "normalizedName": "latitude",
+          "sourceLabel": "Latitude",
+          "sourceSlug": "renault-latitude"
+        },
+        {
+          "canonicalName": "Megane",
+          "normalizedName": "megane",
+          "sourceLabel": "Megane",
+          "sourceSlug": "renault-megane"
+        },
+        {
+          "canonicalName": "Modus",
+          "normalizedName": "modus",
+          "sourceLabel": "Modus",
+          "sourceSlug": "renault-modus"
+        },
+        {
+          "canonicalName": "Safrane",
+          "normalizedName": "safrane",
+          "sourceLabel": "Safrane",
+          "sourceSlug": "renault-safrane"
+        },
+        {
+          "canonicalName": "Scenic",
+          "normalizedName": "scenic",
+          "sourceLabel": "Scenic",
+          "sourceSlug": "renault-scenic"
+        },
+        {
+          "canonicalName": "Symbol",
+          "normalizedName": "symbol",
+          "sourceLabel": "Symbol",
+          "sourceSlug": "renault-symbol"
+        },
+        {
+          "canonicalName": "Taliant",
+          "normalizedName": "taliant",
+          "sourceLabel": "Taliant",
+          "sourceSlug": "renault-taliant"
+        },
+        {
+          "canonicalName": "Talisman",
+          "normalizedName": "talisman",
+          "sourceLabel": "Talisman",
+          "sourceSlug": "renault-talisman"
+        },
+        {
+          "canonicalName": "Twingo",
+          "normalizedName": "twingo",
+          "sourceLabel": "Twingo",
+          "sourceSlug": "renault-twingo"
+        },
+        {
+          "canonicalName": "Twizy",
+          "normalizedName": "twizy",
+          "sourceLabel": "Twizy",
+          "sourceSlug": "renault-twizy"
+        },
+        {
+          "canonicalName": "Vel Satis",
+          "normalizedName": "vel satis",
+          "sourceLabel": "Vel Satis",
+          "sourceSlug": "renault-vel-satis"
+        },
+        {
+          "canonicalName": "ZOE",
+          "normalizedName": "zoe",
+          "sourceLabel": "ZOE",
+          "sourceSlug": "renault-zoe"
+        }
+      ]
+    },
+    {
+      "canonicalName": "RKS",
+      "normalizedName": "rks",
+      "sourceLabel": "RKS",
+      "sourceSlug": "rks",
+      "series": [
+        {
+          "canonicalName": "M5",
+          "normalizedName": "m5",
+          "sourceLabel": "M5",
+          "sourceSlug": "rks-m5"
+        }
+      ]
+    },
+    {
+      "canonicalName": "Rolls Royce",
+      "normalizedName": "rolls royce",
+      "sourceLabel": "Rolls Royce",
+      "sourceSlug": "rolls-royce",
+      "series": [
+        {
+          "canonicalName": "Ghost",
+          "normalizedName": "ghost",
+          "sourceLabel": "Ghost",
+          "sourceSlug": "rolls-royce-ghost"
+        },
+        {
+          "canonicalName": "Spectre",
+          "normalizedName": "spectre",
+          "sourceLabel": "Spectre",
+          "sourceSlug": "rolls-royce-spectre"
+        },
+        {
+          "canonicalName": "Wraith",
+          "normalizedName": "wraith",
+          "sourceLabel": "Wraith",
+          "sourceSlug": "rolls-royce-wraith"
+        }
+      ]
+    },
+    {
+      "canonicalName": "Rover",
+      "normalizedName": "rover",
+      "sourceLabel": "Rover",
+      "sourceSlug": "rover",
+      "series": []
+    },
+    {
+      "canonicalName": "Saab",
+      "normalizedName": "saab",
+      "sourceLabel": "Saab",
+      "sourceSlug": "saab",
+      "series": []
+    },
+    {
+      "canonicalName": "Seat",
+      "normalizedName": "seat",
+      "sourceLabel": "Seat",
+      "sourceSlug": "seat",
+      "series": [
+        {
+          "canonicalName": "Alhambra",
+          "normalizedName": "alhambra",
+          "sourceLabel": "Alhambra",
+          "sourceSlug": "seat-alhambra"
+        },
+        {
+          "canonicalName": "Altea",
+          "normalizedName": "altea",
+          "sourceLabel": "Altea",
+          "sourceSlug": "seat-altea"
+        },
+        {
+          "canonicalName": "Cordoba",
+          "normalizedName": "cordoba",
+          "sourceLabel": "Cordoba",
+          "sourceSlug": "seat-cordoba"
+        },
+        {
+          "canonicalName": "Exeo",
+          "normalizedName": "exeo",
+          "sourceLabel": "Exeo",
+          "sourceSlug": "seat-exeo"
+        },
+        {
+          "canonicalName": "Ibiza",
+          "normalizedName": "ıbiza",
+          "sourceLabel": "Ibiza",
+          "sourceSlug": "seat-ibiza"
+        },
+        {
+          "canonicalName": "Leon",
+          "normalizedName": "leon",
+          "sourceLabel": "Leon",
+          "sourceSlug": "seat-leon"
+        },
+        {
+          "canonicalName": "Toledo",
+          "normalizedName": "toledo",
+          "sourceLabel": "Toledo",
+          "sourceSlug": "seat-toledo"
+        }
+      ]
+    },
+    {
+      "canonicalName": "Skoda",
+      "normalizedName": "skoda",
+      "sourceLabel": "Skoda",
+      "sourceSlug": "skoda",
+      "series": [
+        {
+          "canonicalName": "Citigo",
+          "normalizedName": "citigo",
+          "sourceLabel": "Citigo",
+          "sourceSlug": "skoda-citigo"
+        },
+        {
+          "canonicalName": "Fabia",
+          "normalizedName": "fabia",
+          "sourceLabel": "Fabia",
+          "sourceSlug": "skoda-fabia"
+        },
+        {
+          "canonicalName": "Favorit",
+          "normalizedName": "favorit",
+          "sourceLabel": "Favorit",
+          "sourceSlug": "skoda-favorit"
+        },
+        {
+          "canonicalName": "Felicia",
+          "normalizedName": "felicia",
+          "sourceLabel": "Felicia",
+          "sourceSlug": "skoda-felicia"
+        },
+        {
+          "canonicalName": "Forman",
+          "normalizedName": "forman",
+          "sourceLabel": "Forman",
+          "sourceSlug": "skoda-forman"
+        },
+        {
+          "canonicalName": "Octavia",
+          "normalizedName": "octavia",
+          "sourceLabel": "Octavia",
+          "sourceSlug": "skoda-octavia"
+        },
+        {
+          "canonicalName": "Rapid",
+          "normalizedName": "rapid",
+          "sourceLabel": "Rapid",
+          "sourceSlug": "skoda-rapid"
+        },
+        {
+          "canonicalName": "Roomster",
+          "normalizedName": "roomster",
+          "sourceLabel": "Roomster",
+          "sourceSlug": "skoda-roomster"
+        },
+        {
+          "canonicalName": "Scala",
+          "normalizedName": "scala",
+          "sourceLabel": "Scala",
+          "sourceSlug": "skoda-scala"
+        },
+        {
+          "canonicalName": "Superb",
+          "normalizedName": "superb",
+          "sourceLabel": "Superb",
+          "sourceSlug": "skoda-superb"
+        }
+      ]
+    },
+    {
+      "canonicalName": "Smart",
+      "normalizedName": "smart",
+      "sourceLabel": "Smart",
+      "sourceSlug": "smart",
+      "series": [
+        {
+          "canonicalName": "Forfour",
+          "normalizedName": "forfour",
+          "sourceLabel": "Forfour",
+          "sourceSlug": "smart-forfour"
+        },
+        {
+          "canonicalName": "Fortwo",
+          "normalizedName": "fortwo",
+          "sourceLabel": "Fortwo",
+          "sourceSlug": "smart-fortwo"
+        },
+        {
+          "canonicalName": "Roadster",
+          "normalizedName": "roadster",
+          "sourceLabel": "Roadster",
+          "sourceSlug": "smart-roadster"
+        }
+      ]
+    },
+    {
+      "canonicalName": "Subaru",
+      "normalizedName": "subaru",
+      "sourceLabel": "Subaru",
+      "sourceSlug": "subaru",
+      "series": [
+        {
+          "canonicalName": "BRZ",
+          "normalizedName": "brz",
+          "sourceLabel": "BRZ",
+          "sourceSlug": "subaru-brz"
+        },
+        {
+          "canonicalName": "Impreza",
+          "normalizedName": "ımpreza",
+          "sourceLabel": "Impreza",
+          "sourceSlug": "subaru-impreza"
+        },
+        {
+          "canonicalName": "Justy",
+          "normalizedName": "justy",
+          "sourceLabel": "Justy",
+          "sourceSlug": "subaru-justy"
+        },
+        {
+          "canonicalName": "Legacy",
+          "normalizedName": "legacy",
+          "sourceLabel": "Legacy",
+          "sourceSlug": "subaru-legacy"
+        },
+        {
+          "canonicalName": "Levorg",
+          "normalizedName": "levorg",
+          "sourceLabel": "Levorg",
+          "sourceSlug": "subaru-levorg"
+        },
+        {
+          "canonicalName": "Vivio",
+          "normalizedName": "vivio",
+          "sourceLabel": "Vivio",
+          "sourceSlug": "subaru-vivio"
+        }
+      ]
+    },
+    {
+      "canonicalName": "Suzuki",
+      "normalizedName": "suzuki",
+      "sourceLabel": "Suzuki",
+      "sourceSlug": "suzuki",
+      "series": [
+        {
+          "canonicalName": "Alto",
+          "normalizedName": "alto",
+          "sourceLabel": "Alto",
+          "sourceSlug": "suzuki-alto"
+        },
+        {
+          "canonicalName": "Baleno",
+          "normalizedName": "baleno",
+          "sourceLabel": "Baleno",
+          "sourceSlug": "suzuki-baleno"
+        },
+        {
+          "canonicalName": "Liana",
+          "normalizedName": "liana",
+          "sourceLabel": "Liana",
+          "sourceSlug": "suzuki-liana"
+        },
+        {
+          "canonicalName": "Maruti",
+          "normalizedName": "maruti",
+          "sourceLabel": "Maruti",
+          "sourceSlug": "suzuki-maruti"
+        },
+        {
+          "canonicalName": "Splash",
+          "normalizedName": "splash",
+          "sourceLabel": "Splash",
+          "sourceSlug": "suzuki-splash"
+        },
+        {
+          "canonicalName": "Swift",
+          "normalizedName": "swift",
+          "sourceLabel": "Swift",
+          "sourceSlug": "suzuki-swift"
+        },
+        {
+          "canonicalName": "SX4",
+          "normalizedName": "sx4",
+          "sourceLabel": "SX4",
+          "sourceSlug": "suzuki-sx4"
+        }
+      ]
+    },
+    {
+      "canonicalName": "Tata",
+      "normalizedName": "tata",
+      "sourceLabel": "Tata",
+      "sourceSlug": "tata",
+      "series": [
+        {
+          "canonicalName": "Indica",
+          "normalizedName": "ındica",
+          "sourceLabel": "Indica",
+          "sourceSlug": "tata-indica"
+        },
+        {
+          "canonicalName": "Indigo",
+          "normalizedName": "ındigo",
+          "sourceLabel": "Indigo",
+          "sourceSlug": "tata-indigo"
+        },
+        {
+          "canonicalName": "Manza",
+          "normalizedName": "manza",
+          "sourceLabel": "Manza",
+          "sourceSlug": "tata-manza"
+        },
+        {
+          "canonicalName": "Marina",
+          "normalizedName": "marina",
+          "sourceLabel": "Marina",
+          "sourceSlug": "tata-marina"
+        },
+        {
+          "canonicalName": "Vista",
+          "normalizedName": "vista",
+          "sourceLabel": "Vista",
+          "sourceSlug": "tata-vista"
+        }
+      ]
+    },
+    {
+      "canonicalName": "Tesla",
+      "normalizedName": "tesla",
+      "sourceLabel": "Tesla",
+      "sourceSlug": "tesla",
+      "series": []
+    },
+    {
+      "canonicalName": "Tofas",
+      "normalizedName": "tofas",
+      "sourceLabel": "Tofas",
+      "sourceSlug": "tofas",
+      "series": [
+        {
+          "canonicalName": "Dogan",
+          "normalizedName": "dogan",
+          "sourceLabel": "Dogan",
+          "sourceSlug": "tofas-dogan"
+        },
+        {
+          "canonicalName": "Dogan L",
+          "normalizedName": "dogan l",
+          "sourceLabel": "Dogan L",
+          "sourceSlug": "tofas-dogan-l"
+        },
+        {
+          "canonicalName": "Dogan Slx",
+          "normalizedName": "dogan slx",
+          "sourceLabel": "Dogan Slx",
+          "sourceSlug": "tofas-dogan-slx"
+        },
+        {
+          "canonicalName": "Kartal",
+          "normalizedName": "kartal",
+          "sourceLabel": "Kartal",
+          "sourceSlug": "tofas-kartal"
+        },
+        {
+          "canonicalName": "Murat",
+          "normalizedName": "murat",
+          "sourceLabel": "Murat",
+          "sourceSlug": "tofas-murat"
+        },
+        {
+          "canonicalName": "Sahin",
+          "normalizedName": "sahin",
+          "sourceLabel": "Sahin",
+          "sourceSlug": "tofas-sahin"
+        },
+        {
+          "canonicalName": "Sahin S",
+          "normalizedName": "sahin s",
+          "sourceLabel": "Sahin S",
+          "sourceSlug": "tofas-sahin-s"
+        },
+        {
+          "canonicalName": "Serce",
+          "normalizedName": "serce",
+          "sourceLabel": "Serce",
+          "sourceSlug": "tofas-serce"
+        }
+      ]
+    },
+    {
+      "canonicalName": "Togg",
+      "normalizedName": "togg",
+      "sourceLabel": "Togg",
+      "sourceSlug": "togg",
+      "series": []
+    },
+    {
+      "canonicalName": "Toyota",
+      "normalizedName": "toyota",
+      "sourceLabel": "Toyota",
+      "sourceSlug": "toyota",
+      "series": [
+        {
+          "canonicalName": "Auris",
+          "normalizedName": "auris",
+          "sourceLabel": "Auris",
+          "sourceSlug": "toyota-auris"
+        },
+        {
+          "canonicalName": "Avensis",
+          "normalizedName": "avensis",
+          "sourceLabel": "Avensis",
+          "sourceSlug": "toyota-avensis"
+        },
+        {
+          "canonicalName": "Camry",
+          "normalizedName": "camry",
+          "sourceLabel": "Camry",
+          "sourceSlug": "toyota-camry"
+        },
+        {
+          "canonicalName": "Carina",
+          "normalizedName": "carina",
+          "sourceLabel": "Carina",
+          "sourceSlug": "toyota-carina"
+        },
+        {
+          "canonicalName": "Celica",
+          "normalizedName": "celica",
+          "sourceLabel": "Celica",
+          "sourceSlug": "toyota-celica"
+        },
+        {
+          "canonicalName": "Corolla",
+          "normalizedName": "corolla",
+          "sourceLabel": "Corolla",
+          "sourceSlug": "toyota-corolla"
+        },
+        {
+          "canonicalName": "Corona",
+          "normalizedName": "corona",
+          "sourceLabel": "Corona",
+          "sourceSlug": "toyota-corona"
+        },
+        {
+          "canonicalName": "Cressida",
+          "normalizedName": "cressida",
+          "sourceLabel": "Cressida",
+          "sourceSlug": "toyota-cressida"
+        },
+        {
+          "canonicalName": "Starlet",
+          "normalizedName": "starlet",
+          "sourceLabel": "Starlet",
+          "sourceSlug": "toyota-starlet"
+        },
+        {
+          "canonicalName": "Urban Cruiser",
+          "normalizedName": "urban cruiser",
+          "sourceLabel": "Urban Cruiser",
+          "sourceSlug": "toyota-urban-cruiser"
+        },
+        {
+          "canonicalName": "Verso",
+          "normalizedName": "verso",
+          "sourceLabel": "Verso",
+          "sourceSlug": "toyota-verso"
+        },
+        {
+          "canonicalName": "Yaris",
+          "normalizedName": "yaris",
+          "sourceLabel": "Yaris",
+          "sourceSlug": "toyota-yaris"
+        }
+      ]
+    },
+    {
+      "canonicalName": "Vanderhall",
+      "normalizedName": "vanderhall",
+      "sourceLabel": "Vanderhall",
+      "sourceSlug": "vanderhall",
+      "series": [
+        {
+          "canonicalName": "Carmel",
+          "normalizedName": "carmel",
+          "sourceLabel": "Carmel",
+          "sourceSlug": "vanderhall-carmel"
+        }
+      ]
+    },
+    {
+      "canonicalName": "Volkswagen",
+      "normalizedName": "volkswagen",
+      "sourceLabel": "Volkswagen",
+      "sourceSlug": "volkswagen",
+      "series": [
+        {
+          "canonicalName": "Arteon",
+          "normalizedName": "arteon",
+          "sourceLabel": "Arteon",
+          "sourceSlug": "volkswagen-arteon"
+        },
+        {
+          "canonicalName": "Beetle",
+          "normalizedName": "beetle",
+          "sourceLabel": "Beetle",
+          "sourceSlug": "volkswagen-beetle"
+        },
+        {
+          "canonicalName": "Bora",
+          "normalizedName": "bora",
+          "sourceLabel": "Bora",
+          "sourceSlug": "volkswagen-bora"
+        },
+        {
+          "canonicalName": "EOS",
+          "normalizedName": "eos",
+          "sourceLabel": "EOS",
+          "sourceSlug": "volkswagen-eos"
+        },
+        {
+          "canonicalName": "Golf",
+          "normalizedName": "golf",
+          "sourceLabel": "Golf",
+          "sourceSlug": "volkswagen-golf"
+        },
+        {
+          "canonicalName": "Jetta",
+          "normalizedName": "jetta",
+          "sourceLabel": "Jetta",
+          "sourceSlug": "volkswagen-jetta"
+        },
+        {
+          "canonicalName": "Lupo",
+          "normalizedName": "lupo",
+          "sourceLabel": "Lupo",
+          "sourceSlug": "volkswagen-lupo"
+        },
+        {
+          "canonicalName": "Passat",
+          "normalizedName": "passat",
+          "sourceLabel": "Passat",
+          "sourceSlug": "volkswagen-passat"
+        },
+        {
+          "canonicalName": "Passat Alltrack",
+          "normalizedName": "passat alltrack",
+          "sourceLabel": "Passat Alltrack",
+          "sourceSlug": "volkswagen-passat-alltrack"
+        },
+        {
+          "canonicalName": "Passat Variant",
+          "normalizedName": "passat variant",
+          "sourceLabel": "Passat Variant",
+          "sourceSlug": "volkswagen-passat-variant"
+        },
+        {
+          "canonicalName": "Phaeton",
+          "normalizedName": "phaeton",
+          "sourceLabel": "Phaeton",
+          "sourceSlug": "volkswagen-phaeton"
+        },
+        {
+          "canonicalName": "Polo",
+          "normalizedName": "polo",
+          "sourceLabel": "Polo",
+          "sourceSlug": "volkswagen-polo"
+        },
+        {
+          "canonicalName": "Scirocco",
+          "normalizedName": "scirocco",
+          "sourceLabel": "Scirocco",
+          "sourceSlug": "volkswagen-scirocco"
+        },
+        {
+          "canonicalName": "Sharan",
+          "normalizedName": "sharan",
+          "sourceLabel": "Sharan",
+          "sourceSlug": "volkswagen-sharan"
+        },
+        {
+          "canonicalName": "The Beetle",
+          "normalizedName": "the beetle",
+          "sourceLabel": "The Beetle",
+          "sourceSlug": "volkswagen-the-beetle"
+        },
+        {
+          "canonicalName": "Touran",
+          "normalizedName": "touran",
+          "sourceLabel": "Touran",
+          "sourceSlug": "volkswagen-touran"
+        },
+        {
+          "canonicalName": "Up Club",
+          "normalizedName": "up club",
+          "sourceLabel": "Up Club",
+          "sourceSlug": "volkswagen-up-club"
+        },
+        {
+          "canonicalName": "Vento",
+          "normalizedName": "vento",
+          "sourceLabel": "Vento",
+          "sourceSlug": "volkswagen-vento"
+        },
+        {
+          "canonicalName": "VW-CC",
+          "normalizedName": "vw-cc",
+          "sourceLabel": "VW-CC",
+          "sourceSlug": "volkswagen-vw-cc"
+        }
+      ]
+    },
+    {
+      "canonicalName": "Volta",
+      "normalizedName": "volta",
+      "sourceLabel": "Volta",
+      "sourceSlug": "volta",
+      "series": [
+        {
+          "canonicalName": "EV1",
+          "normalizedName": "ev1",
+          "sourceLabel": "EV1",
+          "sourceSlug": "volta-ev1"
+        },
+        {
+          "canonicalName": "V1",
+          "normalizedName": "v1",
+          "sourceLabel": "V1",
+          "sourceSlug": "volta-v1"
+        }
+      ]
+    },
+    {
+      "canonicalName": "Volvo",
+      "normalizedName": "volvo",
+      "sourceLabel": "Volvo",
+      "sourceSlug": "volvo",
+      "series": [
+        {
+          "canonicalName": "C30",
+          "normalizedName": "c30",
+          "sourceLabel": "C30",
+          "sourceSlug": "volvo-c30"
+        },
+        {
+          "canonicalName": "C70",
+          "normalizedName": "c70",
+          "sourceLabel": "C70",
+          "sourceSlug": "volvo-c70"
+        },
+        {
+          "canonicalName": "S40",
+          "normalizedName": "s40",
+          "sourceLabel": "S40",
+          "sourceSlug": "volvo-s40"
+        },
+        {
+          "canonicalName": "S60",
+          "normalizedName": "s60",
+          "sourceLabel": "S60",
+          "sourceSlug": "volvo-s60"
+        },
+        {
+          "canonicalName": "S70",
+          "normalizedName": "s70",
+          "sourceLabel": "S70",
+          "sourceSlug": "volvo-s70"
+        },
+        {
+          "canonicalName": "S80",
+          "normalizedName": "s80",
+          "sourceLabel": "S80",
+          "sourceSlug": "volvo-s80"
+        },
+        {
+          "canonicalName": "S90",
+          "normalizedName": "s90",
+          "sourceLabel": "S90",
+          "sourceSlug": "volvo-s90"
+        },
+        {
+          "canonicalName": "V40",
+          "normalizedName": "v40",
+          "sourceLabel": "V40",
+          "sourceSlug": "volvo-v40"
+        },
+        {
+          "canonicalName": "V50",
+          "normalizedName": "v50",
+          "sourceLabel": "V50",
+          "sourceSlug": "volvo-v50"
+        },
+        {
+          "canonicalName": "V60",
+          "normalizedName": "v60",
+          "sourceLabel": "V60",
+          "sourceSlug": "volvo-v60"
+        },
+        {
+          "canonicalName": "V70",
+          "normalizedName": "v70",
+          "sourceLabel": "V70",
+          "sourceSlug": "volvo-v70"
+        }
+      ]
+    },
+    {
+      "canonicalName": "XEV",
+      "normalizedName": "xev",
+      "sourceLabel": "XEV",
+      "sourceSlug": "xev",
+      "series": [
+        {
+          "canonicalName": "Yoyo",
+          "normalizedName": "yoyo",
+          "sourceLabel": "Yoyo",
+          "sourceSlug": "xev-yoyo"
+        }
+      ]
+    },
+    {
+      "canonicalName": "Yuki",
+      "normalizedName": "yuki",
+      "sourceLabel": "Yuki",
+      "sourceSlug": "yuki",
+      "series": [
+        {
+          "canonicalName": "AMY",
+          "normalizedName": "amy",
+          "sourceLabel": "AMY",
+          "sourceSlug": "yuki-amy"
+        },
+        {
+          "canonicalName": "Hector",
+          "normalizedName": "hector",
+          "sourceLabel": "Hector",
+          "sourceSlug": "yuki-hector"
+        }
+      ]
+    }
+  ]
+}
