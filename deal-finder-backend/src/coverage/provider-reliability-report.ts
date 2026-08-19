@@ -22,8 +22,9 @@ import {
   type ReliabilityStore,
 } from "./provider-reliability-store.js";
 import { buildSearchIntentFromFilter } from "./search-intent-builder.js";
+import { VEHICLE_DISCOVERY_PLATFORMS } from "./provider-registry.js";
 
-const HEALTH_PLATFORMS = ["arabam", "letgo", "sahibinden"] as const;
+const HEALTH_PLATFORMS = VEHICLE_DISCOVERY_PLATFORMS;
 
 const hondaCivicSample = {
   category: "Vasıta > Otomobil",

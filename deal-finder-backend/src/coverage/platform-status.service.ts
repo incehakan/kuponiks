@@ -18,12 +18,12 @@ export interface PlatformFieldCompleteness {
 }
 
 export interface PlatformStatusReport {
-  snapshots: Record<"arabam" | "letgo" | "sahibinden", PlatformRuntimeSnapshot>;
+  snapshots: Record<"arabam" | "otoplus" | "letgo" | "sahibinden", PlatformRuntimeSnapshot>;
   completeness: PlatformFieldCompleteness[];
 }
 
 export async function measureListingCompleteness(
-  platforms: ScrapePlatform[] = ["arabam", "letgo", "sahibinden"],
+  platforms: ScrapePlatform[] = ["arabam", "otoplus", "letgo", "sahibinden"],
 ): Promise<PlatformFieldCompleteness[]> {
   const rows = await Promise.all(
     platforms.map(async (platform) => {

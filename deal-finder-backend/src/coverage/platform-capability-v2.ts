@@ -29,6 +29,25 @@ export const PLATFORM_CRITERION_ROLES_V2: Record<
     transmission: "MATCHER_ONLY",
     sellerType: "MATCHER_ONLY",
   },
+  otoplus: {
+    brand: "SOURCE",
+    series: "SOURCE",
+    keywords: "MATCHER_ONLY",
+    city: "MATCHER_ONLY",
+    minYear: "MATCHER_ONLY",
+    maxYear: "MATCHER_ONLY",
+    minPrice: "MATCHER_ONLY",
+    maxPrice: "MATCHER_ONLY",
+    category: "MATCHER_ONLY",
+    subcategory: "MATCHER_ONLY",
+    district: "MATCHER_ONLY",
+    minMileage: "MATCHER_ONLY",
+    maxMileage: "MATCHER_ONLY",
+    trim: "MATCHER_ONLY",
+    fuelType: "MATCHER_ONLY",
+    transmission: "MATCHER_ONLY",
+    sellerType: "MATCHER_ONLY",
+  },
   letgo: {
     brand: "SOURCE",
     series: "SOURCE",
@@ -94,6 +113,7 @@ export const PLATFORM_MATCHER_RELIABILITY: Record<
   MatcherReliability
 > = {
   arabam: "structured",
+  otoplus: "structured",
   letgo: "weak",
   sahibinden: "structured",
   hepsiemlak: "structured",

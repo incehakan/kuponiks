@@ -171,7 +171,10 @@ describe("Provider reliability classification", () => {
     );
     const counts = countEffectiveSources(rows);
     expect(counts.activeSourceCount).toBe(1);
-    expect(counts.limitedSourceCount).toBe(1);
+    expect(rows.find((row) => row.platform === "otoplus")?.effectiveStatus).toBe(
+      "LIMITED",
+    );
+    expect(counts.limitedSourceCount).toBe(2);
     expect(counts.unavailableSourceCount).toBe(1);
     expect(counts.statusLabel).toBe("1 kaynak aktif");
     expect(counts.statusLabel).not.toContain("2/3");
@@ -186,6 +189,7 @@ describe("Provider reliability classification", () => {
     );
     const dto = toCoverageApiResponse(snapshot);
     expect(dto.activeSourceCount).toBe(1);
+    expect(dto.limitedSourceCount).toBe(2);
     expect(dto.monitoredPlatformCount).toBe(1);
     expect(dto.statusLabel).toBe("1 kaynak aktif");
     const letgo = dto.platforms.find((row) => row.platform === "letgo");
@@ -401,7 +405,7 @@ describe("27. production-like replay", () => {
       { arabam, letgo, sahibinden },
     );
     expect(snapshot.activeSourceCount).toBe(1);
-    expect(snapshot.limitedSourceCount).toBe(1);
+    expect(snapshot.limitedSourceCount).toBe(2);
     expect(snapshot.unavailableSourceCount).toBe(1);
     expect(snapshot.statusLabel).toBe("1 kaynak aktif");
   });

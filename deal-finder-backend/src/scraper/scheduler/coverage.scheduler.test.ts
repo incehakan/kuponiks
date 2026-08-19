@@ -62,7 +62,7 @@ describe("Coverage scheduler routing", () => {
   it("26. coverage routing disabled → old 3-platform behavior", () => {
     const groups = groupActiveFilters([honda], { routingEnabled: false });
     const platforms = [...new Set(groups.map((g) => g.platform))].sort();
-    expect(platforms).toEqual(["arabam", "letgo", "sahibinden"]);
+    expect(platforms).toEqual(["arabam", "letgo", "otoplus", "sahibinden"]);
   });
 
   it("27. enabled → only supported/usable groups", () => {
@@ -71,7 +71,7 @@ describe("Coverage scheduler routing", () => {
       availability: defaultAvailabilityMap(),
     });
     const platforms = [...new Set(groups.map((g) => g.platform))].sort();
-    expect(platforms).toEqual(["arabam", "letgo"]);
+    expect(platforms).toEqual(["arabam", "letgo", "otoplus"]);
     expect(platforms).not.toContain("sahibinden");
     expect(platforms).not.toContain("hepsiemlak");
   });
@@ -136,7 +136,7 @@ describe("Coverage scheduler routing", () => {
       reliability: { arabam: "HEALTHY", letgo: "NO_DATA" },
     });
     const platforms = [...new Set(groups.map((g) => g.platform))].sort();
-    expect(platforms).toEqual(["arabam", "letgo"]);
+    expect(platforms).toEqual(["arabam", "letgo", "otoplus"]);
     expect(groups.find((g) => g.platform === "arabam")?.intervalMs).toBe(
       getScrapeIntervalMs(SubscriptionPlan.VIP),
     );

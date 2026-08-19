@@ -16,6 +16,7 @@ import {
   ARABAM_PROBE_SCRIPT,
   ARABAM_WAIT_SELECTOR,
 } from "../parsers/arabam.parser.js";
+import { parseArabamListHtml } from "../parsers/arabam-http.js";
 import { logDomProbe } from "../parsers/dom-probe.js";
 import { pickBestListingImage } from "../../lib/listing-image.js";
 import { enrichArabamRowsMissingImages } from "../utils/arabam-detail-image.js";
@@ -41,6 +42,12 @@ export class ArabamAdapter extends BaseScraperAdapter {
   async search(params: ScrapeSearchParams): Promise<RawScrapedListing[]> {
     const limit = this.clampLimit(params.limit);
     const url = this.buildSearchUrl(params);
+
+    const publicHtml = await this.searchViaPublicHtml(url, params, limit);
+    if (publicHtml.length > 0) {
+      console.log(`[arabam] Public HTML → ${publicHtml.length} ilan`);
+      return publicHtml;
+    }
 
     let browser: Browser | null = null;
 
@@ -167,6 +174,37 @@ export class ArabamAdapter extends BaseScraperAdapter {
       } catch {
         // ignore
       }
+    }
+  }
+
+  private async searchViaPublicHtml(
+    url: string,
+    params: ScrapeSearchParams,
+    limit: number,
+  ): Promise<RawScrapedListing[]> {
+    try {
+      const res = await fetch(url, {
+        redirect: "follow",
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+          Accept: "text/html,application/xhtml+xml",
+          "Accept-Language": "tr-TR,tr;q=0.9,en;q=0.8",
+        },
+      });
+      if (res.status !== 200) {
+        console.warn(
+          `[arabam] Public HTML status=${res.status} — puppeteer fallback`,
+        );
+        return [];
+      }
+      const html = await res.text();
+      const rows = parseArabamListHtml(html);
+      return this.mapRows(rows, params).slice(0, limit);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.warn(`[arabam] Public HTML fetch failed: ${message}`);
+      return [];
     }
   }
 

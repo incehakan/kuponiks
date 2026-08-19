@@ -3,6 +3,7 @@ import type { SearchIntent } from "../../coverage/search-intent.js";
 import type { BuiltPlatformQuery } from "./planners/arabam-query-builder.js";
 import { buildArabamQuery } from "./planners/arabam-query-builder.js";
 import { buildLetgoQuery } from "./planners/letgo-query-builder.js";
+import { buildOtoplusQuery } from "./planners/otoplus-query-builder.js";
 import { buildSahibindenQuery } from "./planners/sahibinden-query-builder.js";
 import {
   planFromFilter,
@@ -35,6 +36,8 @@ export function buildPlatformQueryFromPlan(
   switch (plan.platform) {
     case "arabam":
       return buildArabamQuery(plan);
+    case "otoplus":
+      return buildOtoplusQuery(plan);
     case "letgo":
       return buildLetgoQuery(plan);
     case "sahibinden":

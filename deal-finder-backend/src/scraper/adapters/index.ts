@@ -2,6 +2,7 @@ import { arabamAdapter } from "./arabam.adapter.js";
 import type { BaseScraperAdapter } from "./base.adapter.js";
 import { hepsiemlakAdapter } from "./hepsiemlak.adapter.js";
 import { letgoAdapter } from "./letgo.adapter.js";
+import { otoplusAdapter } from "./otoplus.adapter.js";
 import { sahibindenAdapter } from "./sahibinden.adapter.js";
 import type { ScrapePlatform } from "../../queues/scraper.queue.js";
 
@@ -14,6 +15,8 @@ export function resolveScraperAdapter(
   switch (platform) {
     case "arabam":
       return arabamAdapter;
+    case "otoplus":
+      return otoplusAdapter;
     case "letgo":
       return letgoAdapter;
     case "sahibinden":

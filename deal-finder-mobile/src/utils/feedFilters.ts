@@ -92,6 +92,7 @@ export function applyDealFeedFilters(
 export function platformLabel(value: string): string {
   const key = value.toLowerCase();
   if (key === 'arabam') return 'Arabam';
+  if (key === 'otoplus') return 'Otoplus';
   if (key === 'sahibinden') return 'Sahibinden';
   if (key === 'letgo') return 'Letgo';
   if (key === 'hepsiemlak') return 'Hepsiemlak';

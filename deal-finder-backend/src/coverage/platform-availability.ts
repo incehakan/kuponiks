@@ -41,10 +41,11 @@ function parseLast(raw: string | null): LastScrapeSnapshot | null {
  * Not completeness scores — runtime only.
  */
 export const DEFAULT_RUNTIME_SNAPSHOT: Record<
-  "arabam" | "letgo" | "sahibinden",
+  "arabam" | "otoplus" | "letgo" | "sahibinden",
   Pick<PlatformRuntimeSnapshot, "availability" | "reason">
 > = {
   arabam: { availability: "AVAILABLE", reason: "none" },
+  otoplus: { availability: "AVAILABLE", reason: "none" },
   letgo: { availability: "DEGRADED", reason: "empty" },
   sahibinden: { availability: "UNAVAILABLE", reason: "cloudflare" },
 };
@@ -62,6 +63,19 @@ function classifyArabam(input: {
     return { availability: "DEGRADED", reason: "empty" };
   }
   return { ...DEFAULT_RUNTIME_SNAPSHOT.arabam };
+}
+
+function classifyOtoplus(input: {
+  success: number;
+  last: LastScrapeSnapshot | null;
+}): { availability: RuntimeAvailability; reason: AvailabilityReason } {
+  if (input.last?.outcome === "success" || input.success > 0) {
+    return { availability: "AVAILABLE", reason: "none" };
+  }
+  if (input.last?.outcome === "empty") {
+    return { availability: "DEGRADED", reason: "empty" };
+  }
+  return { ...DEFAULT_RUNTIME_SNAPSHOT.otoplus };
 }
 
 function classifyLetgo(input: {
@@ -99,15 +113,17 @@ export async function readLastScrapeSnapshot(
 }
 
 export async function loadPlatformRuntimeSnapshots(): Promise<
-  Record<"arabam" | "letgo" | "sahibinden", PlatformRuntimeSnapshot>
+  Record<"arabam" | "otoplus" | "letgo" | "sahibinden", PlatformRuntimeSnapshot>
 > {
-  const [stats, arabamCircuit, letgoCircuit, sahibindenCircuit, arabamLast, letgoLast, sahibindenLast] =
+  const [stats, arabamCircuit, otoplusCircuit, letgoCircuit, sahibindenCircuit, arabamLast, otoplusLast, letgoLast, sahibindenLast] =
     await Promise.all([
       readDayOpsStats(),
       getPlatformCircuit("arabam"),
+      getPlatformCircuit("otoplus"),
       getPlatformCircuit("letgo"),
       getPlatformCircuit("sahibinden"),
       readLastScrapeSnapshot("arabam"),
+      readLastScrapeSnapshot("otoplus"),
       readLastScrapeSnapshot("letgo"),
       readLastScrapeSnapshot("sahibinden"),
     ]);
@@ -122,6 +138,10 @@ export async function loadPlatformRuntimeSnapshots(): Promise<
     empty: stats["arabam:outcome:empty"] ?? 0,
     failure: stats["arabam:outcome:failure"] ?? 0,
     last: arabamLast,
+  });
+  const otoplus = classifyOtoplus({
+    success: stats["otoplus:outcome:success"] ?? 0,
+    last: otoplusLast,
   });
   const letgo = classifyLetgo({
     success: stats["letgo:outcome:success"] ?? 0,
@@ -144,6 +164,16 @@ export async function loadPlatformRuntimeSnapshots(): Promise<
       lastSuccessAt: arabamLast?.outcome === "success" ? arabamLast.at : null,
       lastRawCount: arabamLast?.rawCount ?? null,
       lastOutcome: arabamLast?.outcome ?? null,
+    },
+    otoplus: {
+      platform: "otoplus",
+      ...otoplus,
+      circuitOpen: Boolean(
+        otoplusCircuit && otoplusCircuit.nextAllowedAt > now,
+      ),
+      lastSuccessAt: otoplusLast?.outcome === "success" ? otoplusLast.at : null,
+      lastRawCount: otoplusLast?.rawCount ?? null,
+      lastOutcome: otoplusLast?.outcome ?? null,
     },
     letgo: {
       platform: "letgo",
@@ -171,6 +201,10 @@ export async function loadAvailabilityMap(): Promise<AvailabilityMap> {
     arabam: {
       availability: snapshots.arabam.availability,
       reason: snapshots.arabam.reason,
+    },
+    otoplus: {
+      availability: snapshots.otoplus.availability,
+      reason: snapshots.otoplus.reason,
     },
     letgo: {
       availability: snapshots.letgo.availability,

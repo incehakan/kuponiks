@@ -313,7 +313,9 @@ export function mapArabamLdVehicle(item: Record<string, unknown>): ArabamLdVehic
   const model = asBrandName(item.model);
   const mileage = asMileageValue(item.mileageFromOdometer);
   const year =
-    asYearValue(item.vehicleModelDate) ?? asYearValue(item.productionDate);
+    asYearValue(item.vehicleModelDate) ??
+    asYearValue(item.modelDate) ??
+    asYearValue(item.productionDate);
 
   let transmission: string | null = null;
   if (typeof item.vehicleTransmission === "string" && item.vehicleTransmission.trim()) {

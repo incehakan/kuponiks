@@ -173,8 +173,13 @@ describe("Coverage API", () => {
     });
     const body = res.json();
     expect(body.activeSourceCount).toBe(1);
-    expect(body.limitedSourceCount).toBe(1);
+    expect(body.limitedSourceCount).toBe(2);
     expect(body.unavailableSourceCount).toBe(1);
+    const otoplus = body.platforms.find(
+      (p: { platform: string }) => p.platform === "otoplus",
+    );
+    expect(otoplus.reliability).toBe("UNKNOWN");
+    expect(otoplus.effectiveStatus).toBe("LIMITED");
     await app.close();
   });
 });
@@ -183,6 +188,7 @@ describe("default availability (no live Redis)", () => {
   it("matches production known defaults", () => {
     const map = defaultAvailabilityMap();
     expect(map.arabam?.availability).toBe("AVAILABLE");
+    expect(map.otoplus?.availability).toBe("AVAILABLE");
     expect(map.letgo?.availability).toBe("DEGRADED");
     expect(map.sahibinden?.availability).toBe("UNAVAILABLE");
     expect(map.sahibinden?.reason).toBe("cloudflare");

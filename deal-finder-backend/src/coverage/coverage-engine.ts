@@ -25,26 +25,20 @@ import {
   isVehicleCategory,
   type SearchIntent,
 } from "./search-intent.js";
-
-const VEHICLE_PLATFORMS: readonly ScrapePlatform[] = [
-  "arabam",
-  "letgo",
-  "sahibinden",
-];
-const REALTY_PLATFORMS: readonly ScrapePlatform[] = [
-  "hepsiemlak",
-  "sahibinden",
-];
+import {
+  REALTY_DISCOVERY_PLATFORMS,
+  VEHICLE_DISCOVERY_PLATFORMS,
+} from "./provider-registry.js";
 
 /** Vehicle discovery platforms — hepsiemlak is a separate vertical. */
 export function coveragePlatformsForIntent(
   intent: SearchIntent,
 ): ScrapePlatform[] {
   if (isRealtyCategory(intent.category)) {
-    return [...REALTY_PLATFORMS];
+    return [...REALTY_DISCOVERY_PLATFORMS];
   }
   if (isVehicleCategory(intent.category)) {
-    return [...VEHICLE_PLATFORMS];
+    return [...VEHICLE_DISCOVERY_PLATFORMS];
   }
   return ["sahibinden", "letgo"];
 }
@@ -112,6 +106,7 @@ export type AvailabilityMap = Partial<Record<ScrapePlatform, AvailabilityOverrid
 export function defaultAvailabilityMap(): AvailabilityMap {
   return {
     arabam: { availability: "AVAILABLE", reason: "none" },
+    otoplus: { availability: "AVAILABLE", reason: "none" },
     letgo: { availability: "DEGRADED", reason: "empty" },
     sahibinden: { availability: "UNAVAILABLE", reason: "cloudflare" },
   };

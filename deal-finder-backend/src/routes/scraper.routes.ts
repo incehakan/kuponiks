@@ -8,6 +8,7 @@ import { isRedisAvailable } from "../lib/redis.js";
 
 const TEST_PLATFORMS = new Set<ScrapePlatform>([
   "arabam",
+  "otoplus",
   "letgo",
   "sahibinden",
   "hepsiemlak",
@@ -51,7 +52,7 @@ export const scraperRoutes: FastifyPluginAsync = async (
         statusCode: 400,
         error: "ValidationError",
         message:
-          'platform "arabam", "letgo", "sahibinden" veya "hepsiemlak" olmalıdır.',
+          'platform "arabam", "otoplus", "letgo", "sahibinden" veya "hepsiemlak" olmalıdır.',
       });
     }
 

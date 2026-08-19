@@ -134,9 +134,9 @@ describe("Platform coverage engine", () => {
 
   it("17. schedulable count ignores UNAVAILABLE (routing)", () => {
     const rows = evaluateCoverage(hondaCivic(), defaultAvailabilityMap());
-    expect(countMonitoredPlatforms(rows)).toBe(2);
+    expect(countMonitoredPlatforms(rows)).toBe(3);
     expect(rows.filter((row) => row.schedulable).map((row) => row.platform).sort()).toEqual(
-      ["arabam", "letgo"],
+      ["arabam", "letgo", "otoplus"],
     );
   });
 
@@ -167,9 +167,10 @@ describe("Platform coverage engine", () => {
       formatCoverageLogLine("f1", snapshot),
     );
     expect(formatCoverageLogLine("f1", snapshot)).toContain("arabam=FULL/AVAILABLE");
+    expect(formatCoverageLogLine("f1", snapshot)).toContain("otoplus=FULL/AVAILABLE");
     expect(formatCoverageLogLine("f1", snapshot)).toContain("letgo=PARTIAL/DEGRADED");
     expect(formatCoverageLogLine("f1", snapshot)).toContain("sahibinden=FULL/UNAVAILABLE");
-    expect(formatCoverageLogLine("f1", snapshot)).toContain("monitored=2");
+    expect(formatCoverageLogLine("f1", snapshot)).toContain("monitored=3");
   });
 
   it("activeSourceCount excludes Letgo NO_DATA", () => {

@@ -15,6 +15,7 @@ export const SCRAPER_QUEUE_NAME = "scraper-queue";
 export type ScrapePlatform =
   | "sahibinden"
   | "arabam"
+  | "otoplus"
   | "letgo"
   | "hepsiemlak"
   | "generic";

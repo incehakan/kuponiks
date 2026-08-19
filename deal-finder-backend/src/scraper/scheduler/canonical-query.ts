@@ -27,12 +27,10 @@ import {
 export type { SchedulerFilterInput };
 export { normalizeSchedulerCity, brandSeriesQueryText as scrapeQueryText };
 
-const ALL_PLATFORMS: readonly ScrapePlatform[] = [
-  "sahibinden",
-  "arabam",
-  "letgo",
-  "hepsiemlak",
-];
+import {
+  ALL_DISCOVERY_PLATFORMS,
+  VEHICLE_DISCOVERY_PLATFORMS,
+} from "../../coverage/provider-registry.js";
 
 export interface CanonicalQueryGroup {
   /** Deterministic source signature (platform + SOURCE criteria). */
@@ -75,7 +73,7 @@ export function platformsForCategory(category: string): ScrapePlatform[] {
     c.includes("suv") ||
     c.includes("ticari")
   ) {
-    return ["arabam", "sahibinden", "letgo"];
+    return [...VEHICLE_DISCOVERY_PLATFORMS];
   }
 
   if (
@@ -87,7 +85,7 @@ export function platformsForCategory(category: string): ScrapePlatform[] {
     return ["sahibinden", "letgo"];
   }
 
-  return [...ALL_PLATFORMS];
+  return [...ALL_DISCOVERY_PLATFORMS];
 }
 
 /** @deprecated Legacy key format — prefer buildSourceSignature for grouping. */

@@ -16,6 +16,9 @@ export function resolveSourceLabel(deal: Deal): string {
   if (raw.includes('letgo')) {
     return 'Letgo';
   }
+  if (raw.includes('otoplus')) {
+    return 'Otoplus';
+  }
   if (raw.includes('hepsiemlak')) {
     return 'hepsiemlak';
   }

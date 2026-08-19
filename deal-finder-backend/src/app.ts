@@ -159,6 +159,7 @@ export async function buildApp(): Promise<FastifyInstance> {
     );
     const providers = await getProviderHealthSummary().catch(() => ({
       arabam: "unknown",
+      otoplus: "unknown",
       letgo: "unknown",
       sahibinden: "unknown",
     }));

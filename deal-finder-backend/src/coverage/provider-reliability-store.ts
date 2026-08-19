@@ -82,7 +82,7 @@ export const redisReliabilityStore: ReliabilityStore = {
 };
 
 export async function loadReliabilityMap(
-  platforms: ScrapePlatform[] = ["arabam", "letgo", "sahibinden"],
+  platforms: ScrapePlatform[] = ["arabam", "otoplus", "letgo", "sahibinden"],
   store: ReliabilityStore = redisReliabilityStore,
 ): Promise<ReliabilityMap> {
   const entries = await Promise.all(
@@ -95,7 +95,7 @@ export async function loadReliabilityMap(
 }
 
 export async function loadReliabilityStates(
-  platforms: ScrapePlatform[] = ["arabam", "letgo", "sahibinden"],
+  platforms: ScrapePlatform[] = ["arabam", "otoplus", "letgo", "sahibinden"],
   store: ReliabilityStore = redisReliabilityStore,
 ): Promise<Record<string, ProviderReliabilityState>> {
   const out: Record<string, ProviderReliabilityState> = {};

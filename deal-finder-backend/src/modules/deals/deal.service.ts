@@ -3,6 +3,7 @@ import { HttpError } from "../../lib/http-error.js";
 import { prisma } from "../../lib/prisma.js";
 import { DEAL_SCORE_THRESHOLD } from "../../analyzer/deal-score.service.js";
 import { toPublicListingImageUrl } from "../../lib/listing-image.js";
+import { listingPlatformLabel } from "../../lib/platform-label.js";
 
 /**
  * Deal listing DTO shaped for mobile clients (backward-compatible + V2 fields).
@@ -20,6 +21,7 @@ export interface DealListItem {
   dealPercent: number;
   listingUrl: string;
   platform: string;
+  platformLabel?: string;
   createdAt: Date;
   matchedAt?: Date | null;
   imageUrl?: string | null;
@@ -216,6 +218,7 @@ function mapListingToDeal(
     dealPercent,
     listingUrl: listing.url,
     platform: listing.platform,
+    platformLabel: listingPlatformLabel(listing.platform),
     createdAt: listing.createdAt,
     matchedAt: extras.matchedAt ?? null,
     imageUrl: toPublicListingImageUrl(listing.imageUrl),

@@ -119,6 +119,34 @@ describe("Deal Feed V2 user-specific API", () => {
     expect(deal.id).toBe(listing.id);
     expect(deal.matchedFilters?.[0]?.name).toBe("Honda Civic");
     expect(deal.listingUrl).toContain("arabam.com");
+    expect(deal.platform).toBe("arabam");
+  });
+
+  it("otoplus listing platform is passed through Deal Feed DTO", async () => {
+    const otoplusListing = {
+      ...listing,
+      id: "22222222-2222-2222-2222-222222222222",
+      platform: "otoplus",
+      url: "https://www.otoplus.com/honda/civic/x-562995",
+    };
+    mocked.userListingMatch.findMany.mockResolvedValue([
+      {
+        listingId: otoplusListing.id,
+        matchedAt: new Date(),
+        listing: otoplusListing,
+        filter: {
+          id: "f1",
+          name: "Honda Civic",
+          category: "Vasıta > Otomobil",
+          brand: "Honda",
+          series: "Civic",
+        },
+      },
+    ]);
+    const page = await service.getUserMatchedDeals("user-a", { limit: 20 });
+    expect(page.deals[0]?.platform).toBe("otoplus");
+    expect(page.deals[0]?.platformLabel).toBe("Otoplus");
+    expect(page.deals[0]?.listingUrl).toContain("otoplus.com");
   });
 
   it("4. insufficient market does not expose fake median", async () => {
