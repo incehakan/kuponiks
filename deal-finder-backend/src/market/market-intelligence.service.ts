@@ -17,6 +17,11 @@ import type {
   MarketAnalysisResult,
 } from "./market-intelligence.types.js";
 import {
+  computeMarketSourceDiversity,
+  emptyMarketSourceDiversity,
+  rowsMatchingIqrPrices,
+} from "./market-source-diversity.js";
+import {
   applySegmentConfidencePenalty,
   brandsMatch,
   citiesMatch,
@@ -54,6 +59,7 @@ function insufficient(
   reason: string,
   segmentLevel: MarketAnalysisResult["segmentLevel"] = null,
 ): MarketAnalysisResult {
+  const empty = emptyMarketSourceDiversity();
   return {
     status: "INSUFFICIENT_DATA",
     marketMedianPrice: null,
@@ -64,6 +70,10 @@ function insufficient(
     dispersionPct: null,
     calculatedAt: new Date(),
     reason,
+    sourceCount: empty.sourceCount,
+    sourceDistribution: empty.sourceDistribution,
+    dominantSourcePct: empty.dominantSourcePct,
+    diversity: empty.diversity,
   };
 }
 
@@ -145,6 +155,7 @@ export class MarketIntelligenceService {
     const calculatedAt = new Date();
 
     if (!isVehicleMarketCategory(listing.category)) {
+      const empty = emptyMarketSourceDiversity();
       const result: MarketAnalysisResult = {
         status: "UNSUPPORTED_CATEGORY",
         marketMedianPrice: null,
@@ -155,6 +166,10 @@ export class MarketIntelligenceService {
         dispersionPct: null,
         calculatedAt,
         reason: "unsupported_category",
+        sourceCount: empty.sourceCount,
+        sourceDistribution: empty.sourceDistribution,
+        dominantSourcePct: empty.dominantSourcePct,
+        diversity: empty.diversity,
       };
       this.logResult(listing, result);
       return result;
@@ -273,6 +288,10 @@ export class MarketIntelligenceService {
       const segment = segmentLevelLabel(level);
       const baseConfidence = resolveMarketConfidence(filtered.length, disp);
       const confidence = applySegmentConfidencePenalty(baseConfidence, segment);
+      const sampleRows = rowsMatchingIqrPrices(pool, filtered);
+      const sources = computeMarketSourceDiversity(
+        sampleRows.map((row) => row.platform),
+      );
 
       const result: MarketAnalysisResult = {
         status: "READY",
@@ -283,6 +302,10 @@ export class MarketIntelligenceService {
         segmentLevel: segment,
         dispersionPct: disp,
         calculatedAt,
+        sourceCount: sources.sourceCount,
+        sourceDistribution: sources.sourceDistribution,
+        dominantSourcePct: sources.dominantSourcePct,
+        diversity: sources.diversity,
       };
       this.logResult(listing, result);
       return result;

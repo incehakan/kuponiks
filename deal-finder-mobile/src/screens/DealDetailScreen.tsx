@@ -28,6 +28,8 @@ import {
   dealHeadline,
   dealLocation,
   marketMedian,
+  marketSourceCount,
+  marketSourceSummary,
   resolveListingUrl,
   resolveSourceLabel,
 } from '../utils/dealDisplay';
@@ -41,14 +43,6 @@ type DealDetailScreenProps = NativeStackScreenProps<
   MainStackParamList,
   'DealDetail'
 >;
-
-function confidenceLabel(value: string | null | undefined): string | null {
-  const n = (value ?? '').toUpperCase();
-  if (n === 'HIGH') return 'Yüksek';
-  if (n === 'MEDIUM') return 'Orta';
-  if (n === 'LOW') return 'Düşük';
-  return value?.trim() ? value : null;
-}
 
 function SpecCell({
   label,
@@ -162,8 +156,8 @@ export default function DealDetailScreen({
   const matched = deal.matchedFilters ?? [];
   const median = marketMedian(deal);
   const advantagePct = deal.priceAdvantagePct ?? deal.dealPercent;
-  const advantageAmount =
-    marketReady && median != null ? median - deal.price : null;
+  const sourceCount = marketSourceCount(deal);
+  const sourceSummary = marketSourceSummary(deal);
   const specs: Array<{ label: string; value: string }> = [];
   if (deal.year != null) specs.push({ label: 'Yıl', value: String(deal.year) });
   if (deal.mileage != null) specs.push({ label: 'KM', value: formatKm(deal.mileage) });
@@ -207,43 +201,52 @@ export default function DealDetailScreen({
           ) : null}
           {location ? <Text style={styles.location}>{location}</Text> : null}
 
-          <Text style={styles.sectionTitle}>Fırsat Analizi</Text>
+          <Text style={styles.sectionTitle}>Piyasa Analizi</Text>
           {marketReady ? (
-            <View style={styles.analysisRow}>
-              <View style={styles.analysisCell}>
-                <Text style={styles.analysisLabel}>Piyasa Medyanı</Text>
-                <Text style={styles.analysisValue}>
-                  {median != null ? formatTry(median) : '—'}
-                </Text>
-              </View>
-              <View style={styles.analysisCell}>
-                <Text style={styles.analysisLabel}>Avantaj</Text>
-                <Text
-                  style={[
-                    styles.analysisValue,
-                    advantageAmount != null && advantageAmount > 0
-                      ? styles.positive
-                      : null,
-                  ]}
-                >
-                  {advantageAmount != null ? formatTry(advantageAmount) : '—'}
-                </Text>
-              </View>
-              <View style={styles.analysisCell}>
-                <Text style={styles.analysisLabel}>Güven</Text>
-                <Text style={styles.analysisValue}>
-                  {confidenceLabel(deal.marketConfidence) ?? '—'}
-                </Text>
-              </View>
-              {deal.marketSampleSize != null ? (
+            <>
+              <View style={styles.analysisRow}>
+                <View style={styles.analysisCell}>
+                  <Text style={styles.analysisLabel}>Piyasa Değeri</Text>
+                  <Text style={styles.analysisValue}>
+                    {median != null ? formatTry(median) : '—'}
+                  </Text>
+                </View>
+                <View style={styles.analysisCell}>
+                  <Text style={styles.analysisLabel}>Fiyat Avantajı</Text>
+                  <Text
+                    style={[
+                      styles.analysisValue,
+                      advantagePct != null && advantagePct > 0
+                        ? styles.positive
+                        : null,
+                    ]}
+                  >
+                    {advantagePct != null
+                      ? `%${Math.round(Math.abs(advantagePct))}`
+                      : '—'}
+                  </Text>
+                </View>
                 <View style={styles.analysisCell}>
                   <Text style={styles.analysisLabel}>Emsal</Text>
                   <Text style={styles.analysisValue}>
-                    {deal.marketSampleSize} ilan
+                    {deal.marketSampleSize != null
+                      ? `${deal.marketSampleSize} ilan`
+                      : '—'}
                   </Text>
                 </View>
+                {sourceCount != null ? (
+                  <View style={styles.analysisCell}>
+                    <Text style={styles.analysisLabel}>Kaynak</Text>
+                    <Text style={styles.analysisValue}>
+                      {sourceCount} platform
+                    </Text>
+                  </View>
+                ) : null}
+              </View>
+              {sourceSummary ? (
+                <Text style={styles.sourceCaption}>{sourceSummary}</Text>
               ) : null}
-            </View>
+            </>
           ) : (
             <Text style={styles.insufficient}>Piyasa verisi yetersiz</Text>
           )}
@@ -402,6 +405,12 @@ const styles = StyleSheet.create({
   insufficient: {
     color: colors.textSecondary,
     fontSize: 14,
+  },
+  sourceCaption: {
+    marginTop: 10,
+    color: colors.textSecondary,
+    fontSize: 13,
+    lineHeight: 18,
   },
   specGrid: {
     flexDirection: 'row',

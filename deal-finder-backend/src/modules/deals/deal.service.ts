@@ -4,6 +4,9 @@ import { prisma } from "../../lib/prisma.js";
 import { DEAL_SCORE_THRESHOLD } from "../../analyzer/deal-score.service.js";
 import { toPublicListingImageUrl } from "../../lib/listing-image.js";
 import { listingPlatformLabel } from "../../lib/platform-label.js";
+import { marketSourceCaption } from "../../market/market-source-caption.js";
+import { parseMarketSourceFromRawDetails } from "../../market/market-source-persist.js";
+import { withPlatformLabels } from "../../market/market-source-diversity.js";
 
 /**
  * Deal listing DTO shaped for mobile clients (backward-compatible + V2 fields).
@@ -40,6 +43,16 @@ export interface DealListItem {
   marketSampleSize?: number | null;
   marketConfidence?: string | null;
   marketSegmentLevel?: string | null;
+  /** Additive source-diversity (optional, backward-compatible). */
+  marketSourceCount?: number | null;
+  marketSourceDistribution?: Array<{
+    platform: string;
+    platformLabel: string;
+    sampleSize: number;
+  }> | null;
+  marketDominantSourcePct?: number | null;
+  marketDiversity?: string | null;
+  marketSourceCaption?: string | null;
   matchedFilterCount?: number;
   matchedFilters?: Array<{
     id: string;
@@ -100,6 +113,7 @@ const FEED_SELECT = {
   createdAt: true,
   firstSeenAt: true,
   publishedAt: true,
+  rawDetails: true,
 } satisfies Prisma.ListingSelect;
 
 type AggregatedMatch = {
@@ -184,6 +198,36 @@ function sortAggregated(
   return copy;
 }
 
+function marketSourceFieldsFromListing(raw: unknown): Pick<
+  DealListItem,
+  | "marketSourceCount"
+  | "marketSourceDistribution"
+  | "marketDominantSourcePct"
+  | "marketDiversity"
+  | "marketSourceCaption"
+> {
+  const snap = parseMarketSourceFromRawDetails(raw);
+  if (!snap) {
+    return {
+      marketSourceCount: null,
+      marketSourceDistribution: null,
+      marketDominantSourcePct: null,
+      marketDiversity: null,
+      marketSourceCaption: null,
+    };
+  }
+  return {
+    marketSourceCount: snap.sourceCount,
+    marketSourceDistribution: withPlatformLabels(snap.sourceDistribution),
+    marketDominantSourcePct: snap.dominantSourcePct,
+    marketDiversity: snap.diversity,
+    marketSourceCaption: marketSourceCaption(
+      snap.sourceCount,
+      snap.sourceDistribution,
+    ),
+  };
+}
+
 function mapListingToDeal(
   listing: Prisma.ListingGetPayload<{ select: typeof FEED_SELECT }>,
   extras: {
@@ -236,6 +280,15 @@ function mapListingToDeal(
     marketSampleSize: marketReady ? listing.marketSampleSize : null,
     marketConfidence: marketReady ? listing.marketConfidence : null,
     marketSegmentLevel: marketReady ? listing.marketSegmentLevel : null,
+    ...(marketReady
+      ? marketSourceFieldsFromListing(listing.rawDetails)
+      : {
+          marketSourceCount: null,
+          marketSourceDistribution: null,
+          marketDominantSourcePct: null,
+          marketDiversity: null,
+          marketSourceCaption: null,
+        }),
     ...(extras.matchedFilterCount != null
       ? { matchedFilterCount: extras.matchedFilterCount }
       : {}),

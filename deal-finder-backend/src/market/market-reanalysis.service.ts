@@ -2,7 +2,7 @@
  * Bounded Market Intelligence re-analysis (no notification / no recursion).
  */
 
-import type { Listing } from "@prisma/client";
+import { Prisma, type Listing } from "@prisma/client";
 import { prisma } from "../lib/prisma.js";
 import {
   getMarketLookbackDays,
@@ -13,6 +13,7 @@ import {
   marketIntelligenceService,
   type MarketIntelligenceService,
 } from "./market-intelligence.service.js";
+import { attachMarketSourceToRawDetails } from "./market-source-persist.js";
 import { dealScoreService } from "../analyzer/deal-score.service.js";
 import { effectiveSeries } from "./vehicle-segment.js";
 import { normalizeMatchText } from "../lib/text-normalize.js";
@@ -20,13 +21,26 @@ import { normalizeMatchText } from "../lib/text-normalize.js";
 export interface ReanalyzeResult {
   listingId: string;
   externalId: string;
+  platform?: string;
+  price?: number;
   oldScore: number;
   newScore: number;
   oldMedian: number | null;
   newMedian: number | null;
+  oldSampleSize?: number | null;
+  oldConfidence?: string | null;
+  oldAdvantage?: number | null;
+  oldDispersion?: number | null;
   segment: string | null;
   sampleSize: number;
   status: string;
+  confidence?: string | null;
+  priceAdvantagePct?: number | null;
+  dispersionPct?: number | null;
+  sourceCount?: number;
+  sourceDistribution?: Array<{ platform: string; sampleSize: number }>;
+  dominantSourcePct?: number | null;
+  diversity?: string | null;
   updated: boolean;
 }
 
@@ -93,13 +107,26 @@ export class MarketReanalysisService {
     const result: ReanalyzeResult = {
       listingId: listing.id,
       externalId: listing.externalId,
+      platform: listing.platform,
+      price: listing.price,
       oldScore: listing.dealScore,
       newScore: score.dealScore,
       oldMedian: listing.marketMedianPrice ?? listing.marketAveragePrice,
       newMedian: market.marketMedianPrice,
+      oldSampleSize: listing.marketSampleSize,
+      oldConfidence: listing.marketConfidence,
+      oldAdvantage: listing.priceAdvantagePct,
+      oldDispersion: listing.marketDispersionPct,
       segment: market.segmentLevel,
       sampleSize: market.sampleSize,
       status: market.status,
+      confidence: market.confidence,
+      priceAdvantagePct: market.priceAdvantagePct,
+      dispersionPct: market.dispersionPct,
+      sourceCount: market.sourceCount ?? 0,
+      sourceDistribution: market.sourceDistribution ?? [],
+      dominantSourcePct: market.dominantSourcePct ?? null,
+      diversity: market.diversity ?? null,
       updated: false,
     };
 
@@ -113,6 +140,10 @@ export class MarketReanalysisService {
       data: {
         dealScore: score.dealScore,
         ...marketFields,
+        rawDetails: attachMarketSourceToRawDetails(
+          listing.rawDetails,
+          market,
+        ) as Prisma.InputJsonValue,
         // firstSeenAt / lastSeenAt / notifications untouched
       },
     });

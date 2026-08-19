@@ -16,6 +16,7 @@ import {
   dealLocation,
   dealSpecLine,
   marketMedian,
+  marketSourceCount,
   resolveSourceLabel,
 } from '../utils/dealDisplay';
 import { formatTry } from '../utils/formatDeal';
@@ -37,6 +38,7 @@ function DealCard({
   const median = marketMedian(deal);
   const platform = resolveSourceLabel(deal);
   const advantagePct = deal.priceAdvantagePct ?? deal.dealPercent;
+  const sources = marketSourceCount(deal);
 
   return (
     <Pressable
@@ -62,6 +64,11 @@ function DealCard({
         <View style={styles.advantageWrap}>
           <PriceAdvantageBadge pct={advantagePct} />
         </View>
+        {sources != null && sources >= 2 ? (
+          <View style={styles.sourceBadge}>
+            <Text style={styles.sourceBadgeText}>{sources} kaynak</Text>
+          </View>
+        ) : null}
       </View>
 
       <View style={styles.body}>
@@ -134,6 +141,20 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 12,
     bottom: 12,
+  },
+  sourceBadge: {
+    position: 'absolute',
+    left: 12,
+    top: 12,
+    backgroundColor: 'rgba(8,4,20,0.72)',
+    borderRadius: radii.pill,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  sourceBadgeText: {
+    color: colors.white,
+    fontSize: 11,
+    fontWeight: '700',
   },
   body: {
     padding: spacing.lg,

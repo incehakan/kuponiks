@@ -15,6 +15,17 @@ export type MarketSegmentLevel =
   | "L4_SERIES"
   | null;
 
+/** Additive V1 source-diversity class. Does not affect DealScore. */
+export type MarketDiversity =
+  | "SINGLE_SOURCE"
+  | "MULTI_SOURCE_LOW"
+  | "MULTI_SOURCE_BALANCED";
+
+export interface MarketSourceShare {
+  platform: string;
+  sampleSize: number;
+}
+
 export interface MarketAnalysisInput {
   id?: string | null;
   externalId: string;
@@ -41,6 +52,11 @@ export interface MarketAnalysisResult {
   dispersionPct: number | null;
   calculatedAt: Date;
   reason?: string;
+  /** Distinct real providers in the comparable sample (mock excluded). */
+  sourceCount?: number;
+  sourceDistribution?: MarketSourceShare[];
+  dominantSourcePct?: number | null;
+  diversity?: MarketDiversity | null;
 }
 
 export interface ComparableListingRow {

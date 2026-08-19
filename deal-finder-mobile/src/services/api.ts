@@ -489,6 +489,23 @@ function normalizeDeal(deal: Partial<Deal> & Record<string, unknown>): Deal {
       (deal as { marketConfidence?: string | null }).marketConfidence ?? null,
     marketSegmentLevel:
       (deal as { marketSegmentLevel?: string | null }).marketSegmentLevel ?? null,
+    marketSourceCount:
+      (deal as { marketSourceCount?: number | null }).marketSourceCount ?? null,
+    marketSourceDistribution:
+      (deal as { marketSourceDistribution?: Deal['marketSourceDistribution'] })
+        .marketSourceDistribution ?? undefined,
+    marketDominantSourcePct:
+      (deal as { marketDominantSourcePct?: number | null })
+        .marketDominantSourcePct ?? null,
+    marketDiversity:
+      (deal as { marketDiversity?: string | null }).marketDiversity ?? null,
+    marketSourceCaption:
+      (deal as { marketSourceCaption?: string | null }).marketSourceCaption ??
+      null,
+    platformLabel:
+      typeof (deal as { platformLabel?: string }).platformLabel === 'string'
+        ? (deal as { platformLabel: string }).platformLabel
+        : undefined,
     matchedAt: (deal as { matchedAt?: string | null }).matchedAt ?? null,
     matchedFilterCount:
       (deal as { matchedFilterCount?: number }).matchedFilterCount ?? undefined,

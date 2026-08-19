@@ -11,6 +11,7 @@ import {
   marketIntelligenceService,
   type MarketIntelligenceService,
 } from "../market/market-intelligence.service.js";
+import { attachMarketSourceToRawDetails } from "../market/market-source-persist.js";
 import {
   enqueueListingMatch,
   type ListingMatchJobData,
@@ -120,7 +121,9 @@ export class ListingProcessor {
         marketResult,
       );
 
-      const rawDetailsJson = this.toPrismaJson(input.rawDetails);
+      const rawDetailsJson = this.toPrismaJson(
+        attachMarketSourceToRawDetails(input.rawDetails, marketResult),
+      );
       const marketFields = marketFieldsForPersistence(marketResult);
 
       const listing = await prisma.listing.create({

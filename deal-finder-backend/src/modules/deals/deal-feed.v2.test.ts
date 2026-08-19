@@ -50,6 +50,17 @@ const listing = {
   createdAt: new Date("2026-08-01T10:00:00.000Z"),
   firstSeenAt: new Date("2026-08-01T10:00:00.000Z"),
   publishedAt: null,
+  rawDetails: {
+    _kuponiksMarketSource: {
+      sourceCount: 2,
+      sourceDistribution: [
+        { platform: "arabam", sampleSize: 92 },
+        { platform: "otoplus", sampleSize: 1 },
+      ],
+      dominantSourcePct: 98.9,
+      diversity: "MULTI_SOURCE_LOW",
+    },
+  },
 };
 
 describe("Deal Feed V2 user-specific API", () => {
@@ -265,5 +276,58 @@ describe("Deal Feed V2 user-specific API", () => {
     ]);
     const page = await service.getUserMatchedDeals("user-a");
     expect(page.deals[0]?.imageUrl).toBeNull();
+  });
+
+  it("11. Deal API mapping includes additive source metadata", async () => {
+    mocked.userListingMatch.findMany.mockResolvedValue([
+      {
+        listingId: listing.id,
+        matchedAt: new Date(),
+        listing,
+        filter: {
+          id: "f1",
+          name: "Honda Civic",
+          category: "Vasıta > Otomobil",
+          brand: "Honda",
+          series: "Civic",
+        },
+      },
+    ]);
+    const page = await service.getUserMatchedDeals("user-a");
+    expect(page.deals[0]?.marketSourceCount).toBe(2);
+    expect(page.deals[0]?.marketDominantSourcePct).toBe(98.9);
+    expect(page.deals[0]?.marketDiversity).toBe("MULTI_SOURCE_LOW");
+    expect(page.deals[0]?.marketSourceDistribution).toEqual([
+      { platform: "arabam", platformLabel: "Arabam", sampleSize: 92 },
+      { platform: "otoplus", platformLabel: "Otoplus", sampleSize: 1 },
+    ]);
+    expect(page.deals[0]?.marketSourceCaption).toContain("Arabam ve Otoplus");
+  });
+
+  it("12. Deal Detail mapping includes source metadata", async () => {
+    mocked.listing.findUnique.mockResolvedValue(listing);
+    const deal = await service.getDealById(listing.id);
+    expect(deal.marketSourceCount).toBe(2);
+    expect(deal.marketDiversity).toBe("MULTI_SOURCE_LOW");
+  });
+
+  it("insufficient market hides source metadata", async () => {
+    mocked.userListingMatch.findMany.mockResolvedValue([
+      {
+        listingId: listing.id,
+        matchedAt: new Date(),
+        listing: { ...listing, marketStatus: "INSUFFICIENT_DATA" },
+        filter: {
+          id: "f1",
+          name: null,
+          category: "Vasıta > Otomobil",
+          brand: "Honda",
+          series: "Civic",
+        },
+      },
+    ]);
+    const page = await service.getUserMatchedDeals("user-a");
+    expect(page.deals[0]?.marketSourceCount).toBeNull();
+    expect(page.deals[0]?.marketSourceCaption).toBeNull();
   });
 });

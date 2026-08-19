@@ -81,6 +81,16 @@ export interface Deal {
   marketSampleSize?: number | null;
   marketConfidence?: string | null;
   marketSegmentLevel?: string | null;
+  marketSourceCount?: number | null;
+  marketSourceDistribution?: Array<{
+    platform: string;
+    platformLabel?: string;
+    sampleSize: number;
+  }>;
+  marketDominantSourcePct?: number | null;
+  marketDiversity?: string | null;
+  marketSourceCaption?: string | null;
+  platformLabel?: string;
   fuelType?: string | null;
   transmission?: string | null;
   bodyType?: string | null;

@@ -16,6 +16,7 @@ import {
   marketIntelligenceService,
   type MarketIntelligenceService,
 } from "../market/market-intelligence.service.js";
+import { attachMarketSourceToRawDetails } from "../market/market-source-persist.js";
 import {
   marketReanalysisService,
   type MarketReanalysisService,
@@ -165,7 +166,10 @@ export class ScraperService {
       const listing = await prisma.listing.create({
         data: {
           ...toListingCreateData(input, scoreResult.dealScore, marketFields),
-          rawDetails: input.rawDetails as Prisma.InputJsonValue,
+          rawDetails: attachMarketSourceToRawDetails(
+            input.rawDetails,
+            marketResult,
+          ) as Prisma.InputJsonValue,
           firstSeenAt: now,
           lastSeenAt: now,
         },
@@ -270,11 +274,14 @@ export class ScraperService {
       existing.imageUrl,
       input.imageUrl,
     );
-    const mergedRawDetails = mergeRawDetailsImageSource(
-      existing.rawDetails,
-      input.rawDetails,
-      mergedImageUrl,
-      input.imageUrl,
+    const mergedRawDetails = attachMarketSourceToRawDetails(
+      mergeRawDetailsImageSource(
+        existing.rawDetails,
+        input.rawDetails,
+        mergedImageUrl,
+        input.imageUrl,
+      ),
+      marketResult,
     );
 
     const listing = await prisma.listing.update({

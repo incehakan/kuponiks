@@ -1,4 +1,5 @@
 import type { Deal } from '../types/models';
+import { platformLabel } from './feedFilters';
 
 export function resolveSourceLabel(deal: Deal): string {
   const platformName = (deal.source || deal.platform || '').trim();
@@ -81,6 +82,40 @@ export function marketMedian(deal: Deal): number | null {
     return deal.marketAverage;
   }
   return null;
+}
+
+export function marketSourceCount(deal: Deal): number | null {
+  if (deal.marketStatus !== 'READY') {
+    return null;
+  }
+  const n = deal.marketSourceCount;
+  return n != null && Number.isFinite(n) && n > 0 ? n : null;
+}
+
+export function marketSourceSummary(deal: Deal): string | null {
+  if (deal.marketStatus !== 'READY') {
+    return null;
+  }
+  if (deal.marketSourceCaption?.trim()) {
+    return deal.marketSourceCaption.trim();
+  }
+  const count = marketSourceCount(deal);
+  if (count == null) {
+    return null;
+  }
+  const labels = (deal.marketSourceDistribution ?? [])
+    .map((row) => row.platformLabel || platformLabel(row.platform))
+    .filter(Boolean);
+  if (labels.length === 0) {
+    return null;
+  }
+  if (labels.length === 1) {
+    return `Analiz ${labels[0]} ilanlarından oluşturuldu.`;
+  }
+  if (labels.length === 2) {
+    return `Analiz ${labels[0]} ve ${labels[1]} ilanlarından oluşturuldu.`;
+  }
+  return `Analiz ${labels.slice(0, -1).join(', ')} ve ${labels[labels.length - 1]} ilanlarından oluşturuldu.`;
 }
 
 export function isRecentMatch(deal: Deal, hours = 48): boolean {
