@@ -36,7 +36,8 @@
     "coverage:status": "tsx scripts/coverage-status.ts",
     "provider:status": "tsx scripts/provider-status.ts",
     "provider:verify": "tsx scripts/provider-verify.ts",
-    "market:source-audit": "tsx scripts/market-source-audit.ts"
+    "market:source-audit": "tsx scripts/market-source-audit.ts",
+    "filter:e2e-status": "tsx scripts/filter-e2e-status.ts"
   },
   "keywords": [],
   "author": "",
