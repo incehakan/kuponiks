@@ -73,14 +73,14 @@ describe("Platform coverage engine", () => {
     expect(arabam.schedulable).toBe(false);
   });
 
-  it("12. Letgo Honda Civic is PARTIAL", () => {
+  it("12. Letgo Honda Civic is FULL (structured) when available", () => {
     const letgo = evaluatePlatformCoverage(
       hondaCivic(),
       "letgo",
-      { availability: "DEGRADED", reason: "empty" },
+      { availability: "AVAILABLE", reason: "none" },
     );
-    expect(letgo.coverage).toBe("PARTIAL");
-    expect(letgo.availability).toBe("DEGRADED");
+    expect(letgo.coverage).toBe("FULL");
+    expect(letgo.availability).toBe("AVAILABLE");
     expect(letgo.schedulable).toBe(true);
   });
 
@@ -168,7 +168,7 @@ describe("Platform coverage engine", () => {
     );
     expect(formatCoverageLogLine("f1", snapshot)).toContain("arabam=FULL/AVAILABLE");
     expect(formatCoverageLogLine("f1", snapshot)).toContain("otoplus=FULL/AVAILABLE");
-    expect(formatCoverageLogLine("f1", snapshot)).toContain("letgo=PARTIAL/DEGRADED");
+    expect(formatCoverageLogLine("f1", snapshot)).toContain("letgo=FULL/DEGRADED");
     expect(formatCoverageLogLine("f1", snapshot)).toContain("sahibinden=FULL/UNAVAILABLE");
     expect(formatCoverageLogLine("f1", snapshot)).toContain("monitored=3");
   });

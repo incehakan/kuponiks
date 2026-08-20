@@ -193,7 +193,7 @@ describe("Provider reliability classification", () => {
     expect(dto.monitoredPlatformCount).toBe(1);
     expect(dto.statusLabel).toBe("1 kaynak aktif");
     const letgo = dto.platforms.find((row) => row.platform === "letgo");
-    expect(letgo?.capability).toBe("PARTIAL");
+    expect(letgo?.capability).toBe("FULL");
     expect(letgo?.reliability).toBe("NO_DATA");
     expect(letgo?.effectiveStatus).toBe("NO_DATA");
     expect(letgo?.userLabel).toBe("Şu anda veri alınamıyor");

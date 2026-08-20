@@ -1,8 +1,32 @@
 import type { ScrapeQueryPlan } from "../scrape-query-plan.js";
 import { brandSeriesQueryText } from "../scrape-query-plan.js";
 import type { BuiltPlatformQuery } from "./arabam-query-builder.js";
+import { fieldRole } from "../platform-capabilities.js";
+import {
+  LETGO_CAR_CATEGORY_ID,
+  LETGO_ORIGIN,
+  LETGO_SEARCH_ITEMS_PATH,
+  letgoFilterSlug,
+} from "../../parsers/letgo.parser.js";
 
-/** Letgo search URL — mirrors existing letgo.adapter buildSearchUrl. */
+function isVehicleCategory(category: string): boolean {
+  const c = category.toLocaleLowerCase("tr-TR");
+  return (
+    c.includes("vasıta") ||
+    c.includes("vasita") ||
+    c.includes("otomobil") ||
+    c.includes("araba") ||
+    c.includes("suv")
+  );
+}
+
+/**
+ * Letgo public search contract (verified Aug 2026):
+ * GET https://www.letgo.com/api/search/items
+ *   category_id=15706
+ *   filter=marka:{slug};model:{slug}
+ * Pagination: metadata.next_page_url (search_after cursor).
+ */
 export function buildLetgoQuery(plan: ScrapeQueryPlan): BuiltPlatformQuery {
   const displayQuery = brandSeriesQueryText({
     brand: plan.brand ?? null,
@@ -11,33 +35,74 @@ export function buildLetgoQuery(plan: ScrapeQueryPlan): BuiltPlatformQuery {
     category: plan.category,
   });
 
-  const search = new URL("https://www.letgo.com/tr-tr");
-  const qParts = [displayQuery, plan.category, plan.city]
-    .map((part) => part?.trim())
-    .filter(Boolean);
+  const params = new URLSearchParams();
+  const sourceDebugParams: Record<string, string> = {};
+  const appliedCriteria: string[] = [];
+  const sourceCriteria: Record<string, string | number> = {};
 
-  if (qParts.length > 0) {
-    const joined = qParts.join(" ");
-    search.searchParams.set("search", joined);
-    search.searchParams.set("q", joined);
+  if (isVehicleCategory(plan.category)) {
+    params.set("category_id", LETGO_CAR_CATEGORY_ID);
+    sourceDebugParams.category_id = LETGO_CAR_CATEGORY_ID;
+    if (fieldRole("letgo", "category") === "SOURCE") {
+      appliedCriteria.push("category");
+      sourceCriteria.category = plan.category;
+    }
   }
-  if (plan.city?.trim()) {
-    search.searchParams.set("city", plan.city.trim());
+
+  const brandSlug =
+    fieldRole("letgo", "brand") === "SOURCE" && plan.brand
+      ? letgoFilterSlug(plan.brand)
+      : "";
+  const seriesSlug =
+    fieldRole("letgo", "series") === "SOURCE" && plan.series
+      ? letgoFilterSlug(plan.series)
+      : "";
+
+  const filterParts: string[] = [];
+  if (brandSlug) {
+    filterParts.push(`marka:${brandSlug}`);
+    appliedCriteria.push("brand");
+    sourceCriteria.brand = plan.brand!;
   }
-  if (plan.category.trim()) {
-    search.searchParams.set("category", plan.category.trim());
+  if (seriesSlug) {
+    filterParts.push(`model:${seriesSlug}`);
+    appliedCriteria.push("series");
+    sourceCriteria.series = plan.series!;
   }
+
+  if (filterParts.length > 0) {
+    const filter = filterParts.join(";");
+    params.set("filter", filter);
+    sourceDebugParams.filter = filter;
+  } else if (displayQuery && displayQuery !== plan.category) {
+    params.set("q", displayQuery);
+    sourceDebugParams.q = displayQuery;
+    if (fieldRole("letgo", "keywords") === "SOURCE") {
+      appliedCriteria.push("keywords");
+      sourceCriteria.keywords = displayQuery;
+    }
+  }
+
+  params.set("sorting", "desc-relevance");
+  sourceDebugParams.sorting = "desc-relevance";
+
+  const url = `${LETGO_ORIGIN}${LETGO_SEARCH_ITEMS_PATH}?${params.toString()}`;
+  const deferredCriteria = plan.deferredCriteria.filter(
+    (field) => !appliedCriteria.includes(field),
+  );
 
   return {
-    url: search.toString(),
+    url,
     displayQuery,
     query: displayQuery,
     ...(plan.city ? { city: plan.city } : {}),
     category: plan.category,
-    appliedCriteria: [...plan.appliedCriteria],
-    deferredCriteria: plan.deferredCriteria.filter(
-      (field) => !plan.appliedCriteria.includes(field),
-    ),
-    sourceCriteria: { ...plan.sourceCriteria },
+    appliedCriteria,
+    deferredCriteria,
+    sourceCriteria,
+    sourceDebug: {
+      taxonomyPath: `/araba-${LETGO_CAR_CATEGORY_ID}_c${LETGO_CAR_CATEGORY_ID}`,
+      queryParams: sourceDebugParams,
+    },
   };
 }

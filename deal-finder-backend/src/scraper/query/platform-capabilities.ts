@@ -28,7 +28,9 @@ export type FieldRole = "SOURCE" | "MATCHER_ONLY";
  *
  * Arabam (verified): taxonomy path /ikinci-el/{category}/{brand-series[-city]}
  *   + query params minYear, maxYear, minPrice, maxPrice, take
- * Letgo (verified): search/q/category/city query params.
+ * Letgo (verified Aug 2026): GET /api/search/items
+ *   category_id=15706 + filter=marka:{slug};model:{slug}
+ *   city/year/price/km filters exist in metadata but query encoding not verified.
  * Sahibinden (verified): query_text + address_city on /otomobil.
  */
 export const PLATFORM_FIELD_ROLES: Record<
@@ -78,7 +80,7 @@ export const PLATFORM_FIELD_ROLES: Record<
     series: "SOURCE",
     keywords: "SOURCE",
     category: "SOURCE",
-    city: "SOURCE",
+    city: "MATCHER_ONLY",
     subcategory: "MATCHER_ONLY",
     district: "MATCHER_ONLY",
     minYear: "MATCHER_ONLY",

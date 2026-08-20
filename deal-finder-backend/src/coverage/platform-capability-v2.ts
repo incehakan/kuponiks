@@ -53,7 +53,7 @@ export const PLATFORM_CRITERION_ROLES_V2: Record<
     series: "SOURCE",
     keywords: "SOURCE",
     category: "SOURCE",
-    city: "SOURCE",
+    city: "MATCHER_ONLY",
     subcategory: "MATCHER_ONLY",
     district: "MATCHER_ONLY",
     minYear: "MATCHER_ONLY",
@@ -114,7 +114,7 @@ export const PLATFORM_MATCHER_RELIABILITY: Record<
 > = {
   arabam: "structured",
   otoplus: "structured",
-  letgo: "weak",
+  letgo: "structured",
   sahibinden: "structured",
   hepsiemlak: "structured",
   generic: "weak",

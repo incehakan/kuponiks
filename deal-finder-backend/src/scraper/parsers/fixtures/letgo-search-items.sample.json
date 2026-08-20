@@ -1,0 +1,77 @@
+{
+  "data": [
+    {
+      "id": "1728564686",
+      "title": "Honda CIVIC",
+      "sub_title": "1997 - 243.000 KM",
+      "image": { "external_id": "cba539bb3fdc4-OLXAUTOTR", "width": 810, "height": 1080 },
+      "category_id": 15706,
+      "price": { "value": { "raw": 264999, "display": "264.999 TL" } },
+      "locations_resolved": {
+        "SUBLOCALITY_LEVEL_1_name": "Sivas",
+        "ADMIN_LEVEL_3_name": "Sivas"
+      },
+      "imageUrl": "https://imvm.letgo.com/v1/files/cba539bb3fdc4-OLXAUTOTR/image;s=320x320",
+      "extra_parameters": {
+        "eids": {
+          "data": [
+            { "title": "Marka Adı", "value": "HONDA" },
+            { "title": "Ticari Adı", "value": "CIVIC 1,6 İES" },
+            { "title": "Model Yılı", "value": "1997" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "1732888522",
+      "title": "Honda CIVIC",
+      "sub_title": "2009 - 167.850 KM",
+      "image": { "external_id": "183cd1ddaa424-OLXAUTOTR", "width": 1080, "height": 810 },
+      "category_id": 15706,
+      "price": { "value": { "raw": 980000, "display": "980.000 TL" } },
+      "locations_resolved": {
+        "SUBLOCALITY_LEVEL_1_name": "Üsküdar",
+        "ADMIN_LEVEL_3_name": "İstanbul"
+      },
+      "imageUrl": "https://imvm.letgo.com/v1/files/183cd1ddaa424-OLXAUTOTR/image;s=320x320",
+      "extra_parameters": {
+        "eids": {
+          "data": [
+            { "title": "Marka Adı", "value": "HONDA" },
+            { "title": "Ticari Adı", "value": "CIVIC 4K 1.6" },
+            { "title": "Model Yılı", "value": "2009" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "1730002016",
+      "title": "Honda CIVIC",
+      "sub_title": "2016 - 91.000 KM",
+      "image": { "external_id": "placeholder-image", "width": 1, "height": 1 },
+      "category_id": 15706,
+      "price": { "value": { "raw": 1315000, "display": "1.315.000 TL" } },
+      "locations_resolved": {
+        "SUBLOCALITY_LEVEL_1_name": "Kadıköy",
+        "ADMIN_LEVEL_3_name": "İstanbul"
+      },
+      "imageUrl": "https://imvm.letgo.com/v1/files/placeholder/image;s=320x320",
+      "extra_parameters": {
+        "eids": {
+          "data": [
+            { "title": "Marka Adı", "value": "HONDA" },
+            { "title": "Ticari Adı", "value": "CIVIC" },
+            { "title": "Model Yılı", "value": "2016" }
+          ]
+        }
+      }
+    }
+  ],
+  "metadata": {
+    "total_ads": 1264,
+    "ads_on_page": 3,
+    "next_page_url": "category_id=15706&filter=marka_honda%7Cmodel_civic&search_after=free_0.91%2C1732208560&sorting=desc-relevance"
+  },
+  "empty": false,
+  "success": true
+}
